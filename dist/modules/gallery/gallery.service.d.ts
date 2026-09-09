@@ -15,6 +15,9 @@ export declare class GalleryService {
     findAll(tenant: TenantDocument, filters: {
         type?: GalleryType;
         category?: string;
+        tag?: string;
+        search?: string;
+        all?: boolean;
         page?: number;
         limit?: number;
     }): Promise<{

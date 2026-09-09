@@ -25,6 +25,10 @@ __decorate([
     __metadata("design:type", String)
 ], GalleryItem.prototype, "title", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], GalleryItem.prototype, "description", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ required: true, enum: Object.values(types_1.GalleryType) }),
     __metadata("design:type", String)
 ], GalleryItem.prototype, "type", void 0);
@@ -40,6 +44,10 @@ __decorate([
     (0, mongoose_1.Prop)({ default: null }),
     __metadata("design:type", String)
 ], GalleryItem.prototype, "category", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], GalleryItem.prototype, "tags", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Area', default: null }),
     __metadata("design:type", mongoose_2.Types.ObjectId)

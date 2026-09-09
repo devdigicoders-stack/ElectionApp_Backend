@@ -4,10 +4,12 @@ export type GalleryItemDocument = GalleryItem & Document;
 export declare class GalleryItem {
     tenantId: Types.ObjectId;
     title: string;
+    description?: string;
     type: GalleryType;
     url: string;
     thumbnailUrl?: string;
     category?: string;
+    tags?: string[];
     areaId?: Types.ObjectId;
     isPublished: boolean;
     allowDownload: boolean;
@@ -32,6 +34,15 @@ export declare const GalleryItemSchema: import("mongoose").Schema<GalleryItem, i
         id: string;
     }>> | undefined;
     title?: import("mongoose").SchemaDefinitionProperty<string, GalleryItem, Document<unknown, {}, GalleryItem, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<GalleryItem & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    description?: import("mongoose").SchemaDefinitionProperty<string | undefined, GalleryItem, Document<unknown, {}, GalleryItem, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<GalleryItem & {
         _id: Types.ObjectId;
@@ -68,6 +79,15 @@ export declare const GalleryItemSchema: import("mongoose").Schema<GalleryItem, i
         id: string;
     }>> | undefined;
     category?: import("mongoose").SchemaDefinitionProperty<string | undefined, GalleryItem, Document<unknown, {}, GalleryItem, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<GalleryItem & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    tags?: import("mongoose").SchemaDefinitionProperty<string[] | undefined, GalleryItem, Document<unknown, {}, GalleryItem, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<GalleryItem & {
         _id: Types.ObjectId;

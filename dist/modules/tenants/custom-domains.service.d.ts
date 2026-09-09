@@ -52,7 +52,7 @@ export declare class CustomDomainsService {
         isActive: boolean;
         isVerified: boolean;
         verifiedAt: Date | null;
-        verificationStatus: "pending" | "unconfigured" | "verified" | "failed";
+        verificationStatus: "pending" | "failed" | "unconfigured" | "verified";
         verificationToken: string | null;
         targetCname: string;
         dnsRecords: {

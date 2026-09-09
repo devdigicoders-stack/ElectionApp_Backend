@@ -43,11 +43,12 @@ const usage_module_1 = require("./modules/usage/usage.module");
 const news_module_1 = require("./modules/news/news.module");
 const registration_form_module_1 = require("./modules/registration-form/registration-form.module");
 const citizen_dashboard_module_1 = require("./modules/citizen-dashboard/citizen-dashboard.module");
+const payments_module_1 = require("./modules/payments/payments.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
             .apply(tenant_middleware_1.TenantMiddleware)
-            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET }, { path: 'uploads/(.*)', method: common_1.RequestMethod.ALL })
+            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET }, { path: 'uploads/(.*)', method: common_1.RequestMethod.ALL }, { path: 'payments/webhook', method: common_1.RequestMethod.ALL })
             .forRoutes('*');
     }
 };
@@ -96,6 +97,7 @@ exports.AppModule = AppModule = __decorate([
             news_module_1.NewsModule,
             registration_form_module_1.RegistrationFormModule,
             citizen_dashboard_module_1.CitizenDashboardModule,
+            payments_module_1.PaymentsModule,
         ],
     })
 ], AppModule);

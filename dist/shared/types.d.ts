@@ -25,7 +25,8 @@ export declare enum FeatureKey {
     POSTER_GENERATOR = "poster_generator",
     NOTIFICATIONS = "notifications",
     BANNERS = "banners",
-    NEWS = "news"
+    NEWS = "news",
+    PAYMENTS = "payments"
 }
 export declare enum NewsStatus {
     DRAFT = "draft",
@@ -39,7 +40,14 @@ export declare enum ComplaintStatus {
     ASSIGNED = "assigned",
     IN_PROGRESS = "in_progress",
     RESOLVED = "resolved",
-    CLOSED = "closed"
+    CLOSED = "closed",
+    REJECTED = "rejected"
+}
+export declare enum ComplaintPriority {
+    LOW = "low",
+    MEDIUM = "medium",
+    HIGH = "high",
+    URGENT = "urgent"
 }
 export declare enum WorkStatus {
     UPCOMING = "upcoming",
@@ -51,6 +59,18 @@ export declare enum MembershipStatus {
     APPROVED = "approved",
     REJECTED = "rejected",
     EXPIRED = "expired"
+}
+export declare enum PaymentStatus {
+    PENDING = "pending",
+    SUCCESSFUL = "successful",
+    FAILED = "failed",
+    REFUNDED = "refunded"
+}
+export declare enum PaymentPurpose {
+    MEMBERSHIP_FEE = "membership_fee",
+    VOLUNTARY_CONTRIBUTION = "voluntary_contribution",
+    EVENT_PASS = "event_pass",
+    PLATFORM_SUBSCRIPTION = "platform_subscription"
 }
 export declare enum VolunteerStatus {
     ACTIVE = "active",

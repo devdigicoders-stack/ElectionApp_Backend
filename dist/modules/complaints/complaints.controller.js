@@ -19,24 +19,61 @@ const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const feature_guard_1 = require("../../common/guards/feature.guard");
 const feature_decorator_1 = require("../../common/decorators/feature.decorator");
 const types_1 = require("../../shared/types");
+const complaints_dto_1 = require("./complaints.dto");
 let ComplaintsController = class ComplaintsController {
     constructor(complaintsService) {
         this.complaintsService = complaintsService;
     }
-    create(req, body) {
-        return this.complaintsService.create(req.tenant, req.user.sub, body);
+    getCategories(req) {
+        return this.complaintsService.getCategories(req.tenant);
     }
-    findAll(req, status, areaId, page, limit) {
-        return this.complaintsService.findAll(req.tenant, { status, areaId, page, limit });
+    createCategory(req, dto) {
+        return this.complaintsService.createCategory(req.tenant, dto);
+    }
+    updateCategory(req, catId, dto) {
+        return this.complaintsService.updateCategory(req.tenant, catId, dto);
+    }
+    deleteCategory(req, catId) {
+        return this.complaintsService.deleteCategory(req.tenant, catId);
     }
     findMine(req) {
         return this.complaintsService.findByUser(req.tenant, req.user.sub);
     }
+    getMyStats(req) {
+        return this.complaintsService.getCitizenDashboardCounters(req.tenant, req.user.sub);
+    }
+    getAnalytics(req) {
+        return this.complaintsService.getAnalytics(req.tenant);
+    }
     getStats(req) {
         return this.complaintsService.getDashboardStats(req.tenant);
     }
+    create(req, dto) {
+        return this.complaintsService.create(req.tenant, req.user.sub, dto);
+    }
+    findAll(req, query) {
+        return this.complaintsService.findAll(req.tenant, query);
+    }
     findOne(req, id) {
-        return this.complaintsService.findOne(req.tenant, id);
+        return this.complaintsService.findOne(req.tenant, id, req.user);
+    }
+    assignComplaint(req, id, dto) {
+        return this.complaintsService.assignComplaint(req.tenant, id, dto, req.user);
+    }
+    updatePriority(req, id, dto) {
+        return this.complaintsService.updatePriority(req.tenant, id, dto, req.user);
+    }
+    addRemark(req, id, dto) {
+        return this.complaintsService.addRemark(req.tenant, id, dto, req.user);
+    }
+    resolveComplaint(req, id, dto) {
+        return this.complaintsService.resolveComplaint(req.tenant, id, dto, req.user);
+    }
+    closeComplaint(req, id, dto) {
+        return this.complaintsService.closeComplaint(req.tenant, id, dto, req.user);
+    }
+    rejectComplaint(req, id, dto) {
+        return this.complaintsService.rejectComplaint(req.tenant, id, dto, req.user);
     }
     updateStatus(req, id, body) {
         return this.complaintsService.updateStatus(req.tenant, id, body.status, body.note ?? '', req.user.sub);
@@ -44,24 +81,37 @@ let ComplaintsController = class ComplaintsController {
 };
 exports.ComplaintsController = ComplaintsController;
 __decorate([
-    (0, common_1.Post)(),
+    (0, common_1.Get)('categories'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "getCategories", null);
+__decorate([
+    (0, common_1.Post)('categories'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:paramtypes", [Object, complaints_dto_1.CreateCategoryDto]),
     __metadata("design:returntype", void 0)
-], ComplaintsController.prototype, "create", null);
+], ComplaintsController.prototype, "createCategory", null);
 __decorate([
-    (0, common_1.Get)(),
+    (0, common_1.Patch)('categories/:catId'),
     __param(0, (0, common_1.Req)()),
-    __param(1, (0, common_1.Query)('status')),
-    __param(2, (0, common_1.Query)('areaId')),
-    __param(3, (0, common_1.Query)('page')),
-    __param(4, (0, common_1.Query)('limit')),
+    __param(1, (0, common_1.Param)('catId')),
+    __param(2, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, String, String, Number, Number]),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.UpdateCategoryDto]),
     __metadata("design:returntype", void 0)
-], ComplaintsController.prototype, "findAll", null);
+], ComplaintsController.prototype, "updateCategory", null);
+__decorate([
+    (0, common_1.Delete)('categories/:catId'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('catId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "deleteCategory", null);
 __decorate([
     (0, common_1.Get)('my'),
     __param(0, (0, common_1.Req)()),
@@ -70,12 +120,42 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "findMine", null);
 __decorate([
+    (0, common_1.Get)('my/stats'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "getMyStats", null);
+__decorate([
+    (0, common_1.Get)('analytics'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "getAnalytics", null);
+__decorate([
     (0, common_1.Get)('stats'),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "getStats", null);
+__decorate([
+    (0, common_1.Post)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, complaints_dto_1.CreateComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "create", null);
+__decorate([
+    (0, common_1.Get)(),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, complaints_dto_1.QueryComplaintsDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Req)()),
@@ -84,6 +164,60 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "findOne", null);
+__decorate([
+    (0, common_1.Patch)(':id/assign'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.AssignComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "assignComplaint", null);
+__decorate([
+    (0, common_1.Patch)(':id/priority'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.UpdatePriorityDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "updatePriority", null);
+__decorate([
+    (0, common_1.Post)(':id/remarks'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.AddRemarkDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "addRemark", null);
+__decorate([
+    (0, common_1.Patch)(':id/resolve'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.ResolveComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "resolveComplaint", null);
+__decorate([
+    (0, common_1.Patch)(':id/close'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.CloseComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "closeComplaint", null);
+__decorate([
+    (0, common_1.Patch)(':id/reject'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.RejectComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "rejectComplaint", null);
 __decorate([
     (0, common_1.Patch)(':id/status'),
     __param(0, (0, common_1.Req)()),

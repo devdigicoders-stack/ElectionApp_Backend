@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
+exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
 var TenantStatus;
 (function (TenantStatus) {
     TenantStatus["ACTIVE"] = "active";
@@ -32,6 +32,7 @@ var FeatureKey;
     FeatureKey["NOTIFICATIONS"] = "notifications";
     FeatureKey["BANNERS"] = "banners";
     FeatureKey["NEWS"] = "news";
+    FeatureKey["PAYMENTS"] = "payments";
 })(FeatureKey || (exports.FeatureKey = FeatureKey = {}));
 var NewsStatus;
 (function (NewsStatus) {
@@ -48,7 +49,15 @@ var ComplaintStatus;
     ComplaintStatus["IN_PROGRESS"] = "in_progress";
     ComplaintStatus["RESOLVED"] = "resolved";
     ComplaintStatus["CLOSED"] = "closed";
+    ComplaintStatus["REJECTED"] = "rejected";
 })(ComplaintStatus || (exports.ComplaintStatus = ComplaintStatus = {}));
+var ComplaintPriority;
+(function (ComplaintPriority) {
+    ComplaintPriority["LOW"] = "low";
+    ComplaintPriority["MEDIUM"] = "medium";
+    ComplaintPriority["HIGH"] = "high";
+    ComplaintPriority["URGENT"] = "urgent";
+})(ComplaintPriority || (exports.ComplaintPriority = ComplaintPriority = {}));
 var WorkStatus;
 (function (WorkStatus) {
     WorkStatus["UPCOMING"] = "upcoming";
@@ -62,6 +71,20 @@ var MembershipStatus;
     MembershipStatus["REJECTED"] = "rejected";
     MembershipStatus["EXPIRED"] = "expired";
 })(MembershipStatus || (exports.MembershipStatus = MembershipStatus = {}));
+var PaymentStatus;
+(function (PaymentStatus) {
+    PaymentStatus["PENDING"] = "pending";
+    PaymentStatus["SUCCESSFUL"] = "successful";
+    PaymentStatus["FAILED"] = "failed";
+    PaymentStatus["REFUNDED"] = "refunded";
+})(PaymentStatus || (exports.PaymentStatus = PaymentStatus = {}));
+var PaymentPurpose;
+(function (PaymentPurpose) {
+    PaymentPurpose["MEMBERSHIP_FEE"] = "membership_fee";
+    PaymentPurpose["VOLUNTARY_CONTRIBUTION"] = "voluntary_contribution";
+    PaymentPurpose["EVENT_PASS"] = "event_pass";
+    PaymentPurpose["PLATFORM_SUBSCRIPTION"] = "platform_subscription";
+})(PaymentPurpose || (exports.PaymentPurpose = PaymentPurpose = {}));
 var VolunteerStatus;
 (function (VolunteerStatus) {
     VolunteerStatus["ACTIVE"] = "active";

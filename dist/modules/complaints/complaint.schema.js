@@ -47,18 +47,128 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({ type: [String], default: [] }),
     __metadata("design:type", Array)
+], Complaint.prototype, "attachments", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
 ], Complaint.prototype, "mediaUrls", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: types_1.ComplaintStatus.SUBMITTED, enum: Object.values(types_1.ComplaintStatus) }),
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Complaint.prototype, "videoUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: Object.values(types_1.ComplaintStatus),
+        default: types_1.ComplaintStatus.SUBMITTED,
+    }),
     __metadata("design:type", String)
 ], Complaint.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: Object.values(types_1.ComplaintPriority),
+        default: types_1.ComplaintPriority.MEDIUM,
+    }),
+    __metadata("design:type", String)
+], Complaint.prototype, "priority", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Complaint.prototype, "assignedTo", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Complaint.prototype, "assignedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Complaint.prototype, "assignedAt", void 0);
+__decorate([
     (0, mongoose_1.Prop)({
-        type: [{ status: String, note: String, updatedBy: mongoose_2.Types.ObjectId, updatedAt: Date }],
+        type: [
+            {
+                remark: String,
+                addedBy: { type: mongoose_2.Types.ObjectId, ref: 'AdminUser' },
+                addedByName: String,
+                isInternal: { type: Boolean, default: true },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
+        default: [],
+    }),
+    __metadata("design:type", Array)
+], Complaint.prototype, "internalRemarks", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                remark: String,
+                addedBy: { type: mongoose_2.Types.ObjectId, ref: 'AdminUser' },
+                addedByName: String,
+                isInternal: { type: Boolean, default: false },
+                createdAt: { type: Date, default: Date.now },
+            },
+        ],
+        default: [],
+    }),
+    __metadata("design:type", Array)
+], Complaint.prototype, "publicRemarks", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Complaint.prototype, "resolutionDetails", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], Complaint.prototype, "resolutionProof", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Complaint.prototype, "resolvedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Complaint.prototype, "resolvedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Complaint.prototype, "closedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Complaint.prototype, "closedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Complaint.prototype, "closingNote", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Complaint.prototype, "rejectionReason", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Complaint.prototype, "rejectedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Complaint.prototype, "rejectedBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                status: String,
+                note: String,
+                action: String,
+                updatedBy: mongoose_2.Types.ObjectId,
+                updatedByName: String,
+                updatedByRole: String,
+                isInternal: { type: Boolean, default: false },
+                proofUrls: [String],
+                updatedAt: { type: Date, default: Date.now },
+            },
+        ],
         default: [],
     }),
     __metadata("design:type", Array)
@@ -68,6 +178,11 @@ exports.Complaint = Complaint = __decorate([
 ], Complaint);
 exports.ComplaintSchema = mongoose_1.SchemaFactory.createForClass(Complaint);
 exports.ComplaintSchema.index({ tenantId: 1, status: 1 });
+exports.ComplaintSchema.index({ tenantId: 1, priority: 1 });
 exports.ComplaintSchema.index({ tenantId: 1, areaId: 1 });
+exports.ComplaintSchema.index({ tenantId: 1, category: 1 });
 exports.ComplaintSchema.index({ tenantId: 1, userId: 1 });
+exports.ComplaintSchema.index({ tenantId: 1, assignedTo: 1 });
+exports.ComplaintSchema.index({ tenantId: 1, createdAt: -1 });
+exports.ComplaintSchema.index({ tenantId: 1, complaintNumber: 1 });
 //# sourceMappingURL=complaint.schema.js.map

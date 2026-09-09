@@ -12,6 +12,7 @@ const mongoose_1 = require("@nestjs/mongoose");
 const complaints_service_1 = require("./complaints.service");
 const complaints_controller_1 = require("./complaints.controller");
 const complaint_schema_1 = require("./complaint.schema");
+const complaint_category_schema_1 = require("./complaint-category.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 let ComplaintsModule = class ComplaintsModule {
 };
@@ -21,11 +22,13 @@ exports.ComplaintsModule = ComplaintsModule = __decorate([
         imports: [
             mongoose_1.MongooseModule.forFeature([
                 { name: complaint_schema_1.Complaint.name, schema: complaint_schema_1.ComplaintSchema },
+                { name: complaint_category_schema_1.ComplaintCategory.name, schema: complaint_category_schema_1.ComplaintCategorySchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
             ]),
         ],
         controllers: [complaints_controller_1.ComplaintsController],
         providers: [complaints_service_1.ComplaintsService],
+        exports: [complaints_service_1.ComplaintsService],
     })
 ], ComplaintsModule);
 //# sourceMappingURL=complaints.module.js.map
