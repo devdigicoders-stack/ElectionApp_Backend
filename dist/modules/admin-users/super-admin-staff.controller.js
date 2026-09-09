@@ -31,8 +31,10 @@ let SuperAdminStaffController = class SuperAdminStaffController {
     }
     getAvailableRoles() {
         return {
-            roles: Object.values(super_admin_staff_dto_1.PlatformStaffRole),
+            roles: super_admin_staff_dto_1.PLATFORM_ROLES_METADATA,
+            roleKeys: Object.values(super_admin_staff_dto_1.PlatformStaffRole),
             defaultPermissions: super_admin_staff_dto_1.DEFAULT_PLATFORM_PERMISSIONS,
+            availablePermissionsByCategory: super_admin_staff_dto_1.AVAILABLE_PERMISSIONS_BY_CATEGORY,
         };
     }
     findOneStaff(id) {

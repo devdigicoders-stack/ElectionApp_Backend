@@ -18,8 +18,16 @@ export declare class SuperAdminStaffController {
         };
     }>;
     getAvailableRoles(): {
-        roles: PlatformStaffRole[];
+        roles: import("./super-admin-staff.dto").IPlatformRoleMetadata[];
+        roleKeys: PlatformStaffRole[];
         defaultPermissions: Record<PlatformStaffRole, string[]>;
+        availablePermissionsByCategory: {
+            category: string;
+            permissions: {
+                key: string;
+                label: string;
+            }[];
+        }[];
     };
     findOneStaff(id: string): Promise<import("./admin-user.schema").AdminUser & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;

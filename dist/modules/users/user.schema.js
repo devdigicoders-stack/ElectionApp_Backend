@@ -51,10 +51,46 @@ __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
 ], User.prototype, "isProfileComplete", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], User.prototype, "tags", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'citizen', enum: ['citizen', 'supporter', 'member', 'volunteer'] }),
+    __metadata("design:type", String)
+], User.prototype, "category", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'active', enum: ['active', 'inactive', 'blocked'] }),
+    __metadata("design:type", String)
+], User.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], User.prototype, "email", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], User.prototype, "profilePhoto", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], User.prototype, "address", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], User.prototype, "notes", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], User.prototype, "lastActiveAt", void 0);
 exports.User = User = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], User);
 exports.UserSchema = mongoose_1.SchemaFactory.createForClass(User);
 exports.UserSchema.index({ tenantId: 1, mobile: 1 }, { unique: true });
 exports.UserSchema.index({ tenantId: 1, areaId: 1 });
+exports.UserSchema.index({ tenantId: 1, tags: 1 });
+exports.UserSchema.index({ tenantId: 1, category: 1 });
+exports.UserSchema.index({ tenantId: 1, status: 1 });
+exports.UserSchema.index({ tenantId: 1, createdAt: -1 });
 //# sourceMappingURL=user.schema.js.map

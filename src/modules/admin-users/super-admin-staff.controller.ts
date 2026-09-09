@@ -18,6 +18,8 @@ import {
   QueryStaffDto,
   PlatformStaffRole,
   DEFAULT_PLATFORM_PERMISSIONS,
+  PLATFORM_ROLES_METADATA,
+  AVAILABLE_PERMISSIONS_BY_CATEGORY,
 } from './super-admin-staff.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
@@ -44,7 +46,7 @@ export class SuperAdminStaffController {
   }
 
   /**
-   * List all platform staff members with pagination & search
+   * List all platform staff with role and status filters
    * GET /super-admin/staff
    */
   @Get()
@@ -61,8 +63,10 @@ export class SuperAdminStaffController {
   @Roles(UserRole.SUPER_ADMIN)
   getAvailableRoles() {
     return {
-      roles: Object.values(PlatformStaffRole),
+      roles: PLATFORM_ROLES_METADATA,
+      roleKeys: Object.values(PlatformStaffRole),
       defaultPermissions: DEFAULT_PLATFORM_PERMISSIONS,
+      availablePermissionsByCategory: AVAILABLE_PERMISSIONS_BY_CATEGORY,
     };
   }
 

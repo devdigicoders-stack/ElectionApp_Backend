@@ -6,6 +6,21 @@ export declare enum PlatformStaffRole {
     FINANCE_MANAGER = "finance_manager"
 }
 export declare const DEFAULT_PLATFORM_PERMISSIONS: Record<PlatformStaffRole, string[]>;
+export interface IPlatformRoleMetadata {
+    key: PlatformStaffRole;
+    name: string;
+    description: string;
+    isSystem: boolean;
+    permissions: string[];
+}
+export declare const PLATFORM_ROLES_METADATA: IPlatformRoleMetadata[];
+export declare const AVAILABLE_PERMISSIONS_BY_CATEGORY: {
+    category: string;
+    permissions: {
+        key: string;
+        label: string;
+    }[];
+}[];
 export declare class CreateSuperAdminStaffDto {
     name: string;
     email: string;

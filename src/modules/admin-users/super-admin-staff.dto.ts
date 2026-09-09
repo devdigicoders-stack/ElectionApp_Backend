@@ -39,6 +39,83 @@ export const DEFAULT_PLATFORM_PERMISSIONS: Record<PlatformStaffRole, string[]> =
   ],
 };
 
+export interface IPlatformRoleMetadata {
+  key: PlatformStaffRole;
+  name: string;
+  description: string;
+  isSystem: boolean;
+  permissions: string[];
+}
+
+export const PLATFORM_ROLES_METADATA: IPlatformRoleMetadata[] = [
+  {
+    key: PlatformStaffRole.SUPER_ADMIN,
+    name: 'Super Admin',
+    description: 'Full unrestricted platform-level control across all tenants, plans, global settings, and billing.',
+    isSystem: true,
+    permissions: DEFAULT_PLATFORM_PERMISSIONS[PlatformStaffRole.SUPER_ADMIN],
+  },
+  {
+    key: PlatformStaffRole.SALES_MANAGER,
+    name: 'Sales Manager',
+    description: 'Handles prospective client onboarding, tenant creation, plans, and subscription inquiries.',
+    isSystem: false,
+    permissions: DEFAULT_PLATFORM_PERMISSIONS[PlatformStaffRole.SALES_MANAGER],
+  },
+  {
+    key: PlatformStaffRole.SUPPORT_EXECUTIVE,
+    name: 'Support Executive',
+    description: 'Handles client support, complaints review, audit logs, and authorized tenant troubleshooting.',
+    isSystem: false,
+    permissions: DEFAULT_PLATFORM_PERMISSIONS[PlatformStaffRole.SUPPORT_EXECUTIVE],
+  },
+  {
+    key: PlatformStaffRole.TECHNICAL_SUPPORT,
+    name: 'Technical Support',
+    description: 'Manages custom domains, SSL DNS verification, system health, and tech issues.',
+    isSystem: false,
+    permissions: DEFAULT_PLATFORM_PERMISSIONS[PlatformStaffRole.TECHNICAL_SUPPORT],
+  },
+  {
+    key: PlatformStaffRole.FINANCE_MANAGER,
+    name: 'Finance Manager',
+    description: 'Oversees SaaS revenue, client subscriptions, invoices, and plan billing cycles.',
+    isSystem: false,
+    permissions: DEFAULT_PLATFORM_PERMISSIONS[PlatformStaffRole.FINANCE_MANAGER],
+  },
+];
+
+export const AVAILABLE_PERMISSIONS_BY_CATEGORY = [
+  {
+    category: 'Tenants & Onboarding',
+    permissions: [
+      { key: 'tenants:read', label: 'View Tenants' },
+      { key: 'tenants:create', label: 'Create New Tenants' },
+      { key: 'tenants:impersonate', label: 'Tenant Support Impersonation' },
+      { key: 'tenants:domain', label: 'Manage Custom Domains' },
+    ],
+  },
+  {
+    category: 'Subscriptions & Billing',
+    permissions: [
+      { key: 'subscriptions:read', label: 'View Client Subscriptions' },
+      { key: 'subscriptions:manage', label: 'Modify & Renew Subscriptions' },
+      { key: 'invoices:read', label: 'View Invoices' },
+      { key: 'revenue:read', label: 'View Revenue & Financial Reports' },
+      { key: 'plans:read', label: 'View Subscription Plans' },
+    ],
+  },
+  {
+    category: 'Platform & Monitoring',
+    permissions: [
+      { key: 'audit_logs:read', label: 'View Security Audit Trail' },
+      { key: 'usage:read', label: 'View Tenant Resource Usage & Overages' },
+      { key: 'system:health', label: 'System Health & Metrics' },
+      { key: 'complaints:read', label: 'Read Complaints' },
+    ],
+  },
+];
+
 export class CreateSuperAdminStaffDto {
   @IsString()
   @IsNotEmpty()

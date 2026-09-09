@@ -35,6 +35,7 @@ import { AuditLogsModule } from './modules/audit-logs/audit-logs.module';
 import { UsageModule } from './modules/usage/usage.module';
 import { NewsModule } from './modules/news/news.module';
 import { RegistrationFormModule } from './modules/registration-form/registration-form.module';
+import { CitizenDashboardModule } from './modules/citizen-dashboard/citizen-dashboard.module';
 
 @Module({
   imports: [
@@ -85,6 +86,7 @@ import { RegistrationFormModule } from './modules/registration-form/registration
     UsageModule,
     NewsModule,
     RegistrationFormModule,
+    CitizenDashboardModule,
   ],
 })
 export class AppModule {
