@@ -109,12 +109,26 @@ export class AuthService {
     const isValid = await bcrypt.compare(dto.password, admin.passwordHash);
     if (!isValid) throw new UnauthorizedException('Invalid credentials');
 
+    const permissions = admin.permissions?.length
+      ? admin.permissions
+      : (admin.role === 'super_admin' ? ['*'] : []);
+
     const token = this.jwtService.sign({
       sub: admin._id,
       role: admin.role,
       isSuperAdmin: true,
+      permissions,
     });
 
-    return { token, admin: { id: admin._id, name: admin.name, role: admin.role } };
+    return {
+      token,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+        permissions,
+      },
+    };
   }
 }

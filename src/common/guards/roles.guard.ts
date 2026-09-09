@@ -19,6 +19,12 @@ export class RolesGuard implements CanActivate {
     if (!requiredRoles?.length) return true;
 
     const { user } = context.switchToHttp().getRequest();
+
+    // Allow platform staff / super admin users when route requires SUPER_ADMIN
+    if (requiredRoles.includes(UserRole.SUPER_ADMIN) && user?.isSuperAdmin) {
+      return true;
+    }
+
     if (!requiredRoles.includes(user?.role)) {
       throw new ForbiddenException('Insufficient permissions');
     }

@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.RolesGuard = exports.Roles = exports.ROLES_KEY = void 0;
 const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
+const types_1 = require("../../shared/types");
 exports.ROLES_KEY = 'roles';
 const Roles = (...roles) => {
     return (target, key, descriptor) => {
@@ -29,6 +30,9 @@ let RolesGuard = class RolesGuard {
         if (!requiredRoles?.length)
             return true;
         const { user } = context.switchToHttp().getRequest();
+        if (requiredRoles.includes(types_1.UserRole.SUPER_ADMIN) && user?.isSuperAdmin) {
+            return true;
+        }
         if (!requiredRoles.includes(user?.role)) {
             throw new common_1.ForbiddenException('Insufficient permissions');
         }

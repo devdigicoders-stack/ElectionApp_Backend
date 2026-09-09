@@ -32,7 +32,9 @@ export declare class AuthController {
         admin: {
             id: import("mongoose").Types.ObjectId;
             name: string;
+            email: string;
             role: string;
+            permissions: string[];
         };
     }>;
 }
