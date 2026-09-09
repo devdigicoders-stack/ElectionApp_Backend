@@ -423,12 +423,7 @@ let CustomDomainsService = class CustomDomainsService {
         const pageNum = Math.max(1, Number(page));
         const limitNum = Math.max(1, Number(limit));
         const skip = (pageNum - 1) * limitNum;
-        const filter = {
-            $or: [
-                { customDomain: { $ne: null, $exists: true } },
-                { 'customDomainVerification.domain': { $ne: null, $exists: true } },
-            ],
-        };
+        const filter = {};
         if (status === 'verified') {
             filter.isCustomDomainVerified = true;
         }
@@ -439,16 +434,16 @@ let CustomDomainsService = class CustomDomainsService {
         else if (status === 'failed') {
             filter['customDomainVerification.status'] = 'failed';
         }
+        else if (status === 'unconfigured') {
+            filter.customDomain = { $in: [null, undefined] };
+            filter['customDomainVerification.domain'] = { $in: [null, undefined] };
+        }
         if (search) {
-            filter.$and = [
-                {
-                    $or: [
-                        { customDomain: { $regex: search, $options: 'i' } },
-                        { 'customDomainVerification.domain': { $regex: search, $options: 'i' } },
-                        { name: { $regex: search, $options: 'i' } },
-                        { slug: { $regex: search, $options: 'i' } },
-                    ],
-                },
+            filter.$or = [
+                { customDomain: { $regex: search, $options: 'i' } },
+                { 'customDomainVerification.domain': { $regex: search, $options: 'i' } },
+                { name: { $regex: search, $options: 'i' } },
+                { slug: { $regex: search, $options: 'i' } },
             ];
         }
         const [tenants, total, verifiedCount, pendingCount, failedCount] = await Promise.all([
@@ -493,7 +488,7 @@ let CustomDomainsService = class CustomDomainsService {
                 limit: limitNum,
                 totalPages: Math.ceil(total / limitNum) || 1,
                 stats: {
-                    totalConfigured: total,
+                    totalConfigured: verifiedCount + pendingCount + failedCount,
                     verified: verifiedCount,
                     pending: pendingCount,
                     failed: failedCount,

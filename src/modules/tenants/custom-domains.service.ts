@@ -479,12 +479,7 @@ export class CustomDomainsService {
     const limitNum = Math.max(1, Number(limit));
     const skip = (pageNum - 1) * limitNum;
 
-    const filter: any = {
-      $or: [
-        { customDomain: { $ne: null, $exists: true } },
-        { 'customDomainVerification.domain': { $ne: null, $exists: true } },
-      ],
-    };
+    const filter: any = {};
 
     if (status === 'verified') {
       filter.isCustomDomainVerified = true;
@@ -493,18 +488,17 @@ export class CustomDomainsService {
       filter.isCustomDomainVerified = false;
     } else if (status === 'failed') {
       filter['customDomainVerification.status'] = 'failed';
+    } else if (status === 'unconfigured') {
+      filter.customDomain = { $in: [null, undefined] };
+      filter['customDomainVerification.domain'] = { $in: [null, undefined] };
     }
 
     if (search) {
-      filter.$and = [
-        {
-          $or: [
-            { customDomain: { $regex: search, $options: 'i' } },
-            { 'customDomainVerification.domain': { $regex: search, $options: 'i' } },
-            { name: { $regex: search, $options: 'i' } },
-            { slug: { $regex: search, $options: 'i' } },
-          ],
-        },
+      filter.$or = [
+        { customDomain: { $regex: search, $options: 'i' } },
+        { 'customDomainVerification.domain': { $regex: search, $options: 'i' } },
+        { name: { $regex: search, $options: 'i' } },
+        { slug: { $regex: search, $options: 'i' } },
       ];
     }
 
@@ -552,7 +546,7 @@ export class CustomDomainsService {
         limit: limitNum,
         totalPages: Math.ceil(total / limitNum) || 1,
         stats: {
-          totalConfigured: total,
+          totalConfigured: verifiedCount + pendingCount + failedCount,
           verified: verifiedCount,
           pending: pendingCount,
           failed: failedCount,

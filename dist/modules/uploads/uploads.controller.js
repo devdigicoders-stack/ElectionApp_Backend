@@ -21,7 +21,7 @@ const fs_1 = require("fs");
 let UploadsController = class UploadsController {
     uploadFiles(req, module, files) {
         const tenantSlug = req.tenant?.slug || 'general';
-        const urls = files.map((f) => `/uploads/${tenantSlug}/${module}/${f.filename}`);
+        const urls = (files || []).map((f) => `/uploads/${tenantSlug}/${module}/${f.filename}`);
         return { urls };
     }
 };

@@ -11,14 +11,18 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.DomainQueryDto = exports.VerifyDomainDto = exports.ConfigureDomainDto = void 0;
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class ConfigureDomainDto {
 }
 exports.ConfigureDomainDto = ConfigureDomainDto;
 __decorate([
     (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_transformer_1.Transform)(({ value }) => typeof value === 'string'
+        ? value.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').trim().toLowerCase()
+        : value),
     (0, class_validator_1.Matches)(/^(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/, {
-        message: 'Domain must be a valid domain or subdomain name (e.g. rajeshsharma.in or www.rajeshsharma.in)',
+        message: 'Domain must be a valid domain or subdomain name without http/https (e.g. wncoders.com or www.wncoders.com)',
     }),
     __metadata("design:type", String)
 ], ConfigureDomainDto.prototype, "domain", void 0);

@@ -36,7 +36,7 @@ export class UploadsController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     const tenantSlug = req.tenant?.slug || 'general';
-    const urls = files.map((f) => `/uploads/${tenantSlug}/${module}/${f.filename}`);
+    const urls = (files || []).map((f) => `/uploads/${tenantSlug}/${module}/${f.filename}`);
     return { urls };
   }
 }

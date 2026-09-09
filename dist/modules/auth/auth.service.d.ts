@@ -39,7 +39,9 @@ export declare class AuthService {
         admin: {
             id: import("mongoose").Types.ObjectId;
             name: string;
+            email: string;
             role: string;
+            permissions: string[];
         };
     }>;
 }

@@ -47,7 +47,7 @@ let AppModule = class AppModule {
     configure(consumer) {
         consumer
             .apply(tenant_middleware_1.TenantMiddleware)
-            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET })
+            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET }, { path: 'uploads/(.*)', method: common_1.RequestMethod.ALL })
             .forRoutes('*');
     }
 };

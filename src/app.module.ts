@@ -98,6 +98,7 @@ export class AppModule {
         { path: 'auth/super-admin/(.*)', method: RequestMethod.ALL },
         { path: 'plans', method: RequestMethod.GET },
         { path: 'plans/(.*)', method: RequestMethod.GET },
+        { path: 'uploads/(.*)', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }
