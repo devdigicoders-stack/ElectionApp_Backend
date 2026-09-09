@@ -36,6 +36,7 @@ import { UsageModule } from './modules/usage/usage.module';
 import { NewsModule } from './modules/news/news.module';
 import { RegistrationFormModule } from './modules/registration-form/registration-form.module';
 import { CitizenDashboardModule } from './modules/citizen-dashboard/citizen-dashboard.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -87,6 +88,7 @@ import { CitizenDashboardModule } from './modules/citizen-dashboard/citizen-dash
     NewsModule,
     RegistrationFormModule,
     CitizenDashboardModule,
+    PaymentsModule,
   ],
 })
 export class AppModule {
@@ -98,6 +100,7 @@ export class AppModule {
         { path: 'auth/super-admin/(.*)', method: RequestMethod.ALL },
         { path: 'plans', method: RequestMethod.GET },
         { path: 'plans/(.*)', method: RequestMethod.GET },
+        { path: 'payments/webhook', method: RequestMethod.ALL },
       )
       .forRoutes('*');
   }

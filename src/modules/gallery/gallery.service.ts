@@ -13,14 +13,38 @@ export class GalleryService {
     return this.galleryModel.create({ tenantId: tenant._id, ...data });
   }
 
-  async findAll(tenant: TenantDocument, filters: { type?: GalleryType; category?: string; page?: number; limit?: number }) {
-    const { type, category, page = 1, limit = 20 } = filters;
-    const query: any = { tenantId: tenant._id, isPublished: true };
+  async findAll(
+    tenant: TenantDocument,
+    filters: {
+      type?: GalleryType;
+      category?: string;
+      tag?: string;
+      search?: string;
+      all?: boolean;
+      page?: number;
+      limit?: number;
+    },
+  ) {
+    const { type, category, tag, search, all, page = 1, limit = 20 } = filters;
+    const query: any = { tenantId: tenant._id };
+    if (!all) query.isPublished = true;
     if (type) query.type = type;
     if (category) query.category = category;
+    if (tag) query.tags = tag;
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+        { tags: { $regex: search, $options: 'i' } },
+      ];
+    }
 
     const [data, total] = await Promise.all([
-      this.galleryModel.find(query).sort({ sortOrder: 1, createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+      this.galleryModel
+        .find(query)
+        .sort({ sortOrder: 1, createdAt: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit),
       this.galleryModel.countDocuments(query),
     ]);
     return { data, total, page, limit };

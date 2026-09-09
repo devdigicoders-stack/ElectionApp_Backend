@@ -12,6 +12,9 @@ export class GalleryItem {
   @Prop({ required: true })
   title: string;
 
+  @Prop({ default: null })
+  description?: string;
+
   @Prop({ required: true, enum: Object.values(GalleryType) })
   type: GalleryType; // photo | video
 
@@ -23,6 +26,9 @@ export class GalleryItem {
 
   @Prop({ default: null })
   category?: string;
+
+  @Prop({ type: [String], default: [] })
+  tags?: string[];
 
   @Prop({ type: Types.ObjectId, ref: 'Area', default: null })
   areaId?: Types.ObjectId;

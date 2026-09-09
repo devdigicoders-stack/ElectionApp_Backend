@@ -28,6 +28,7 @@ export enum FeatureKey {
   NOTIFICATIONS = 'notifications',
   BANNERS = 'banners',
   NEWS = 'news',
+  PAYMENTS = 'payments',
 }
 
 export enum NewsStatus {
@@ -44,6 +45,14 @@ export enum ComplaintStatus {
   IN_PROGRESS = 'in_progress',
   RESOLVED = 'resolved',
   CLOSED = 'closed',
+  REJECTED = 'rejected',
+}
+
+export enum ComplaintPriority {
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
 }
 
 export enum WorkStatus {
@@ -57,6 +66,20 @@ export enum MembershipStatus {
   APPROVED = 'approved',
   REJECTED = 'rejected',
   EXPIRED = 'expired',
+}
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  SUCCESSFUL = 'successful',
+  FAILED = 'failed',
+  REFUNDED = 'refunded',
+}
+
+export enum PaymentPurpose {
+  MEMBERSHIP_FEE = 'membership_fee',
+  VOLUNTARY_CONTRIBUTION = 'voluntary_contribution',
+  EVENT_PASS = 'event_pass',
+  PLATFORM_SUBSCRIPTION = 'platform_subscription',
 }
 
 export enum VolunteerStatus {
