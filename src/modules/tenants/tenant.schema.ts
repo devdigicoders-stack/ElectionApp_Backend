@@ -1,0 +1,86 @@
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
+import { TenantStatus } from '../../shared/types';
+
+export type TenantDocument = Tenant & Document;
+
+@Schema({ timestamps: true })
+export class Tenant {
+  @Prop({ required: true, unique: true, lowercase: true, trim: true })
+  slug: string;
+
+  @Prop({ required: true })
+  name: string;
+
+  @Prop({ unique: true, sparse: true })
+  customDomain?: string;
+
+  @Prop({ default: false })
+  isCustomDomainVerified?: boolean;
+
+  @Prop({ default: null })
+  customDomainVerifiedAt?: Date;
+
+  @Prop({
+    type: Object,
+    default: () => ({
+      domain: null,
+      status: 'unconfigured',
+      verificationToken: null,
+      targetCname: 'cname.madiyayu.com',
+      dnsRecords: [],
+      lastCheckedAt: null,
+      failureReason: null,
+    }),
+  })
+  customDomainVerification?: {
+    domain?: string | null;
+    status?: 'unconfigured' | 'pending' | 'verified' | 'failed';
+    verificationToken?: string | null;
+    targetCname?: string | null;
+    dnsRecords?: Array<{
+      type: 'TXT' | 'CNAME' | 'A';
+      name: string;
+      value: string;
+      purpose: string;
+      ttl?: string;
+    }>;
+    lastCheckedAt?: Date | null;
+    failureReason?: string | null;
+  };
+
+  @Prop({ default: TenantStatus.TRIAL, enum: Object.values(TenantStatus) })
+  status: TenantStatus;
+
+  @Prop({ type: Object, default: {} })
+  branding: {
+    logoUrl?: string;
+    faviconUrl?: string;
+    pwaIconUrl?: string;
+    primaryColor?: string;
+    secondaryColor?: string;
+    leaderName?: string;
+    tagline?: string;
+  };
+
+  @Prop({ type: Object, default: {} })
+  settings: {
+    registrationFields?: any[];
+    areaLevels?: string[];
+    timezone?: string;
+  };
+
+  @Prop({ type: Types.ObjectId, ref: 'Plan', default: null })
+  planId?: Types.ObjectId;
+
+  @Prop({ default: null })
+  trialEndsAt?: Date;
+
+  @Prop({ default: null })
+  subscriptionStartsAt?: Date;
+
+  @Prop({ default: null })
+  subscriptionEndsAt?: Date;
+}
+
+export const TenantSchema = SchemaFactory.createForClass(Tenant);
