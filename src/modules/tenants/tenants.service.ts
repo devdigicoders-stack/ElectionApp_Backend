@@ -641,4 +641,20 @@ export class TenantsService {
       limit: 50,
     });
   }
+
+  /**
+   * Get admin users for a specific tenant (Super Admin use)
+   * GET /super-admin/tenants/:id/admin-users
+   */
+  async getAdminUsers(tenantId: string) {
+    const tenant = await this.tenantModel.findById(tenantId);
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const admins = await this.adminUserModel
+      .find({ tenantId: new Types.ObjectId(tenantId) })
+      .select('name email role isActive createdAt')
+      .lean();
+
+    return admins;
+  }
 }

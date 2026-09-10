@@ -94,6 +94,11 @@ export class TenantsController {
     return this.tenantsService.toggleFeature(id, featureKey, isEnabled);
   }
 
+  @Get(':id/admin-users')
+  getAdminUsers(@Param('id') tenantId: string) {
+    return this.tenantsService.getAdminUsers(tenantId);
+  }
+
   @Post(':id/admin-users')
   createAdminUser(
     @Param('id') tenantId: string,
