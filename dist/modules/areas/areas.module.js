@@ -9,9 +9,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AreasModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const core_1 = require("@nestjs/core");
 const areas_service_1 = require("./areas.service");
 const areas_controller_1 = require("./areas.controller");
 const area_schema_1 = require("./area.schema");
+const roles_guard_1 = require("../../common/guards/roles.guard");
 let AreasModule = class AreasModule {
 };
 exports.AreasModule = AreasModule;
@@ -24,7 +26,7 @@ exports.AreasModule = AreasModule = __decorate([
             ]),
         ],
         controllers: [areas_controller_1.AreasController],
-        providers: [areas_service_1.AreasService],
+        providers: [areas_service_1.AreasService, roles_guard_1.RolesGuard, core_1.Reflector],
         exports: [areas_service_1.AreasService, mongoose_1.MongooseModule],
     })
 ], AreasModule);

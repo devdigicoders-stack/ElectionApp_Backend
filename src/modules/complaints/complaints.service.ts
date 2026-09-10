@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
+import { Response } from 'express';
 import { Complaint, ComplaintDocument } from './complaint.schema';
 import { ComplaintCategory, ComplaintCategoryDocument, DEFAULT_COMPLAINT_CATEGORIES } from './complaint-category.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { ComplaintStatus, ComplaintPriority } from '../../shared/types';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import {
   CreateComplaintDto,
   QueryComplaintsDto,
@@ -23,6 +25,7 @@ export class ComplaintsService {
   constructor(
     @InjectModel(Complaint.name) private complaintModel: Model<ComplaintDocument>,
     @InjectModel(ComplaintCategory.name) private categoryModel: Model<ComplaintCategoryDocument>,
+    @Optional() private auditLogsService?: AuditLogsService,
   ) {}
 
   /**
@@ -727,5 +730,149 @@ export class ComplaintsService {
     const deleted = await this.categoryModel.findOneAndDelete({ _id: catId, tenantId: tenant._id });
     if (!deleted) throw new NotFoundException('Category not found');
     return { message: 'Category deleted successfully' };
+  }
+
+  // ══════════════════════════════════════════════════════════════
+  // DATA EXPORT SYSTEM (SRS Sec 58 & 59)
+  // ══════════════════════════════════════════════════════════════
+
+  /**
+   * Export Filtered Complaints to CSV or Excel (SRS Sec 58)
+   */
+  async exportComplaints(
+    tenant: TenantDocument,
+    query: QueryComplaintsDto,
+    res: Response,
+    format: string = 'csv',
+    adminUser?: any,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const filter: any = { tenantId: tenant._id };
+
+    if (query.status) filter.status = query.status;
+    if (query.priority) filter.priority = query.priority;
+    if (query.category) filter.category = query.category;
+    if (query.areaId && Types.ObjectId.isValid(query.areaId)) {
+      filter.areaId = new Types.ObjectId(query.areaId);
+    }
+    if (query.assignedTo && Types.ObjectId.isValid(query.assignedTo)) {
+      filter.assignedTo = new Types.ObjectId(query.assignedTo);
+    }
+    if (query.search) {
+      filter.$or = [
+        { complaintNumber: { $regex: query.search.trim(), $options: 'i' } },
+        { title: { $regex: query.search.trim(), $options: 'i' } },
+        { description: { $regex: query.search.trim(), $options: 'i' } },
+      ];
+    }
+    if (query.startDate || query.endDate) {
+      filter.createdAt = {};
+      if (query.startDate) filter.createdAt.$gte = new Date(query.startDate);
+      if (query.endDate) filter.createdAt.$lte = new Date(query.endDate);
+    }
+
+    const complaints = await this.complaintModel
+      .find(filter)
+      .populate('userId', 'name mobile')
+      .populate('areaId', 'name type')
+      .populate('assignedTo', 'name email role')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const maskMobile = (mobile?: string) => {
+      if (!mobile || mobile.length < 5) return 'N/A';
+      return mobile.slice(0, 2) + '****' + mobile.slice(-4);
+    };
+
+    const headers = [
+      'Complaint No',
+      'Title',
+      'Category',
+      'Priority',
+      'Status',
+      'Citizen Name',
+      'Citizen Mobile',
+      'Area / Ward',
+      'Assigned Staff',
+      'Submitted Date',
+      'Resolved Date',
+      'Closed Date',
+      'Resolution Details',
+      'Resolution Proof Links',
+    ];
+
+    const rows = complaints.map((c: any) => {
+      const citizen = c.userId || {};
+      const area = c.areaId || {};
+      const assigned = c.assignedTo || {};
+      const proofs = (c.resolutionProof || []).join('; ');
+
+      return [
+        escapeCsv(c.complaintNumber),
+        escapeCsv(c.title),
+        escapeCsv(c.category),
+        escapeCsv(c.priority),
+        escapeCsv(c.status),
+        escapeCsv(citizen.name || 'Citizen'),
+        escapeCsv(maskMobile(citizen.mobile)),
+        escapeCsv(area.name ? `${area.name} (${area.type || 'Area'})` : 'Constituency'),
+        escapeCsv(assigned.name || 'Unassigned'),
+        escapeCsv(c.createdAt ? new Date(c.createdAt).toISOString() : ''),
+        escapeCsv(c.resolvedAt ? new Date(c.resolvedAt).toISOString() : ''),
+        escapeCsv(c.closedAt ? new Date(c.closedAt).toISOString() : ''),
+        escapeCsv(c.resolutionDetails || ''),
+        escapeCsv(proofs),
+      ].join(',');
+    });
+
+    const isExcel = (format || '').toLowerCase() === 'excel' || (format || '').toLowerCase() === 'xlsx';
+    // Prefix UTF-8 BOM (\uFEFF) for Excel compatibility so Unicode/Hindi renders without corruption
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `complaints-${tenant.slug || 'export'}-${timestamp}.csv`;
+
+    const contentType = isExcel
+      ? 'application/vnd.ms-excel; charset=utf-8'
+      : 'text/csv; charset=utf-8';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    // Audit log (SRS Sec 58 & 59)
+    if (this.auditLogsService && adminUser) {
+      await this.auditLogsService
+        .log({
+          tenantId: tenant._id,
+          tenantName: tenant.name,
+          action: 'DATA_EXPORT_COMPLAINTS',
+          performedBy: {
+            id: adminUser.sub || adminUser.id || 'admin',
+            email: adminUser.email || 'admin@platform.local',
+            name: adminUser.name || 'Admin',
+            role: adminUser.role || 'admin',
+          },
+          details: {
+            format: isExcel ? 'excel' : 'csv',
+            recordCount: complaints.length,
+            filterQuery: query,
+            filename,
+          },
+          ipAddress,
+          userAgent,
+        })
+        .catch(() => {});
+    }
+
+    return res.status(200).send(csvContent);
   }
 }

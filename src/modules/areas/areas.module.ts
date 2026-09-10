@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Reflector } from '@nestjs/core';
 import { AreasService } from './areas.service';
 import { AreasController } from './areas.controller';
 import { AreaLevel, AreaLevelSchema, Area, AreaSchema } from './area.schema';
+import { RolesGuard } from '../../common/guards/roles.guard';
 
 @Module({
   imports: [
@@ -12,7 +14,7 @@ import { AreaLevel, AreaLevelSchema, Area, AreaSchema } from './area.schema';
     ]),
   ],
   controllers: [AreasController],
-  providers: [AreasService],
+  providers: [AreasService, RolesGuard, Reflector],
   exports: [AreasService, MongooseModule],
 })
 export class AreasModule {}

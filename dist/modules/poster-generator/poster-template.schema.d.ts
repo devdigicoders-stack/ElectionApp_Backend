@@ -18,15 +18,23 @@ export interface TemplateField {
         fontColor?: string;
         fontWeight?: string;
         textAlign?: string;
+        maskShape?: 'circle' | 'rectangle' | 'rounded';
     };
 }
 export declare class PosterTemplate {
     tenantId: Types.ObjectId;
     title: string;
     category: string;
+    description?: string;
     templateImageUrl: string;
     thumbnailUrl?: string;
+    width: number;
+    height: number;
+    dimensionPreset: string;
     fields: TemplateField[];
+    includeTenantBranding: boolean;
+    expiresAt?: Date;
+    tags: string[];
     isActive: boolean;
     sortOrder: number;
     usageCount: number;
@@ -67,6 +75,15 @@ export declare const PosterTemplateSchema: import("mongoose").Schema<PosterTempl
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    description?: import("mongoose").SchemaDefinitionProperty<string | undefined, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     templateImageUrl?: import("mongoose").SchemaDefinitionProperty<string, PosterTemplate, Document<unknown, {}, PosterTemplate, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
@@ -85,7 +102,61 @@ export declare const PosterTemplateSchema: import("mongoose").Schema<PosterTempl
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    width?: import("mongoose").SchemaDefinitionProperty<number, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    height?: import("mongoose").SchemaDefinitionProperty<number, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    dimensionPreset?: import("mongoose").SchemaDefinitionProperty<string, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     fields?: import("mongoose").SchemaDefinitionProperty<TemplateField[], PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    includeTenantBranding?: import("mongoose").SchemaDefinitionProperty<boolean, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    expiresAt?: import("mongoose").SchemaDefinitionProperty<Date | undefined, PosterTemplate, Document<unknown, {}, PosterTemplate, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    tags?: import("mongoose").SchemaDefinitionProperty<string[], PosterTemplate, Document<unknown, {}, PosterTemplate, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<PosterTemplate & {
         _id: Types.ObjectId;

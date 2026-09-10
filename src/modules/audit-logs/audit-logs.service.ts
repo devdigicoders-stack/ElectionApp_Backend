@@ -78,4 +78,17 @@ export class AuditLogsService {
       .limit(limit)
       .lean();
   }
+
+  /**
+   * Get export history logs (SRS Sec 58 & Sec 59)
+   */
+  async findExportHistory(tenantId?: any, limit = 50) {
+    const filter: any = { action: { $regex: '^DATA_EXPORT_' } };
+    if (tenantId) filter.tenantId = new Types.ObjectId(tenantId.toString());
+    return this.auditLogModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+  }
 }

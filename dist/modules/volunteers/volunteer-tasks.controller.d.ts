@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { VolunteerTasksService } from './volunteer-tasks.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { CreateVolunteerTaskDto, UpdateVolunteerTaskDto, SubmitVolunteerTaskDto, ReviewVolunteerTaskDto, QueryVolunteerTaskDto } from './volunteer-task.dto';
@@ -34,6 +35,9 @@ export declare class VolunteerTasksController {
     }> & {
         __v: number;
     })[]>;
+    exportTasks(req: TenantRequest & {
+        user: any;
+    }, res: Response, query: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
     getStats(req: TenantRequest): Promise<{
         totalTasks: number;
         pending: number;

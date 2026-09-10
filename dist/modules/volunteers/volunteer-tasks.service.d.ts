@@ -1,13 +1,16 @@
+import { Response } from 'express';
 import { Model, Types } from 'mongoose';
 import { VolunteerTask, VolunteerTaskDocument } from './volunteer-task.schema';
 import { VolunteerDocument } from './volunteer.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { VolunteerTaskStatus } from '../../shared/types';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateVolunteerTaskDto, UpdateVolunteerTaskDto, SubmitVolunteerTaskDto, ReviewVolunteerTaskDto, QueryVolunteerTaskDto } from './volunteer-task.dto';
 export declare class VolunteerTasksService {
     private taskModel;
     private volunteerModel;
-    constructor(taskModel: Model<VolunteerTaskDocument>, volunteerModel: Model<VolunteerDocument>);
+    private auditLogsService?;
+    constructor(taskModel: Model<VolunteerTaskDocument>, volunteerModel: Model<VolunteerDocument>, auditLogsService?: AuditLogsService | undefined);
     create(tenant: TenantDocument, dto: CreateVolunteerTaskDto, adminUser: any): Promise<import("mongoose").Document<unknown, {}, VolunteerTaskDocument, {}, import("mongoose").DefaultSchemaOptions> & VolunteerTask & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {
@@ -101,4 +104,5 @@ export declare class VolunteerTasksService {
         success: boolean;
         message: string;
     }>;
+    exportVolunteerTasks(tenant: TenantDocument, query: any, res: Response, format?: string, adminUser?: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
 }

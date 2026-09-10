@@ -6,6 +6,7 @@ import { Membership, MembershipDocument } from '../membership/membership.schema'
 import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
 import { Complaint, ComplaintDocument } from '../complaints/complaint.schema';
 import { AreaDocument } from '../areas/area.schema';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CitizenQueryDto, UpdateCitizenDto, UpdateCitizenStatusDto, UpgradeCategoryDto, AssignMembershipDto, AssignVolunteerDto } from './citizens.dto';
 import { MembershipStatus, VolunteerStatus } from '../../shared/types';
 export declare class UsersService {
@@ -14,7 +15,8 @@ export declare class UsersService {
     private volunteerModel;
     private complaintModel;
     private areaModel;
-    constructor(userModel: Model<UserDocument>, membershipModel: Model<MembershipDocument>, volunteerModel: Model<VolunteerDocument>, complaintModel: Model<ComplaintDocument>, areaModel: Model<AreaDocument>);
+    private auditLogsService?;
+    constructor(userModel: Model<UserDocument>, membershipModel: Model<MembershipDocument>, volunteerModel: Model<VolunteerDocument>, complaintModel: Model<ComplaintDocument>, areaModel: Model<AreaDocument>, auditLogsService?: AuditLogsService | undefined);
     findAll(tenant: TenantDocument, filters: {
         areaId?: string;
         search?: string;
@@ -274,7 +276,7 @@ export declare class UsersService {
             id: string;
         };
     }>;
-    exportCitizens(tenant: TenantDocument, queryDto: CitizenQueryDto, res: Response): Promise<Response<any, Record<string, any>>>;
+    exportCitizens(tenant: TenantDocument, queryDto: CitizenQueryDto, res: Response, adminUser?: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
     getCrmAnalytics(tenant: TenantDocument): Promise<{
         overview: {
             totalCitizens: number;

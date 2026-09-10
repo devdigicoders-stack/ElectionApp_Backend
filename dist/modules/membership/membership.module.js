@@ -12,9 +12,11 @@ const mongoose_1 = require("@nestjs/mongoose");
 const membership_service_1 = require("./membership.service");
 const membership_controller_1 = require("./membership.controller");
 const membership_schema_1 = require("./membership.schema");
+const membership_plan_schema_1 = require("./membership-plan.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const user_schema_1 = require("../users/user.schema");
 const area_schema_1 = require("../areas/area.schema");
+const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
 let MembershipModule = class MembershipModule {
 };
 exports.MembershipModule = MembershipModule;
@@ -23,14 +25,16 @@ exports.MembershipModule = MembershipModule = __decorate([
         imports: [
             mongoose_1.MongooseModule.forFeature([
                 { name: membership_schema_1.Membership.name, schema: membership_schema_1.MembershipSchema },
+                { name: membership_plan_schema_1.MembershipPlan.name, schema: membership_plan_schema_1.MembershipPlanSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
                 { name: area_schema_1.Area.name, schema: area_schema_1.AreaSchema },
             ]),
+            audit_logs_module_1.AuditLogsModule,
         ],
         controllers: [membership_controller_1.MembershipController],
         providers: [membership_service_1.MembershipService],
-        exports: [membership_service_1.MembershipService],
+        exports: [membership_service_1.MembershipService, mongoose_1.MongooseModule],
     })
 ], MembershipModule);
 //# sourceMappingURL=membership.module.js.map

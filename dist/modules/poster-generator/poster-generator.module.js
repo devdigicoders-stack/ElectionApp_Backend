@@ -11,9 +11,11 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const poster_generator_service_1 = require("./poster-generator.service");
 const poster_generator_controller_1 = require("./poster-generator.controller");
+const background_removal_service_1 = require("./background-removal.service");
 const poster_template_schema_1 = require("./poster-template.schema");
 const generated_poster_schema_1 = require("./generated-poster.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
+const user_schema_1 = require("../users/user.schema");
 let PosterGeneratorModule = class PosterGeneratorModule {
 };
 exports.PosterGeneratorModule = PosterGeneratorModule;
@@ -24,10 +26,12 @@ exports.PosterGeneratorModule = PosterGeneratorModule = __decorate([
                 { name: poster_template_schema_1.PosterTemplate.name, schema: poster_template_schema_1.PosterTemplateSchema },
                 { name: generated_poster_schema_1.GeneratedPoster.name, schema: generated_poster_schema_1.GeneratedPosterSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
             ]),
         ],
         controllers: [poster_generator_controller_1.PosterGeneratorController],
-        providers: [poster_generator_service_1.PosterGeneratorService],
+        providers: [poster_generator_service_1.PosterGeneratorService, background_removal_service_1.BackgroundRemovalService],
+        exports: [poster_generator_service_1.PosterGeneratorService, background_removal_service_1.BackgroundRemovalService],
     })
 ], PosterGeneratorModule);
 //# sourceMappingURL=poster-generator.module.js.map

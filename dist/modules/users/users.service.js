@@ -21,15 +21,17 @@ const membership_schema_1 = require("../membership/membership.schema");
 const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const complaint_schema_1 = require("../complaints/complaint.schema");
 const area_schema_1 = require("../areas/area.schema");
+const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const citizens_dto_1 = require("./citizens.dto");
 const types_1 = require("../../shared/types");
 let UsersService = class UsersService {
-    constructor(userModel, membershipModel, volunteerModel, complaintModel, areaModel) {
+    constructor(userModel, membershipModel, volunteerModel, complaintModel, areaModel, auditLogsService) {
         this.userModel = userModel;
         this.membershipModel = membershipModel;
         this.volunteerModel = volunteerModel;
         this.complaintModel = complaintModel;
         this.areaModel = areaModel;
+        this.auditLogsService = auditLogsService;
     }
     async findAll(tenant, filters) {
         const { areaId, search, page = 1, limit = 20 } = filters;
@@ -567,7 +569,7 @@ let UsersService = class UsersService {
             volunteer,
         };
     }
-    async exportCitizens(tenant, queryDto, res) {
+    async exportCitizens(tenant, queryDto, res, adminUser, ipAddress, userAgent) {
         const mongoQuery = await this.buildCitizenFilterQuery(tenant, queryDto);
         const users = await this.userModel
             .find(mongoQuery)
@@ -637,12 +639,40 @@ let UsersService = class UsersService {
                 escapeCsv(u.createdAt ? new Date(u.createdAt).toISOString() : ''),
             ].join(',');
         });
-        const csvContent = [headers.join(','), ...rows].join('\r\n');
+        const isExcel = (queryDto.format || '').toLowerCase() === 'excel' || (queryDto.format || '').toLowerCase() === 'xlsx';
+        const bom = '\uFEFF';
+        const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
         const filename = `citizens-${tenant.slug || 'export'}-${timestamp}.csv`;
-        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        const contentType = isExcel
+            ? 'application/vnd.ms-excel; charset=utf-8'
+            : 'text/csv; charset=utf-8';
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+        if (this.auditLogsService && adminUser) {
+            await this.auditLogsService
+                .log({
+                tenantId: tenant._id,
+                tenantName: tenant.name,
+                action: 'DATA_EXPORT_CITIZENS',
+                performedBy: {
+                    id: adminUser.sub || adminUser.id || 'admin',
+                    email: adminUser.email || 'admin@platform.local',
+                    name: adminUser.name || 'Admin',
+                    role: adminUser.role || 'admin',
+                },
+                details: {
+                    format: isExcel ? 'excel' : 'csv',
+                    recordCount: users.length,
+                    filterQuery: queryDto,
+                    filename,
+                },
+                ipAddress,
+                userAgent,
+            })
+                .catch(() => { });
+        }
         return res.status(200).send(csvContent);
     }
     async getCrmAnalytics(tenant) {
@@ -728,10 +758,12 @@ exports.UsersService = UsersService = __decorate([
     __param(2, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
     __param(3, (0, mongoose_1.InjectModel)(complaint_schema_1.Complaint.name)),
     __param(4, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
+    __param(5, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService])
 ], UsersService);
 //# sourceMappingURL=users.service.js.map

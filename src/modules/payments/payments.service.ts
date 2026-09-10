@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Payment, PaymentDocument } from './payment.schema';
 import { Membership, MembershipDocument } from '../membership/membership.schema';
+import { MembershipPlan, MembershipPlanDocument } from '../membership/membership-plan.schema';
 import { User, UserDocument } from '../users/user.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { RazorpayGatewayService } from './razorpay.service';
@@ -30,6 +31,7 @@ export class PaymentsService {
   constructor(
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
     @InjectModel(Membership.name) private membershipModel: Model<MembershipDocument>,
+    @InjectModel(MembershipPlan.name) private membershipPlanModel: Model<MembershipPlanDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private readonly razorpayGateway: RazorpayGatewayService,
   ) {}
@@ -193,6 +195,15 @@ export class PaymentsService {
     // ══════════════════════════════════════════════════════════════
     if (payment.purpose === PaymentPurpose.MEMBERSHIP_FEE) {
       try {
+        let plan: any = null;
+        if (payment.membershipPlanId) {
+          plan = await this.membershipPlanModel.findById(payment.membershipPlanId).lean();
+        }
+
+        const designation = plan?.name || 'Active Member';
+        const validityDays = plan?.validityDays !== undefined ? plan.validityDays : 365;
+        const expiresAt = validityDays > 0 ? new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000) : null;
+
         let membership = await this.membershipModel.findOne({
           tenantId: tenant._id,
           userId: payment.userId,
@@ -207,10 +218,12 @@ export class PaymentsService {
           membership = await this.membershipModel.create({
             tenantId: tenant._id,
             userId: payment.userId,
+            planId: plan ? (plan._id as Types.ObjectId) : undefined,
+            designation,
             status: MembershipStatus.APPROVED,
             membershipNumber,
             approvedAt: new Date(),
-            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 Year validity
+            expiresAt: expiresAt || undefined,
             cardIssuedAt: new Date(),
             paymentInfo: {
               amount: payment.amount,
@@ -220,8 +233,11 @@ export class PaymentsService {
           });
         } else {
           membership.status = MembershipStatus.APPROVED;
+          if (plan) membership.planId = plan._id as Types.ObjectId;
+          membership.designation = designation;
           if (!membership.membershipNumber) membership.membershipNumber = membershipNumber;
           membership.approvedAt = new Date();
+          membership.expiresAt = expiresAt || undefined;
           membership.cardIssuedAt = new Date();
           membership.paymentInfo = {
             amount: payment.amount,

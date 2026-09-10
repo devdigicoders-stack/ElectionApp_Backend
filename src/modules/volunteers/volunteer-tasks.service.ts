@@ -3,13 +3,16 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  Optional,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { VolunteerTask, VolunteerTaskDocument } from './volunteer-task.schema';
 import { Volunteer, VolunteerDocument } from './volunteer.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { TaskPriority, VolunteerTaskStatus } from '../../shared/types';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import {
   CreateVolunteerTaskDto,
   UpdateVolunteerTaskDto,
@@ -25,6 +28,7 @@ export class VolunteerTasksService {
     private taskModel: Model<VolunteerTaskDocument>,
     @InjectModel(Volunteer.name)
     private volunteerModel: Model<VolunteerDocument>,
+    @Optional() private auditLogsService?: AuditLogsService,
   ) {}
 
   /**
@@ -409,5 +413,147 @@ export class VolunteerTasksService {
     const deleted = await this.taskModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
     if (!deleted) throw new NotFoundException('Volunteer task not found');
     return { success: true, message: 'Volunteer task deleted successfully' };
+  }
+
+  /**
+   * 11. Export Volunteer Tasks to CSV or Excel (SRS Sec 58)
+   */
+  async exportVolunteerTasks(
+    tenant: TenantDocument,
+    query: any,
+    res: Response,
+    format: string = 'csv',
+    adminUser?: any,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const filter: any = { tenantId: tenant._id };
+
+    if (query.status) filter.status = query.status;
+    if (query.priority) filter.priority = query.priority;
+    if (query.areaId && Types.ObjectId.isValid(query.areaId)) {
+      filter.areaId = new Types.ObjectId(query.areaId);
+    }
+    if (query.volunteerId && Types.ObjectId.isValid(query.volunteerId)) {
+      filter.assignedVolunteerId = new Types.ObjectId(query.volunteerId);
+    }
+    if (query.search) {
+      const searchRegex = { $regex: query.search.trim(), $options: 'i' };
+      filter.$or = [{ title: searchRegex }, { description: searchRegex }];
+    }
+    if (query.startDate || query.endDate) {
+      filter.createdAt = {};
+      if (query.startDate) filter.createdAt.$gte = new Date(query.startDate);
+      if (query.endDate) filter.createdAt.$lte = new Date(query.endDate);
+    }
+
+    const tasks = await this.taskModel
+      .find(filter)
+      .populate({
+        path: 'assignedVolunteerId',
+        populate: { path: 'userId', select: 'name mobile email' },
+      })
+      .populate('assignedUserId', 'name mobile email')
+      .populate('areaId', 'name code type')
+      .populate('createdBy', 'name email')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const maskMobile = (mobile?: string) => {
+      if (!mobile || mobile.length < 5) return 'N/A';
+      return mobile.slice(0, 2) + '****' + mobile.slice(-4);
+    };
+
+    const headers = [
+      'Task ID',
+      'Title',
+      'Description',
+      'Priority',
+      'Status',
+      'Assigned Volunteer Name',
+      'Assigned Volunteer Mobile',
+      'Area / Ward',
+      'Due Date',
+      'Submitted Proof Remark',
+      'Submitted Date',
+      'Admin Review Status',
+      'Admin Review Note',
+      'Created Date',
+    ];
+
+    const rows = tasks.map((t: any) => {
+      const volUser = (t.assignedVolunteerId as any)?.userId || t.assignedUserId || {};
+      const area = (t.areaId as any) || {};
+      const submission = t.submission || {};
+      const review = t.review || {};
+
+      let reviewStatus = 'Not Reviewed';
+      if (review.isApproved === true) reviewStatus = 'Approved';
+      else if (review.isApproved === false) reviewStatus = 'Rejected';
+
+      return [
+        escapeCsv(t._id.toString()),
+        escapeCsv(t.title),
+        escapeCsv(t.description),
+        escapeCsv(t.priority),
+        escapeCsv(t.status),
+        escapeCsv(volUser.name || 'Unassigned'),
+        escapeCsv(maskMobile(volUser.mobile)),
+        escapeCsv(area.name ? `${area.name} (${area.type || 'Area'})` : 'Constituency'),
+        escapeCsv(t.dueDate ? new Date(t.dueDate).toISOString() : ''),
+        escapeCsv(submission.completionRemark || ''),
+        escapeCsv(submission.submittedAt ? new Date(submission.submittedAt).toISOString() : ''),
+        escapeCsv(reviewStatus),
+        escapeCsv(review.reviewNote || ''),
+        escapeCsv(t.createdAt ? new Date(t.createdAt).toISOString() : ''),
+      ].join(',');
+    });
+
+    const isExcel = (format || '').toLowerCase() === 'excel' || (format || '').toLowerCase() === 'xlsx';
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `volunteer-tasks-${tenant.slug || 'export'}-${timestamp}.csv`;
+
+    const contentType = isExcel
+      ? 'application/vnd.ms-excel; charset=utf-8'
+      : 'text/csv; charset=utf-8';
+
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    if (this.auditLogsService && adminUser) {
+      await this.auditLogsService
+        .log({
+          tenantId: tenant._id,
+          tenantName: tenant.name,
+          action: 'DATA_EXPORT_VOLUNTEER_TASKS',
+          performedBy: {
+            id: adminUser.sub || adminUser.id || 'admin',
+            email: adminUser.email || 'admin@platform.local',
+            name: adminUser.name || 'Admin',
+            role: adminUser.role || 'admin',
+          },
+          details: {
+            format: isExcel ? 'excel' : 'csv',
+            recordCount: tasks.length,
+            filterQuery: query,
+            filename,
+          },
+          ipAddress,
+          userAgent,
+        })
+        .catch(() => {});
+    }
+
+    return res.status(200).send(csvContent);
   }
 }

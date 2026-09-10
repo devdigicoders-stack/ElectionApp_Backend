@@ -83,4 +83,5 @@ export declare class AreasService {
     } & {
         id: string;
     }>;
+    getAncestors(tenant: TenantDocument, areaId: string): Promise<any[]>;
 }

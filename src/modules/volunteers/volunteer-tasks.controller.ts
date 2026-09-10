@@ -8,11 +8,16 @@ import {
   Param,
   Query,
   Req,
+  Res,
+  Ip,
+  Headers,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { VolunteerTasksService } from './volunteer-tasks.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import {
   CreateVolunteerTaskDto,
   UpdateVolunteerTaskDto,
@@ -20,7 +25,7 @@ import {
   ReviewVolunteerTaskDto,
   QueryVolunteerTaskDto,
 } from './volunteer-task.dto';
-import { VolunteerTaskStatus } from '../../shared/types';
+import { VolunteerTaskStatus, UserRole } from '../../shared/types';
 
 @Controller('volunteers/tasks')
 @UseGuards(JwtAuthGuard)
@@ -61,6 +66,31 @@ export class VolunteerTasksController {
     @Query('status') status?: VolunteerTaskStatus,
   ) {
     return this.tasksService.findMyTasks(req.tenant, req.user.sub, { status });
+  }
+
+  /**
+   * [Admin] Export Volunteer Tasks to CSV or Excel (SRS Sec 58)
+   * GET /volunteers/tasks/export
+   */
+  @Get('export')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.LEADER, UserRole.ADMIN)
+  exportTasks(
+    @Req() req: TenantRequest & { user: any },
+    @Res() res: Response,
+    @Query() query: any,
+    @Ip() ipAddress?: string,
+    @Headers('user-agent') userAgent?: string,
+  ) {
+    return this.tasksService.exportVolunteerTasks(
+      req.tenant,
+      query,
+      res,
+      query?.format || 'csv',
+      req.user,
+      ipAddress,
+      userAgent,
+    );
   }
 
   /**

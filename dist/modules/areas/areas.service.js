@@ -32,6 +32,13 @@ let AreasService = class AreasService {
         return this.levelModel.findOneAndUpdate({ _id: levelId, tenantId: tenant._id }, { $set: data }, { new: true });
     }
     async deleteLevel(tenant, levelId) {
+        const usageCount = await this.areaModel.countDocuments({
+            tenantId: tenant._id,
+            levelId: new mongoose_2.Types.ObjectId(levelId),
+        });
+        if (usageCount > 0) {
+            throw new common_1.BadRequestException(`Cannot delete level — ${usageCount} area(s) are using it. Delete those areas first.`);
+        }
         return this.levelModel.findOneAndDelete({ _id: levelId, tenantId: tenant._id });
     }
     async createArea(tenant, data) {
@@ -72,6 +79,21 @@ let AreasService = class AreasService {
         if (!area)
             throw new common_1.NotFoundException('Area not found');
         return area;
+    }
+    async getAncestors(tenant, areaId) {
+        const ancestors = [];
+        let currentId = areaId;
+        while (currentId) {
+            const area = await this.areaModel
+                .findOne({ _id: currentId, tenantId: tenant._id })
+                .populate('levelId', 'name levelOrder')
+                .lean();
+            if (!area)
+                break;
+            ancestors.unshift(area);
+            currentId = area.parentId ? area.parentId.toString() : null;
+        }
+        return ancestors;
     }
 };
 exports.AreasService = AreasService;

@@ -18,6 +18,7 @@ export declare class TenantsController {
             tenantId: import("mongoose").Types.ObjectId;
             slug: string;
             name: string;
+            title: string;
             status: import("../../shared/types").TenantStatus;
             isPublished: boolean;
             completionPercentage: number;
@@ -29,6 +30,7 @@ export declare class TenantsController {
                     completed: boolean;
                     data: {
                         name: string;
+                        title: string;
                         slug: string;
                         leaderName: string | null;
                         electionType: string;
@@ -42,9 +44,11 @@ export declare class TenantsController {
                     name: string;
                     completed: boolean;
                     data: {
-                        platformName: string;
-                        leaderName: string | null;
+                        title: string | null;
+                        platformName: string | null;
+                        logo: string | null;
                         logoUrl: string | null;
+                        leaderName: string | null;
                         leaderPhotoUrl: string | null;
                         faviconUrl: string | null;
                         pwaIconUrl: string | null;
@@ -121,6 +125,7 @@ export declare class TenantsController {
         tenantId: import("mongoose").Types.ObjectId;
         slug: string;
         name: string;
+        title: string;
         status: import("../../shared/types").TenantStatus;
         isPublished: boolean;
         completionPercentage: number;
@@ -132,6 +137,7 @@ export declare class TenantsController {
                 completed: boolean;
                 data: {
                     name: string;
+                    title: string;
                     slug: string;
                     leaderName: string | null;
                     electionType: string;
@@ -145,9 +151,11 @@ export declare class TenantsController {
                 name: string;
                 completed: boolean;
                 data: {
-                    platformName: string;
-                    leaderName: string | null;
+                    title: string | null;
+                    platformName: string | null;
+                    logo: string | null;
                     logoUrl: string | null;
+                    leaderName: string | null;
                     leaderPhotoUrl: string | null;
                     faviconUrl: string | null;
                     pwaIconUrl: string | null;
@@ -229,13 +237,13 @@ export declare class TenantsController {
     } & {
         id: string;
     }>;
-    update(id: string, dto: UpdateTenantDto): Promise<import("mongoose").Document<unknown, {}, import("./tenant.schema").TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./tenant.schema").Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    update(id: string, dto: UpdateTenantDto): Promise<(import("mongoose").Document<unknown, {}, import("./tenant.schema").TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./tenant.schema").Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    }>;
+    }) | null>;
     updateBranding(id: string, branding: UpdateBrandingDto): Promise<(import("mongoose").Document<unknown, {}, import("./tenant.schema").TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./tenant.schema").Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {

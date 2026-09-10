@@ -5,6 +5,9 @@ import { EventsController } from './events.controller';
 import { Event, EventSchema } from './event.schema';
 import { EventRsvp, EventRsvpSchema } from './event-rsvp.schema';
 import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.schema';
+import { User, UserSchema } from '../users/user.schema';
+import { Area, AreaSchema } from '../areas/area.schema';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -12,7 +15,10 @@ import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.s
       { name: Event.name, schema: EventSchema },
       { name: EventRsvp.name, schema: EventRsvpSchema },
       { name: TenantFeature.name, schema: TenantFeatureSchema },
+      { name: User.name, schema: UserSchema },
+      { name: Area.name, schema: AreaSchema },
     ]),
+    AuditLogsModule,
   ],
   controllers: [EventsController],
   providers: [EventsService],

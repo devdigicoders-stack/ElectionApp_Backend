@@ -4,6 +4,7 @@ export type MembershipDocument = Membership & Document;
 export declare class Membership {
     tenantId: Types.ObjectId;
     userId: Types.ObjectId;
+    planId?: Types.ObjectId;
     status: MembershipStatus;
     membershipNumber?: string;
     designation?: string;
@@ -42,6 +43,15 @@ export declare const MembershipSchema: import("mongoose").Schema<Membership, imp
         id: string;
     }>> | undefined;
     userId?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Membership, Document<unknown, {}, Membership, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Membership & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    planId?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId | undefined, Membership, Document<unknown, {}, Membership, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Membership & {
         _id: Types.ObjectId;

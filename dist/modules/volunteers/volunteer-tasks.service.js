@@ -19,10 +19,12 @@ const mongoose_2 = require("mongoose");
 const volunteer_task_schema_1 = require("./volunteer-task.schema");
 const volunteer_schema_1 = require("./volunteer.schema");
 const types_1 = require("../../shared/types");
+const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 let VolunteerTasksService = class VolunteerTasksService {
-    constructor(taskModel, volunteerModel) {
+    constructor(taskModel, volunteerModel, auditLogsService) {
         this.taskModel = taskModel;
         this.volunteerModel = volunteerModel;
+        this.auditLogsService = auditLogsService;
     }
     async create(tenant, dto, adminUser) {
         let assignedVolunteerId = undefined;
@@ -338,13 +340,139 @@ let VolunteerTasksService = class VolunteerTasksService {
             throw new common_1.NotFoundException('Volunteer task not found');
         return { success: true, message: 'Volunteer task deleted successfully' };
     }
+    async exportVolunteerTasks(tenant, query, res, format = 'csv', adminUser, ipAddress, userAgent) {
+        const filter = { tenantId: tenant._id };
+        if (query.status)
+            filter.status = query.status;
+        if (query.priority)
+            filter.priority = query.priority;
+        if (query.areaId && mongoose_2.Types.ObjectId.isValid(query.areaId)) {
+            filter.areaId = new mongoose_2.Types.ObjectId(query.areaId);
+        }
+        if (query.volunteerId && mongoose_2.Types.ObjectId.isValid(query.volunteerId)) {
+            filter.assignedVolunteerId = new mongoose_2.Types.ObjectId(query.volunteerId);
+        }
+        if (query.search) {
+            const searchRegex = { $regex: query.search.trim(), $options: 'i' };
+            filter.$or = [{ title: searchRegex }, { description: searchRegex }];
+        }
+        if (query.startDate || query.endDate) {
+            filter.createdAt = {};
+            if (query.startDate)
+                filter.createdAt.$gte = new Date(query.startDate);
+            if (query.endDate)
+                filter.createdAt.$lte = new Date(query.endDate);
+        }
+        const tasks = await this.taskModel
+            .find(filter)
+            .populate({
+            path: 'assignedVolunteerId',
+            populate: { path: 'userId', select: 'name mobile email' },
+        })
+            .populate('assignedUserId', 'name mobile email')
+            .populate('areaId', 'name code type')
+            .populate('createdBy', 'name email')
+            .sort({ createdAt: -1 })
+            .lean();
+        const escapeCsv = (val) => {
+            if (val === null || val === undefined)
+                return '""';
+            const str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        };
+        const maskMobile = (mobile) => {
+            if (!mobile || mobile.length < 5)
+                return 'N/A';
+            return mobile.slice(0, 2) + '****' + mobile.slice(-4);
+        };
+        const headers = [
+            'Task ID',
+            'Title',
+            'Description',
+            'Priority',
+            'Status',
+            'Assigned Volunteer Name',
+            'Assigned Volunteer Mobile',
+            'Area / Ward',
+            'Due Date',
+            'Submitted Proof Remark',
+            'Submitted Date',
+            'Admin Review Status',
+            'Admin Review Note',
+            'Created Date',
+        ];
+        const rows = tasks.map((t) => {
+            const volUser = t.assignedVolunteerId?.userId || t.assignedUserId || {};
+            const area = t.areaId || {};
+            const submission = t.submission || {};
+            const review = t.review || {};
+            let reviewStatus = 'Not Reviewed';
+            if (review.isApproved === true)
+                reviewStatus = 'Approved';
+            else if (review.isApproved === false)
+                reviewStatus = 'Rejected';
+            return [
+                escapeCsv(t._id.toString()),
+                escapeCsv(t.title),
+                escapeCsv(t.description),
+                escapeCsv(t.priority),
+                escapeCsv(t.status),
+                escapeCsv(volUser.name || 'Unassigned'),
+                escapeCsv(maskMobile(volUser.mobile)),
+                escapeCsv(area.name ? `${area.name} (${area.type || 'Area'})` : 'Constituency'),
+                escapeCsv(t.dueDate ? new Date(t.dueDate).toISOString() : ''),
+                escapeCsv(submission.completionRemark || ''),
+                escapeCsv(submission.submittedAt ? new Date(submission.submittedAt).toISOString() : ''),
+                escapeCsv(reviewStatus),
+                escapeCsv(review.reviewNote || ''),
+                escapeCsv(t.createdAt ? new Date(t.createdAt).toISOString() : ''),
+            ].join(',');
+        });
+        const isExcel = (format || '').toLowerCase() === 'excel' || (format || '').toLowerCase() === 'xlsx';
+        const bom = '\uFEFF';
+        const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `volunteer-tasks-${tenant.slug || 'export'}-${timestamp}.csv`;
+        const contentType = isExcel
+            ? 'application/vnd.ms-excel; charset=utf-8'
+            : 'text/csv; charset=utf-8';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+        if (this.auditLogsService && adminUser) {
+            await this.auditLogsService
+                .log({
+                tenantId: tenant._id,
+                tenantName: tenant.name,
+                action: 'DATA_EXPORT_VOLUNTEER_TASKS',
+                performedBy: {
+                    id: adminUser.sub || adminUser.id || 'admin',
+                    email: adminUser.email || 'admin@platform.local',
+                    name: adminUser.name || 'Admin',
+                    role: adminUser.role || 'admin',
+                },
+                details: {
+                    format: isExcel ? 'excel' : 'csv',
+                    recordCount: tasks.length,
+                    filterQuery: query,
+                    filename,
+                },
+                ipAddress,
+                userAgent,
+            })
+                .catch(() => { });
+        }
+        return res.status(200).send(csvContent);
+    }
 };
 exports.VolunteerTasksService = VolunteerTasksService;
 exports.VolunteerTasksService = VolunteerTasksService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(volunteer_task_schema_1.VolunteerTask.name)),
     __param(1, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
+    __param(2, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService])
 ], VolunteerTasksService);
 //# sourceMappingURL=volunteer-tasks.service.js.map

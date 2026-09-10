@@ -13,6 +13,8 @@ const notifications_service_1 = require("./notifications.service");
 const notifications_controller_1 = require("./notifications.controller");
 const notification_schema_1 = require("./notification.schema");
 const user_schema_1 = require("../users/user.schema");
+const membership_schema_1 = require("../membership/membership.schema");
+const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 let NotificationsModule = class NotificationsModule {
 };
@@ -24,6 +26,8 @@ exports.NotificationsModule = NotificationsModule = __decorate([
                 { name: notification_schema_1.Notification.name, schema: notification_schema_1.NotificationSchema },
                 { name: notification_schema_1.NotificationRead.name, schema: notification_schema_1.NotificationReadSchema },
                 { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: membership_schema_1.Membership.name, schema: membership_schema_1.MembershipSchema },
+                { name: volunteer_schema_1.Volunteer.name, schema: volunteer_schema_1.VolunteerSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
             ]),
         ],

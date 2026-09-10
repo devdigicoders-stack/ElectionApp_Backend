@@ -8,14 +8,19 @@ import {
   Param,
   Query,
   Req,
+  Res,
+  Ip,
+  Headers,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ComplaintsService } from './complaints.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { FeatureGuard } from '../../common/guards/feature.guard';
 import { RequireFeature } from '../../common/decorators/feature.decorator';
-import { FeatureKey, ComplaintStatus } from '../../shared/types';
+import { FeatureKey, ComplaintStatus, UserRole } from '../../shared/types';
 import {
   CreateComplaintDto,
   QueryComplaintsDto,
@@ -146,7 +151,38 @@ export class ComplaintsController {
   }
 
   /**
-   * 11. Single Complaint Detail (SRS Sec 15 & 16)
+   * 11. Admin: Export Filtered Complaints to CSV or Excel (SRS Sec 58 & 59)
+   * GET /complaints/export
+   */
+  @Get('export')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.AREA_COORDINATOR,
+    UserRole.CONTENT_MANAGER,
+  )
+  exportComplaints(
+    @Req() req: TenantRequest & { user: any },
+    @Query() query: QueryComplaintsDto & { format?: string },
+    @Res() res: Response,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
+  ) {
+    return this.complaintsService.exportComplaints(
+      req.tenant,
+      query,
+      res,
+      query.format || 'csv',
+      req.user,
+      ip,
+      userAgent,
+    );
+  }
+
+  /**
+   * 12. Single Complaint Detail (SRS Sec 15 & 16)
    * GET /complaints/:id
    */
   @Get(':id')

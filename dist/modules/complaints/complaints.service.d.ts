@@ -1,13 +1,16 @@
 import { Model, Types } from 'mongoose';
+import { Response } from 'express';
 import { Complaint, ComplaintDocument } from './complaint.schema';
 import { ComplaintCategory, ComplaintCategoryDocument } from './complaint-category.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { ComplaintStatus, ComplaintPriority } from '../../shared/types';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateComplaintDto, QueryComplaintsDto, AssignComplaintDto, UpdatePriorityDto, AddRemarkDto, ResolveComplaintDto, CloseComplaintDto, RejectComplaintDto, CreateCategoryDto, UpdateCategoryDto } from './complaints.dto';
 export declare class ComplaintsService {
     private complaintModel;
     private categoryModel;
-    constructor(complaintModel: Model<ComplaintDocument>, categoryModel: Model<ComplaintCategoryDocument>);
+    private auditLogsService?;
+    constructor(complaintModel: Model<ComplaintDocument>, categoryModel: Model<ComplaintCategoryDocument>, auditLogsService?: AuditLogsService | undefined);
     private generateNumber;
     create(tenant: TenantDocument, userId: string, dto: CreateComplaintDto): Promise<(Complaint & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
@@ -502,4 +505,5 @@ export declare class ComplaintsService {
     deleteCategory(tenant: TenantDocument, catId: string): Promise<{
         message: string;
     }>;
+    exportComplaints(tenant: TenantDocument, query: QueryComplaintsDto, res: Response, format?: string, adminUser?: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
 }

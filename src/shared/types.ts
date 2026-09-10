@@ -118,6 +118,25 @@ export enum GalleryType {
 export enum EventRsvpStatus {
   INTERESTED = 'interested',
   GOING = 'going',
+  NOT_GOING = 'not_going',
+}
+
+export enum EventType {
+  JAN_SABHA = 'Jan Sabha',
+  RALLY = 'Rally',
+  PUBLIC_MEETING = 'Public Meeting',
+  MEMBERSHIP_CAMPAIGN = 'Membership Campaign',
+  PRESS_CONFERENCE = 'Press Conference',
+  SPECIAL_EVENT = 'Special Event',
+  SOCIAL_PROGRAM = 'Social Program',
+  OTHER = 'Other',
+}
+
+export enum EventStatus {
+  UPCOMING = 'upcoming',
+  ONGOING = 'ongoing',
+  COMPLETED = 'completed',
+  CANCELLED = 'cancelled',
 }
 
 export enum ElectionType {
@@ -135,7 +154,9 @@ export enum ElectionType {
 
 export interface BrandingConfig {
   platformName?: string;
+  title?: string;
   logoUrl?: string;
+  logo?: string;
   faviconUrl?: string;
   pwaIconUrl?: string;
   leaderPhotoUrl?: string;
@@ -161,5 +182,21 @@ export interface RegistrationField {
   required: boolean;
   options?: string[];
   areaLevels?: string[];
+}
+
+export enum PollTargetAudience {
+  ALL = 'ALL',
+  SPECIFIC_AREA = 'SPECIFIC_AREA',
+  MEMBERS_ONLY = 'MEMBERS_ONLY',
+  VOLUNTEERS_ONLY = 'VOLUNTEERS_ONLY',
+  AGE_GROUP = 'AGE_GROUP',
+  GENDER = 'GENDER',
+}
+
+export enum PollResultVisibility {
+  ALWAYS_PUBLIC = 'ALWAYS_PUBLIC',
+  AFTER_VOTE = 'AFTER_VOTE',
+  AFTER_END = 'AFTER_END',
+  ADMIN_ONLY = 'ADMIN_ONLY',
 }
 

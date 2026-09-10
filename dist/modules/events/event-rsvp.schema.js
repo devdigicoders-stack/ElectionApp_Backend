@@ -17,24 +17,55 @@ let EventRsvp = class EventRsvp {
 };
 exports.EventRsvp = EventRsvp;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Tenant', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Tenant', required: true, index: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], EventRsvp.prototype, "tenantId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Event', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Event', required: true, index: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], EventRsvp.prototype, "eventId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true, index: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], EventRsvp.prototype, "userId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true, enum: Object.values(types_1.EventRsvpStatus) }),
+    (0, mongoose_1.Prop)({
+        type: String,
+        enum: Object.values(types_1.EventRsvpStatus),
+        default: types_1.EventRsvpStatus.GOING,
+    }),
     __metadata("design:type", String)
 ], EventRsvp.prototype, "status", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null, index: true }),
+    __metadata("design:type", String)
+], EventRsvp.prototype, "ticketNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], EventRsvp.prototype, "qrData", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], EventRsvp.prototype, "isCheckedIn", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], EventRsvp.prototype, "checkedInAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], EventRsvp.prototype, "checkedInBy", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
+    __metadata("design:type", String)
+], EventRsvp.prototype, "notes", void 0);
 exports.EventRsvp = EventRsvp = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], EventRsvp);
 exports.EventRsvpSchema = mongoose_1.SchemaFactory.createForClass(EventRsvp);
 exports.EventRsvpSchema.index({ eventId: 1, userId: 1 }, { unique: true });
+exports.EventRsvpSchema.index({ tenantId: 1, ticketNumber: 1 });
+exports.EventRsvpSchema.index({ eventId: 1, isCheckedIn: 1 });
+exports.EventRsvpSchema.index({ tenantId: 1, eventId: 1, status: 1 });
 //# sourceMappingURL=event-rsvp.schema.js.map

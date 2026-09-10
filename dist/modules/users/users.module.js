@@ -17,6 +17,7 @@ const membership_schema_1 = require("../membership/membership.schema");
 const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const complaint_schema_1 = require("../complaints/complaint.schema");
 const area_schema_1 = require("../areas/area.schema");
+const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
@@ -30,6 +31,7 @@ exports.UsersModule = UsersModule = __decorate([
                 { name: complaint_schema_1.Complaint.name, schema: complaint_schema_1.ComplaintSchema },
                 { name: area_schema_1.Area.name, schema: area_schema_1.AreaSchema },
             ]),
+            audit_logs_module_1.AuditLogsModule,
         ],
         controllers: [users_controller_1.UsersController, citizens_controller_1.CitizensController],
         providers: [users_service_1.UsersService],

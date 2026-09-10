@@ -1,7 +1,10 @@
 import { TenantStatus, UserRole } from '../../shared/types';
 export declare class CreateTenantDto {
     slug: string;
-    name: string;
+    name?: string;
+    title?: string;
+    logo?: string;
+    logoUrl?: string;
     leaderName?: string;
     contactPerson?: string;
     mobileNumber?: string;
@@ -16,6 +19,9 @@ export declare class CreateTenantDto {
 }
 export declare class UpdateTenantDto {
     name?: string;
+    title?: string;
+    logo?: string;
+    logoUrl?: string;
     contactPerson?: string;
     mobileNumber?: string;
     email?: string;
@@ -28,7 +34,9 @@ export declare class UpdateTenantDto {
 }
 export declare class UpdateBrandingDto {
     platformName?: string;
+    title?: string;
     logoUrl?: string;
+    logo?: string;
     leaderPhotoUrl?: string;
     faviconUrl?: string;
     pwaIconUrl?: string;

@@ -1,10 +1,15 @@
 import { Model, Types } from 'mongoose';
+import { Response } from 'express';
 import { Volunteer, VolunteerDocument } from './volunteer.schema';
+import { VolunteerTaskDocument } from './volunteer-task.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { VolunteerStatus } from '../../shared/types';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 export declare class VolunteersService {
     private volunteerModel;
-    constructor(volunteerModel: Model<VolunteerDocument>);
+    private taskModel;
+    private auditLogsService?;
+    constructor(volunteerModel: Model<VolunteerDocument>, taskModel: Model<VolunteerTaskDocument>, auditLogsService?: AuditLogsService | undefined);
     add(tenant: TenantDocument, data: {
         userId?: string;
         role?: string;
@@ -59,4 +64,11 @@ export declare class VolunteersService {
     } & {
         id: string;
     }) | null>;
+    exportVolunteers(tenant: TenantDocument, query: {
+        status?: VolunteerStatus;
+        areaId?: string;
+        role?: string;
+        search?: string;
+        format?: string;
+    }, res: Response, format?: string, adminUser?: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
 }

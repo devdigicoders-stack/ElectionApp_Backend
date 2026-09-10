@@ -16,6 +16,7 @@ exports.VolunteerTasksController = void 0;
 const common_1 = require("@nestjs/common");
 const volunteer_tasks_service_1 = require("./volunteer-tasks.service");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
 const volunteer_task_dto_1 = require("./volunteer-task.dto");
 const types_1 = require("../../shared/types");
 let VolunteerTasksController = class VolunteerTasksController {
@@ -30,6 +31,9 @@ let VolunteerTasksController = class VolunteerTasksController {
     }
     findMyTasks(req, status) {
         return this.tasksService.findMyTasks(req.tenant, req.user.sub, { status });
+    }
+    exportTasks(req, res, query, ipAddress, userAgent) {
+        return this.tasksService.exportVolunteerTasks(req.tenant, query, res, query?.format || 'csv', req.user, ipAddress, userAgent);
     }
     getStats(req) {
         return this.tasksService.getStats(req.tenant);
@@ -78,6 +82,19 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], VolunteerTasksController.prototype, "findMyTasks", null);
+__decorate([
+    (0, common_1.Get)('export'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
+    __param(2, (0, common_1.Query)()),
+    __param(3, (0, common_1.Ip)()),
+    __param(4, (0, common_1.Headers)('user-agent')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object, Object, String, String]),
+    __metadata("design:returntype", void 0)
+], VolunteerTasksController.prototype, "exportTasks", null);
 __decorate([
     (0, common_1.Get)('stats'),
     __param(0, (0, common_1.Req)()),

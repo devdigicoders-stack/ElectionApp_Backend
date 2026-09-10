@@ -20,13 +20,17 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], PosterTemplate.prototype, "tenantId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, trim: true }),
     __metadata("design:type", String)
 ], PosterTemplate.prototype, "title", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, trim: true }),
     __metadata("design:type", String)
 ], PosterTemplate.prototype, "category", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
+    __metadata("design:type", String)
+], PosterTemplate.prototype, "description", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
@@ -36,9 +40,33 @@ __decorate([
     __metadata("design:type", String)
 ], PosterTemplate.prototype, "thumbnailUrl", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: 1080 }),
+    __metadata("design:type", Number)
+], PosterTemplate.prototype, "width", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 1080 }),
+    __metadata("design:type", Number)
+], PosterTemplate.prototype, "height", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '1080x1080' }),
+    __metadata("design:type", String)
+], PosterTemplate.prototype, "dimensionPreset", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: [Object], default: [] }),
     __metadata("design:type", Array)
 ], PosterTemplate.prototype, "fields", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: true }),
+    __metadata("design:type", Boolean)
+], PosterTemplate.prototype, "includeTenantBranding", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], PosterTemplate.prototype, "expiresAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], PosterTemplate.prototype, "tags", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)
@@ -56,4 +84,5 @@ exports.PosterTemplate = PosterTemplate = __decorate([
 ], PosterTemplate);
 exports.PosterTemplateSchema = mongoose_1.SchemaFactory.createForClass(PosterTemplate);
 exports.PosterTemplateSchema.index({ tenantId: 1, category: 1, isActive: 1 });
+exports.PosterTemplateSchema.index({ tenantId: 1, isActive: 1, expiresAt: 1 });
 //# sourceMappingURL=poster-template.schema.js.map

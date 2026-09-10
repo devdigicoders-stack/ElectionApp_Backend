@@ -50,6 +50,7 @@ const common_1 = require("@nestjs/common");
 const path = __importStar(require("path"));
 const membership_service_1 = require("./membership.service");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
 const feature_guard_1 = require("../../common/guards/feature.guard");
 const feature_decorator_1 = require("../../common/decorators/feature.decorator");
 const types_1 = require("../../shared/types");
@@ -57,6 +58,24 @@ const membership_dto_1 = require("./membership.dto");
 let MembershipController = class MembershipController {
     constructor(membershipService) {
         this.membershipService = membershipService;
+    }
+    getPublicPlans(req) {
+        return this.membershipService.findAllPlans(req.tenant, true);
+    }
+    getAllPlansAdmin(req) {
+        return this.membershipService.findAllPlans(req.tenant, false);
+    }
+    getPlanById(req, id) {
+        return this.membershipService.findPlanById(req.tenant, id);
+    }
+    createPlan(req, dto) {
+        return this.membershipService.createPlan(req.tenant, dto);
+    }
+    updatePlan(req, id, dto) {
+        return this.membershipService.updatePlan(req.tenant, id, dto);
+    }
+    deletePlan(req, id) {
+        return this.membershipService.deletePlan(req.tenant, id);
     }
     apply(req, dto) {
         return this.membershipService.apply(req.tenant, req.user.sub, dto);
@@ -80,6 +99,9 @@ let MembershipController = class MembershipController {
     }
     getStats(req) {
         return this.membershipService.getStats(req.tenant);
+    }
+    exportMembers(req, query, res, ipAddress, userAgent) {
+        return this.membershipService.exportMembers(req.tenant, query, res, req.user, ipAddress, userAgent);
     }
     findAll(req, query) {
         return this.membershipService.findAll(req.tenant, query);
@@ -106,6 +128,61 @@ let MembershipController = class MembershipController {
     }
 };
 exports.MembershipController = MembershipController;
+__decorate([
+    (0, common_1.Get)('plans'),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "getPublicPlans", null);
+__decorate([
+    (0, common_1.Get)('plans/admin'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "getAllPlansAdmin", null);
+__decorate([
+    (0, common_1.Get)('plans/:id'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "getPlanById", null);
+__decorate([
+    (0, common_1.Post)('plans'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, membership_dto_1.CreateMembershipPlanDto]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "createPlan", null);
+__decorate([
+    (0, common_1.Patch)('plans/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, membership_dto_1.UpdateMembershipPlanDto]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "updatePlan", null);
+__decorate([
+    (0, common_1.Delete)('plans/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "deletePlan", null);
 __decorate([
     (0, common_1.Post)('apply'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -150,15 +227,30 @@ __decorate([
 ], MembershipController.prototype, "verifyCard", null);
 __decorate([
     (0, common_1.Get)('stats'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], MembershipController.prototype, "getStats", null);
 __decorate([
+    (0, common_1.Get)('export'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __param(2, (0, common_1.Res)()),
+    __param(3, (0, common_1.Ip)()),
+    __param(4, (0, common_1.Headers)('user-agent')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, membership_dto_1.QueryMembershipDto, Object, String, String]),
+    __metadata("design:returntype", void 0)
+], MembershipController.prototype, "exportMembers", null);
+__decorate([
     (0, common_1.Get)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Query)()),
     __metadata("design:type", Function),
@@ -167,7 +259,8 @@ __decorate([
 ], MembershipController.prototype, "findAll", null);
 __decorate([
     (0, common_1.Get)(':id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -176,7 +269,8 @@ __decorate([
 ], MembershipController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Get)(':id/card/download'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Res)()),
@@ -186,7 +280,8 @@ __decorate([
 ], MembershipController.prototype, "downloadMemberCard", null);
 __decorate([
     (0, common_1.Patch)(':id/approve'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -196,7 +291,8 @@ __decorate([
 ], MembershipController.prototype, "approve", null);
 __decorate([
     (0, common_1.Patch)(':id/reject'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -206,7 +302,8 @@ __decorate([
 ], MembershipController.prototype, "reject", null);
 __decorate([
     (0, common_1.Post)(':id/regenerate-card'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -216,7 +313,8 @@ __decorate([
 ], MembershipController.prototype, "regenerateCard", null);
 __decorate([
     (0, common_1.Patch)(':id/card-details'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),

@@ -1,12 +1,16 @@
 import { Model, Types } from 'mongoose';
 import { Notification, NotificationDocument, NotificationRead, NotificationReadDocument } from './notification.schema';
 import { UserDocument } from '../users/user.schema';
+import { MembershipDocument } from '../membership/membership.schema';
+import { VolunteerDocument } from '../volunteers/volunteer.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 export declare class NotificationsService {
     private notificationModel;
     private readModel;
     private userModel;
-    constructor(notificationModel: Model<NotificationDocument>, readModel: Model<NotificationReadDocument>, userModel: Model<UserDocument>);
+    private membershipModel;
+    private volunteerModel;
+    constructor(notificationModel: Model<NotificationDocument>, readModel: Model<NotificationReadDocument>, userModel: Model<UserDocument>, membershipModel: Model<MembershipDocument>, volunteerModel: Model<VolunteerDocument>);
     create(tenant: TenantDocument, data: any): Promise<import("mongoose").Document<unknown, {}, NotificationDocument, {}, import("mongoose").DefaultSchemaOptions> & Notification & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {

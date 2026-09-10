@@ -1,9 +1,13 @@
+import { Response } from 'express';
 import { VolunteersService } from './volunteers.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { VolunteerStatus } from '../../shared/types';
 export declare class VolunteersController {
     private volunteersService;
     constructor(volunteersService: VolunteersService);
+    exportVolunteers(req: TenantRequest & {
+        user: any;
+    }, res: Response, areaId?: string, status?: VolunteerStatus, search?: string, format?: string, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
     add(req: TenantRequest & {
         user: any;
     }, body: any): Promise<import("mongoose").Document<unknown, {}, import("./volunteer.schema").VolunteerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./volunteer.schema").Volunteer & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{

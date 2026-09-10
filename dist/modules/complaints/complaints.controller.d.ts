@@ -1,3 +1,4 @@
+import { Response } from 'express';
 import { ComplaintsService } from './complaints.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { ComplaintStatus } from '../../shared/types';
@@ -141,6 +142,11 @@ export declare class ComplaintsController {
             totalPages: number;
         };
     }>;
+    exportComplaints(req: TenantRequest & {
+        user: any;
+    }, query: QueryComplaintsDto & {
+        format?: string;
+    }, res: Response, ip: string, userAgent: string): Promise<Response<any, Record<string, any>>>;
     findOne(req: TenantRequest & {
         user: any;
     }, id: string): Promise<(import("./complaint.schema").Complaint & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{

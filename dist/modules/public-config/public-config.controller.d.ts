@@ -8,11 +8,14 @@ export declare class PublicConfigController {
             id: import("mongoose").Types.ObjectId;
             slug: string;
             name: string;
+            title: string;
             status: import("../../shared/types").TenantStatus;
         };
         branding: {
-            platformName?: string;
-            logoUrl?: string;
+            title: string | null;
+            platformName: string | null;
+            logo: string | null;
+            logoUrl: string | null;
             faviconUrl?: string;
             pwaIconUrl?: string;
             leaderPhotoUrl?: string;

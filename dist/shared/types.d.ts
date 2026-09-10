@@ -102,7 +102,24 @@ export declare enum GalleryType {
 }
 export declare enum EventRsvpStatus {
     INTERESTED = "interested",
-    GOING = "going"
+    GOING = "going",
+    NOT_GOING = "not_going"
+}
+export declare enum EventType {
+    JAN_SABHA = "Jan Sabha",
+    RALLY = "Rally",
+    PUBLIC_MEETING = "Public Meeting",
+    MEMBERSHIP_CAMPAIGN = "Membership Campaign",
+    PRESS_CONFERENCE = "Press Conference",
+    SPECIAL_EVENT = "Special Event",
+    SOCIAL_PROGRAM = "Social Program",
+    OTHER = "Other"
+}
+export declare enum EventStatus {
+    UPCOMING = "upcoming",
+    ONGOING = "ongoing",
+    COMPLETED = "completed",
+    CANCELLED = "cancelled"
 }
 export declare enum ElectionType {
     GRAM_PRADHAN = "gram_pradhan",
@@ -118,7 +135,9 @@ export declare enum ElectionType {
 }
 export interface BrandingConfig {
     platformName?: string;
+    title?: string;
     logoUrl?: string;
+    logo?: string;
     faviconUrl?: string;
     pwaIconUrl?: string;
     leaderPhotoUrl?: string;
@@ -143,4 +162,18 @@ export interface RegistrationField {
     required: boolean;
     options?: string[];
     areaLevels?: string[];
+}
+export declare enum PollTargetAudience {
+    ALL = "ALL",
+    SPECIFIC_AREA = "SPECIFIC_AREA",
+    MEMBERS_ONLY = "MEMBERS_ONLY",
+    VOLUNTEERS_ONLY = "VOLUNTEERS_ONLY",
+    AGE_GROUP = "AGE_GROUP",
+    GENDER = "GENDER"
+}
+export declare enum PollResultVisibility {
+    ALWAYS_PUBLIC = "ALWAYS_PUBLIC",
+    AFTER_VOTE = "AFTER_VOTE",
+    AFTER_END = "AFTER_END",
+    ADMIN_ONLY = "ADMIN_ONLY"
 }

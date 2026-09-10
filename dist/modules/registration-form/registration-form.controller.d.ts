@@ -11,7 +11,9 @@ export declare class RegistrationFormController {
             slug: string;
             branding: {
                 platformName?: string;
+                title?: string;
                 logoUrl?: string;
+                logo?: string;
                 faviconUrl?: string;
                 pwaIconUrl?: string;
                 leaderPhotoUrl?: string;

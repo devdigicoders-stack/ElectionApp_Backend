@@ -25,6 +25,10 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Membership.prototype, "userId", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'MembershipPlan', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Membership.prototype, "planId", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: types_1.MembershipStatus.PENDING, enum: Object.values(types_1.MembershipStatus) }),
     __metadata("design:type", String)
 ], Membership.prototype, "status", void 0);
@@ -87,4 +91,5 @@ exports.MembershipSchema = mongoose_1.SchemaFactory.createForClass(Membership);
 exports.MembershipSchema.index({ tenantId: 1, userId: 1 }, { unique: true });
 exports.MembershipSchema.index({ tenantId: 1, status: 1 });
 exports.MembershipSchema.index({ tenantId: 1, membershipNumber: 1 });
+exports.MembershipSchema.index({ tenantId: 1, planId: 1 });
 //# sourceMappingURL=membership.schema.js.map

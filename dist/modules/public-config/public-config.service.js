@@ -28,14 +28,25 @@ let PublicConfigService = class PublicConfigService {
             this.featureModel.find({ tenantId: tenant._id, isEnabled: true }).select('featureKey config'),
             this.areaLevelModel.find({ tenantId: tenant._id }).sort({ levelOrder: 1 }).select('levelOrder name isRequired'),
         ]);
+        const branding = tenant.branding || {};
+        const title = branding.title || branding.platformName || tenant.title || tenant.name;
+        const logo = branding.logoUrl || branding.logo || null;
+        const normalizedBranding = {
+            ...branding,
+            title: title || null,
+            platformName: title || null,
+            logo: logo,
+            logoUrl: logo,
+        };
         return {
             tenant: {
                 id: tenant._id,
                 slug: tenant.slug,
                 name: tenant.name,
+                title: tenant.title || title || tenant.name,
                 status: tenant.status,
             },
-            branding: tenant.branding,
+            branding: normalizedBranding,
             registrationFields: tenant.settings?.registrationFields ?? [],
             enabledFeatures: features.map((f) => ({ key: f.featureKey, config: f.config })),
             areaLevels,

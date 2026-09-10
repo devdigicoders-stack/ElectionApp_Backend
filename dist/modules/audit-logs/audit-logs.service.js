@@ -72,6 +72,16 @@ let AuditLogsService = class AuditLogsService {
             .limit(limit)
             .lean();
     }
+    async findExportHistory(tenantId, limit = 50) {
+        const filter = { action: { $regex: '^DATA_EXPORT_' } };
+        if (tenantId)
+            filter.tenantId = new mongoose_2.Types.ObjectId(tenantId.toString());
+        return this.auditLogModel
+            .find(filter)
+            .sort({ createdAt: -1 })
+            .limit(limit)
+            .lean();
+    }
 };
 exports.AuditLogsService = AuditLogsService;
 exports.AuditLogsService = AuditLogsService = __decorate([

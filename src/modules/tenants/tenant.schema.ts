@@ -12,6 +12,9 @@ export class Tenant {
   @Prop({ required: true })
   name: string;
 
+  @Prop({ type: String, default: null })
+  title?: string;
+
   @Prop({ unique: true, sparse: true })
   customDomain?: string;
 
@@ -70,7 +73,9 @@ export class Tenant {
   @Prop({ type: Object, default: {} })
   branding: {
     platformName?: string;
+    title?: string;
     logoUrl?: string;
+    logo?: string;
     faviconUrl?: string;
     pwaIconUrl?: string;
     leaderPhotoUrl?: string;

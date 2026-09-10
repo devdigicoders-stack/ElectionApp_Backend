@@ -9,12 +9,16 @@ import {
   Query,
   Req,
   Res,
+  Ip,
+  Headers,
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { UsersService } from './users.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { RolesGuard, Roles } from '../../common/guards/roles.guard';
+import { UserRole } from '../../shared/types';
 import {
   CitizenQueryDto,
   UpdateCitizenDto,
@@ -64,12 +68,16 @@ export class CitizensController {
    * GET /citizens/export
    */
   @Get('export')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.SUPER_ADMIN, UserRole.LEADER, UserRole.ADMIN)
   exportCitizens(
-    @Req() req: TenantRequest,
+    @Req() req: TenantRequest & { user?: any },
     @Query() query: CitizenQueryDto,
     @Res() res: Response,
+    @Ip() ipAddress?: string,
+    @Headers('user-agent') userAgent?: string,
   ) {
-    return this.usersService.exportCitizens(req.tenant, query, res);
+    return this.usersService.exportCitizens(req.tenant, query, res, req.user, ipAddress, userAgent);
   }
 
   /**

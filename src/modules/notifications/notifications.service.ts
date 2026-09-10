@@ -3,8 +3,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Notification, NotificationDocument, NotificationRead, NotificationReadDocument } from './notification.schema';
 import { User, UserDocument } from '../users/user.schema';
+import { Membership, MembershipDocument } from '../membership/membership.schema';
+import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
-import { NotificationTarget } from '../../shared/types';
+import { NotificationTarget, MembershipStatus, VolunteerStatus } from '../../shared/types';
 
 @Injectable()
 export class NotificationsService {
@@ -12,6 +14,8 @@ export class NotificationsService {
     @InjectModel(Notification.name) private notificationModel: Model<NotificationDocument>,
     @InjectModel(NotificationRead.name) private readModel: Model<NotificationReadDocument>,
     @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Membership.name) private membershipModel: Model<MembershipDocument>,
+    @InjectModel(Volunteer.name) private volunteerModel: Model<VolunteerDocument>,
   ) {}
 
   async create(tenant: TenantDocument, data: any) {
@@ -33,9 +37,14 @@ export class NotificationsService {
       const users = await this.userModel.find({ ...query, areaId: notification.targetAreaId }).select('_id');
       userIds = users.map((u) => u._id as Types.ObjectId);
     } else if (notification.target === NotificationTarget.SPECIFIC) {
-      userIds = notification.targetUserIds;
+      userIds = notification.targetUserIds || [];
+    } else if (notification.target === NotificationTarget.MEMBERS) {
+      const members = await this.membershipModel.find({ tenantId: tenant._id, status: MembershipStatus.APPROVED }).select('userId');
+      userIds = members.map((m) => m.userId as Types.ObjectId);
+    } else if (notification.target === NotificationTarget.VOLUNTEERS) {
+      const volunteers = await this.volunteerModel.find({ tenantId: tenant._id, status: VolunteerStatus.ACTIVE }).select('userId');
+      userIds = volunteers.map((v) => v.userId as Types.ObjectId);
     }
-    // MEMBERS / VOLUNTEERS targeting can be added in Phase 2 with membership/volunteer model joins
 
     // Create read records (unread) for all target users
     if (userIds.length > 0) {

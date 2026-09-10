@@ -16,6 +16,7 @@ const volunteer_tasks_controller_1 = require("./volunteer-tasks.controller");
 const volunteer_schema_1 = require("./volunteer.schema");
 const volunteer_task_schema_1 = require("./volunteer-task.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
+const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
 let VolunteersModule = class VolunteersModule {
 };
 exports.VolunteersModule = VolunteersModule;
@@ -27,6 +28,7 @@ exports.VolunteersModule = VolunteersModule = __decorate([
                 { name: volunteer_task_schema_1.VolunteerTask.name, schema: volunteer_task_schema_1.VolunteerTaskSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
             ]),
+            audit_logs_module_1.AuditLogsModule,
         ],
         controllers: [volunteer_tasks_controller_1.VolunteerTasksController, volunteers_controller_1.VolunteersController],
         providers: [volunteers_service_1.VolunteersService, volunteer_tasks_service_1.VolunteerTasksService],

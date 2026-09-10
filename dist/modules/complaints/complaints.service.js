@@ -19,10 +19,12 @@ const mongoose_2 = require("mongoose");
 const complaint_schema_1 = require("./complaint.schema");
 const complaint_category_schema_1 = require("./complaint-category.schema");
 const types_1 = require("../../shared/types");
+const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 let ComplaintsService = class ComplaintsService {
-    constructor(complaintModel, categoryModel) {
+    constructor(complaintModel, categoryModel, auditLogsService) {
         this.complaintModel = complaintModel;
         this.categoryModel = categoryModel;
+        this.auditLogsService = auditLogsService;
     }
     async generateNumber(tenantId) {
         const year = new Date().getFullYear();
@@ -578,13 +580,135 @@ let ComplaintsService = class ComplaintsService {
             throw new common_1.NotFoundException('Category not found');
         return { message: 'Category deleted successfully' };
     }
+    async exportComplaints(tenant, query, res, format = 'csv', adminUser, ipAddress, userAgent) {
+        const filter = { tenantId: tenant._id };
+        if (query.status)
+            filter.status = query.status;
+        if (query.priority)
+            filter.priority = query.priority;
+        if (query.category)
+            filter.category = query.category;
+        if (query.areaId && mongoose_2.Types.ObjectId.isValid(query.areaId)) {
+            filter.areaId = new mongoose_2.Types.ObjectId(query.areaId);
+        }
+        if (query.assignedTo && mongoose_2.Types.ObjectId.isValid(query.assignedTo)) {
+            filter.assignedTo = new mongoose_2.Types.ObjectId(query.assignedTo);
+        }
+        if (query.search) {
+            filter.$or = [
+                { complaintNumber: { $regex: query.search.trim(), $options: 'i' } },
+                { title: { $regex: query.search.trim(), $options: 'i' } },
+                { description: { $regex: query.search.trim(), $options: 'i' } },
+            ];
+        }
+        if (query.startDate || query.endDate) {
+            filter.createdAt = {};
+            if (query.startDate)
+                filter.createdAt.$gte = new Date(query.startDate);
+            if (query.endDate)
+                filter.createdAt.$lte = new Date(query.endDate);
+        }
+        const complaints = await this.complaintModel
+            .find(filter)
+            .populate('userId', 'name mobile')
+            .populate('areaId', 'name type')
+            .populate('assignedTo', 'name email role')
+            .sort({ createdAt: -1 })
+            .lean();
+        const escapeCsv = (val) => {
+            if (val === null || val === undefined)
+                return '""';
+            const str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        };
+        const maskMobile = (mobile) => {
+            if (!mobile || mobile.length < 5)
+                return 'N/A';
+            return mobile.slice(0, 2) + '****' + mobile.slice(-4);
+        };
+        const headers = [
+            'Complaint No',
+            'Title',
+            'Category',
+            'Priority',
+            'Status',
+            'Citizen Name',
+            'Citizen Mobile',
+            'Area / Ward',
+            'Assigned Staff',
+            'Submitted Date',
+            'Resolved Date',
+            'Closed Date',
+            'Resolution Details',
+            'Resolution Proof Links',
+        ];
+        const rows = complaints.map((c) => {
+            const citizen = c.userId || {};
+            const area = c.areaId || {};
+            const assigned = c.assignedTo || {};
+            const proofs = (c.resolutionProof || []).join('; ');
+            return [
+                escapeCsv(c.complaintNumber),
+                escapeCsv(c.title),
+                escapeCsv(c.category),
+                escapeCsv(c.priority),
+                escapeCsv(c.status),
+                escapeCsv(citizen.name || 'Citizen'),
+                escapeCsv(maskMobile(citizen.mobile)),
+                escapeCsv(area.name ? `${area.name} (${area.type || 'Area'})` : 'Constituency'),
+                escapeCsv(assigned.name || 'Unassigned'),
+                escapeCsv(c.createdAt ? new Date(c.createdAt).toISOString() : ''),
+                escapeCsv(c.resolvedAt ? new Date(c.resolvedAt).toISOString() : ''),
+                escapeCsv(c.closedAt ? new Date(c.closedAt).toISOString() : ''),
+                escapeCsv(c.resolutionDetails || ''),
+                escapeCsv(proofs),
+            ].join(',');
+        });
+        const isExcel = (format || '').toLowerCase() === 'excel' || (format || '').toLowerCase() === 'xlsx';
+        const bom = '\uFEFF';
+        const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `complaints-${tenant.slug || 'export'}-${timestamp}.csv`;
+        const contentType = isExcel
+            ? 'application/vnd.ms-excel; charset=utf-8'
+            : 'text/csv; charset=utf-8';
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+        if (this.auditLogsService && adminUser) {
+            await this.auditLogsService
+                .log({
+                tenantId: tenant._id,
+                tenantName: tenant.name,
+                action: 'DATA_EXPORT_COMPLAINTS',
+                performedBy: {
+                    id: adminUser.sub || adminUser.id || 'admin',
+                    email: adminUser.email || 'admin@platform.local',
+                    name: adminUser.name || 'Admin',
+                    role: adminUser.role || 'admin',
+                },
+                details: {
+                    format: isExcel ? 'excel' : 'csv',
+                    recordCount: complaints.length,
+                    filterQuery: query,
+                    filename,
+                },
+                ipAddress,
+                userAgent,
+            })
+                .catch(() => { });
+        }
+        return res.status(200).send(csvContent);
+    }
 };
 exports.ComplaintsService = ComplaintsService;
 exports.ComplaintsService = ComplaintsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(complaint_schema_1.Complaint.name)),
     __param(1, (0, mongoose_1.InjectModel)(complaint_category_schema_1.ComplaintCategory.name)),
+    __param(2, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService])
 ], ComplaintsService);
 //# sourceMappingURL=complaints.service.js.map

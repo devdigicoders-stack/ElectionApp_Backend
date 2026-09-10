@@ -14,6 +14,9 @@ const events_controller_1 = require("./events.controller");
 const event_schema_1 = require("./event.schema");
 const event_rsvp_schema_1 = require("./event-rsvp.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
+const user_schema_1 = require("../users/user.schema");
+const area_schema_1 = require("../areas/area.schema");
+const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
 let EventsModule = class EventsModule {
 };
 exports.EventsModule = EventsModule;
@@ -24,7 +27,10 @@ exports.EventsModule = EventsModule = __decorate([
                 { name: event_schema_1.Event.name, schema: event_schema_1.EventSchema },
                 { name: event_rsvp_schema_1.EventRsvp.name, schema: event_rsvp_schema_1.EventRsvpSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: area_schema_1.Area.name, schema: area_schema_1.AreaSchema },
             ]),
+            audit_logs_module_1.AuditLogsModule,
         ],
         controllers: [events_controller_1.EventsController],
         providers: [events_service_1.EventsService],

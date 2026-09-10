@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ElectionType = exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
+exports.PollResultVisibility = exports.PollTargetAudience = exports.ElectionType = exports.EventStatus = exports.EventType = exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
 var TenantStatus;
 (function (TenantStatus) {
     TenantStatus["ACTIVE"] = "active";
@@ -122,7 +122,26 @@ var EventRsvpStatus;
 (function (EventRsvpStatus) {
     EventRsvpStatus["INTERESTED"] = "interested";
     EventRsvpStatus["GOING"] = "going";
+    EventRsvpStatus["NOT_GOING"] = "not_going";
 })(EventRsvpStatus || (exports.EventRsvpStatus = EventRsvpStatus = {}));
+var EventType;
+(function (EventType) {
+    EventType["JAN_SABHA"] = "Jan Sabha";
+    EventType["RALLY"] = "Rally";
+    EventType["PUBLIC_MEETING"] = "Public Meeting";
+    EventType["MEMBERSHIP_CAMPAIGN"] = "Membership Campaign";
+    EventType["PRESS_CONFERENCE"] = "Press Conference";
+    EventType["SPECIAL_EVENT"] = "Special Event";
+    EventType["SOCIAL_PROGRAM"] = "Social Program";
+    EventType["OTHER"] = "Other";
+})(EventType || (exports.EventType = EventType = {}));
+var EventStatus;
+(function (EventStatus) {
+    EventStatus["UPCOMING"] = "upcoming";
+    EventStatus["ONGOING"] = "ongoing";
+    EventStatus["COMPLETED"] = "completed";
+    EventStatus["CANCELLED"] = "cancelled";
+})(EventStatus || (exports.EventStatus = EventStatus = {}));
 var ElectionType;
 (function (ElectionType) {
     ElectionType["GRAM_PRADHAN"] = "gram_pradhan";
@@ -136,4 +155,20 @@ var ElectionType;
     ElectionType["POLITICAL_PARTY"] = "political_party";
     ElectionType["OTHER"] = "other";
 })(ElectionType || (exports.ElectionType = ElectionType = {}));
+var PollTargetAudience;
+(function (PollTargetAudience) {
+    PollTargetAudience["ALL"] = "ALL";
+    PollTargetAudience["SPECIFIC_AREA"] = "SPECIFIC_AREA";
+    PollTargetAudience["MEMBERS_ONLY"] = "MEMBERS_ONLY";
+    PollTargetAudience["VOLUNTEERS_ONLY"] = "VOLUNTEERS_ONLY";
+    PollTargetAudience["AGE_GROUP"] = "AGE_GROUP";
+    PollTargetAudience["GENDER"] = "GENDER";
+})(PollTargetAudience || (exports.PollTargetAudience = PollTargetAudience = {}));
+var PollResultVisibility;
+(function (PollResultVisibility) {
+    PollResultVisibility["ALWAYS_PUBLIC"] = "ALWAYS_PUBLIC";
+    PollResultVisibility["AFTER_VOTE"] = "AFTER_VOTE";
+    PollResultVisibility["AFTER_END"] = "AFTER_END";
+    PollResultVisibility["ADMIN_ONLY"] = "ADMIN_ONLY";
+})(PollResultVisibility || (exports.PollResultVisibility = PollResultVisibility = {}));
 //# sourceMappingURL=types.js.map

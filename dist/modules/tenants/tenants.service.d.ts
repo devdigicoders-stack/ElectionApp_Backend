@@ -33,6 +33,7 @@ export declare class TenantsService {
             tenantId: Types.ObjectId;
             slug: string;
             name: string;
+            title: string;
             status: TenantStatus;
             isPublished: boolean;
             completionPercentage: number;
@@ -44,6 +45,7 @@ export declare class TenantsService {
                     completed: boolean;
                     data: {
                         name: string;
+                        title: string;
                         slug: string;
                         leaderName: string | null;
                         electionType: string;
@@ -57,9 +59,11 @@ export declare class TenantsService {
                     name: string;
                     completed: boolean;
                     data: {
-                        platformName: string;
-                        leaderName: string | null;
+                        title: string | null;
+                        platformName: string | null;
+                        logo: string | null;
                         logoUrl: string | null;
+                        leaderName: string | null;
                         leaderPhotoUrl: string | null;
                         faviconUrl: string | null;
                         pwaIconUrl: string | null;
@@ -129,6 +133,7 @@ export declare class TenantsService {
         tenantId: Types.ObjectId;
         slug: string;
         name: string;
+        title: string;
         status: TenantStatus;
         isPublished: boolean;
         completionPercentage: number;
@@ -140,6 +145,7 @@ export declare class TenantsService {
                 completed: boolean;
                 data: {
                     name: string;
+                    title: string;
                     slug: string;
                     leaderName: string | null;
                     electionType: string;
@@ -153,9 +159,11 @@ export declare class TenantsService {
                 name: string;
                 completed: boolean;
                 data: {
-                    platformName: string;
-                    leaderName: string | null;
+                    title: string | null;
+                    platformName: string | null;
+                    logo: string | null;
                     logoUrl: string | null;
+                    leaderName: string | null;
                     leaderPhotoUrl: string | null;
                     faviconUrl: string | null;
                     pwaIconUrl: string | null;
@@ -244,13 +252,13 @@ export declare class TenantsService {
     } & {
         id: string;
     }>;
-    update(id: string, dto: UpdateTenantDto): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    update(id: string, dto: UpdateTenantDto): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    }>;
+    }) | null>;
     updateBranding(id: string, branding: Record<string, any>): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {

@@ -14,19 +14,17 @@ const common_1 = require("@nestjs/common");
 const core_1 = require("@nestjs/core");
 const types_1 = require("../../shared/types");
 exports.ROLES_KEY = 'roles';
-const Roles = (...roles) => {
-    return (target, key, descriptor) => {
-        Reflect.defineMetadata(exports.ROLES_KEY, roles, descriptor.value);
-        return descriptor;
-    };
-};
+const Roles = (...roles) => (0, common_1.SetMetadata)(exports.ROLES_KEY, roles);
 exports.Roles = Roles;
 let RolesGuard = class RolesGuard {
     constructor(reflector) {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.get(exports.ROLES_KEY, context.getHandler());
+        const requiredRoles = this.reflector.getAllAndOverride(exports.ROLES_KEY, [
+            context.getHandler(),
+            context.getClass(),
+        ]);
         if (!requiredRoles?.length)
             return true;
         const { user } = context.switchToHttp().getRequest();

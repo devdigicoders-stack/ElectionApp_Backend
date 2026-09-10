@@ -16,6 +16,8 @@ exports.AreasController = void 0;
 const common_1 = require("@nestjs/common");
 const areas_service_1 = require("./areas.service");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
+const roles_guard_1 = require("../../common/guards/roles.guard");
+const types_1 = require("../../shared/types");
 let AreasController = class AreasController {
     constructor(areasService) {
         this.areasService = areasService;
@@ -44,11 +46,15 @@ let AreasController = class AreasController {
     getChildren(req, id) {
         return this.areasService.getChildren(req.tenant, id);
     }
+    getAncestors(req, id) {
+        return this.areasService.getAncestors(req.tenant, id);
+    }
 };
 exports.AreasController = AreasController;
 __decorate([
     (0, common_1.Post)('levels'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -64,7 +70,8 @@ __decorate([
 ], AreasController.prototype, "getLevels", null);
 __decorate([
     (0, common_1.Patch)('levels/:id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __param(2, (0, common_1.Body)()),
@@ -74,7 +81,8 @@ __decorate([
 ], AreasController.prototype, "updateLevel", null);
 __decorate([
     (0, common_1.Delete)('levels/:id'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
     __metadata("design:type", Function),
@@ -83,7 +91,8 @@ __decorate([
 ], AreasController.prototype, "deleteLevel", null);
 __decorate([
     (0, common_1.Post)(),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -113,6 +122,14 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], AreasController.prototype, "getChildren", null);
+__decorate([
+    (0, common_1.Get)(':id/ancestors'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AreasController.prototype, "getAncestors", null);
 exports.AreasController = AreasController = __decorate([
     (0, common_1.Controller)('areas'),
     __metadata("design:paramtypes", [areas_service_1.AreasService])

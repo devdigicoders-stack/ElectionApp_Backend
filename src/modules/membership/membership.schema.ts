@@ -12,6 +12,9 @@ export class Membership {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
+  @Prop({ type: Types.ObjectId, ref: 'MembershipPlan', default: null })
+  planId?: Types.ObjectId;
+
   @Prop({ default: MembershipStatus.PENDING, enum: Object.values(MembershipStatus) })
   status: MembershipStatus;
 
@@ -59,3 +62,4 @@ export const MembershipSchema = SchemaFactory.createForClass(Membership);
 MembershipSchema.index({ tenantId: 1, userId: 1 }, { unique: true });
 MembershipSchema.index({ tenantId: 1, status: 1 });
 MembershipSchema.index({ tenantId: 1, membershipNumber: 1 });
+MembershipSchema.index({ tenantId: 1, planId: 1 });

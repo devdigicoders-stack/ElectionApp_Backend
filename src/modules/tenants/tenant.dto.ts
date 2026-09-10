@@ -5,8 +5,21 @@ export class CreateTenantDto {
   @IsString()
   slug: string;
 
+  @IsOptional()
   @IsString()
-  name: string;
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
 
   @IsOptional()
   @IsString()
@@ -60,6 +73,18 @@ export class UpdateTenantDto {
 
   @IsOptional()
   @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
   contactPerson?: string;
 
   @IsOptional()
@@ -102,7 +127,15 @@ export class UpdateBrandingDto {
 
   @IsOptional()
   @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
   logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  logo?: string;
 
   @IsOptional()
   @IsString()

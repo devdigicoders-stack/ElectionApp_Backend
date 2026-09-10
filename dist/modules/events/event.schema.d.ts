@@ -1,18 +1,32 @@
 import { Document, Types } from 'mongoose';
+import { EventStatus } from '../../shared/types';
 export type EventDocument = Event & Document;
 export declare class Event {
     tenantId: Types.ObjectId;
     title: string;
     description?: string;
-    eventType: string;
+    category: string;
+    bannerUrl?: string;
     startDate: Date;
     endDate?: Date;
+    startTime?: string;
+    endTime?: string;
     location?: string;
+    mapLink?: string;
     areaId?: Types.ObjectId;
     images: string[];
-    isPublished: boolean;
+    registrationRequired: boolean;
+    maximumParticipants?: number;
+    registeredCount: number;
+    checkedInCount: number;
     interestedCount: number;
     goingCount: number;
+    status: EventStatus;
+    organizerName?: string;
+    organizerPhone?: string;
+    tags: string[];
+    isPublished: boolean;
+    isActive: boolean;
 }
 export declare const EventSchema: import("mongoose").Schema<Event, import("mongoose").Model<Event, any, any, any, any, any, Event>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Event, Document<unknown, {}, Event, {
     id: string;
@@ -50,7 +64,16 @@ export declare const EventSchema: import("mongoose").Schema<Event, import("mongo
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    eventType?: import("mongoose").SchemaDefinitionProperty<string, Event, Document<unknown, {}, Event, {
+    category?: import("mongoose").SchemaDefinitionProperty<string, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    bannerUrl?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
         _id: Types.ObjectId;
@@ -77,7 +100,34 @@ export declare const EventSchema: import("mongoose").Schema<Event, import("mongo
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    startTime?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    endTime?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     location?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    mapLink?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
         _id: Types.ObjectId;
@@ -104,7 +154,34 @@ export declare const EventSchema: import("mongoose").Schema<Event, import("mongo
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    isPublished?: import("mongoose").SchemaDefinitionProperty<boolean, Event, Document<unknown, {}, Event, {
+    registrationRequired?: import("mongoose").SchemaDefinitionProperty<boolean, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    maximumParticipants?: import("mongoose").SchemaDefinitionProperty<number | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    registeredCount?: import("mongoose").SchemaDefinitionProperty<number, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    checkedInCount?: import("mongoose").SchemaDefinitionProperty<number, Event, Document<unknown, {}, Event, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
         _id: Types.ObjectId;
@@ -123,6 +200,60 @@ export declare const EventSchema: import("mongoose").Schema<Event, import("mongo
         id: string;
     }>> | undefined;
     goingCount?: import("mongoose").SchemaDefinitionProperty<number, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    status?: import("mongoose").SchemaDefinitionProperty<EventStatus, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    organizerName?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    organizerPhone?: import("mongoose").SchemaDefinitionProperty<string | undefined, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    tags?: import("mongoose").SchemaDefinitionProperty<string[], Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    isPublished?: import("mongoose").SchemaDefinitionProperty<boolean, Event, Document<unknown, {}, Event, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    isActive?: import("mongoose").SchemaDefinitionProperty<boolean, Event, Document<unknown, {}, Event, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Event & {
         _id: Types.ObjectId;

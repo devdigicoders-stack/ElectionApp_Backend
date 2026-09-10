@@ -8,6 +8,7 @@ import { Membership, MembershipSchema } from '../membership/membership.schema';
 import { Volunteer, VolunteerSchema } from '../volunteers/volunteer.schema';
 import { Complaint, ComplaintSchema } from '../complaints/complaint.schema';
 import { Area, AreaSchema } from '../areas/area.schema';
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { Area, AreaSchema } from '../areas/area.schema';
       { name: Complaint.name, schema: ComplaintSchema },
       { name: Area.name, schema: AreaSchema },
     ]),
+    AuditLogsModule,
   ],
   controllers: [UsersController, CitizensController],
   providers: [UsersService],

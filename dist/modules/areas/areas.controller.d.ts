@@ -71,4 +71,5 @@ export declare class AreasController {
     } & {
         id: string;
     })[]>;
+    getAncestors(req: TenantRequest, id: string): Promise<any[]>;
 }

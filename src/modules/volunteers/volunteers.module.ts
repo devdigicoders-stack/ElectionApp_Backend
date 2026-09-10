@@ -8,6 +8,8 @@ import { Volunteer, VolunteerSchema } from './volunteer.schema';
 import { VolunteerTask, VolunteerTaskSchema } from './volunteer-task.schema';
 import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.schema';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -15,6 +17,7 @@ import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.s
       { name: VolunteerTask.name, schema: VolunteerTaskSchema },
       { name: TenantFeature.name, schema: TenantFeatureSchema },
     ]),
+    AuditLogsModule,
   ],
   controllers: [VolunteerTasksController, VolunteersController],
   providers: [VolunteersService, VolunteerTasksService],

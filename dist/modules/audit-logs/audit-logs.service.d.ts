@@ -23,4 +23,9 @@ export declare class AuditLogsService {
     }> & {
         __v: number;
     })[]>;
+    findExportHistory(tenantId?: any, limit?: number): Promise<(AuditLog & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    })[]>;
 }

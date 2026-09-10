@@ -32,6 +32,30 @@ __decorate([
     __metadata("design:type", String)
 ], GeneratedPoster.prototype, "outputUrl", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: 'png' }),
+    __metadata("design:type", String)
+], GeneratedPoster.prototype, "format", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 1080 }),
+    __metadata("design:type", Number)
+], GeneratedPoster.prototype, "width", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 1080 }),
+    __metadata("design:type", Number)
+], GeneratedPoster.prototype, "height", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], GeneratedPoster.prototype, "downloadUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], GeneratedPoster.prototype, "shareText", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], GeneratedPoster.prototype, "userPhotoUrl", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: Object, default: {} }),
     __metadata("design:type", Object)
 ], GeneratedPoster.prototype, "fieldValues", void 0);
@@ -41,4 +65,5 @@ exports.GeneratedPoster = GeneratedPoster = __decorate([
 exports.GeneratedPosterSchema = mongoose_1.SchemaFactory.createForClass(GeneratedPoster);
 exports.GeneratedPosterSchema.index({ tenantId: 1, userId: 1 });
 exports.GeneratedPosterSchema.index({ tenantId: 1, templateId: 1 });
+exports.GeneratedPosterSchema.index({ tenantId: 1, createdAt: -1 });
 //# sourceMappingURL=generated-poster.schema.js.map

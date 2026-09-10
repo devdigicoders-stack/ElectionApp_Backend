@@ -44,6 +44,7 @@ const news_module_1 = require("./modules/news/news.module");
 const registration_form_module_1 = require("./modules/registration-form/registration-form.module");
 const citizen_dashboard_module_1 = require("./modules/citizen-dashboard/citizen-dashboard.module");
 const payments_module_1 = require("./modules/payments/payments.module");
+const exports_module_1 = require("./modules/exports/exports.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
@@ -98,6 +99,7 @@ exports.AppModule = AppModule = __decorate([
             registration_form_module_1.RegistrationFormModule,
             citizen_dashboard_module_1.CitizenDashboardModule,
             payments_module_1.PaymentsModule,
+            exports_module_1.ExportsModule,
         ],
     })
 ], AppModule);

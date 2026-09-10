@@ -54,14 +54,18 @@ const path = __importStar(require("path"));
 const QRCode = __importStar(require("qrcode"));
 const canvas_1 = require("canvas");
 const membership_schema_1 = require("./membership.schema");
+const membership_plan_schema_1 = require("./membership-plan.schema");
 const user_schema_1 = require("../users/user.schema");
 const area_schema_1 = require("../areas/area.schema");
+const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const types_1 = require("../../shared/types");
 let MembershipService = class MembershipService {
-    constructor(membershipModel, userModel, areaModel) {
+    constructor(membershipModel, planModel, userModel, areaModel, auditLogsService) {
         this.membershipModel = membershipModel;
+        this.planModel = planModel;
         this.userModel = userModel;
         this.areaModel = areaModel;
+        this.auditLogsService = auditLogsService;
     }
     generateMemberNumber(tenantSlug, count) {
         return `${tenantSlug.toUpperCase()}-${String(count + 1).padStart(6, '0')}`;
@@ -85,6 +89,166 @@ let MembershipService = class MembershipService {
         ctx.lineTo(x, y + r);
         ctx.quadraticCurveTo(x, y, x + r, y);
         ctx.closePath();
+    }
+    async seedDefaultPlansIfEmpty(tenant) {
+        const count = await this.planModel.countDocuments({ tenantId: tenant._id });
+        if (count > 0)
+            return;
+        const defaultPlans = [
+            {
+                tenantId: tenant._id,
+                name: 'Primary Member / प्राथमिक सदस्य',
+                code: 'PRIMARY',
+                description: 'Free entry-level membership with digital identity card and official updates.',
+                price: 0,
+                currency: 'INR',
+                validityDays: 365,
+                badgeText: 'PRIMARY',
+                badgeColor: '#3b82f6',
+                benefits: [
+                    'Official Digital ID Card with QR Verification',
+                    'Direct Jan Samasya Complaint Filing',
+                    'Access to Constituency Event Updates',
+                ],
+                requiresApproval: false,
+                isActive: true,
+                sortOrder: 1,
+            },
+            {
+                tenantId: tenant._id,
+                name: 'Active Member / सक्रिय सदस्य',
+                code: 'ACTIVE',
+                description: 'Standard active membership for grassroots volunteers and active supporters.',
+                price: 100,
+                currency: 'INR',
+                validityDays: 365,
+                badgeText: 'ACTIVE',
+                badgeColor: '#f59e0b',
+                benefits: [
+                    'Official Digital ID Card with Golden Active Seal',
+                    'Priority Jan Samasya Resolution Escrow',
+                    'Access to Volunteer Task Missions & Points',
+                    'Invitation to Monthly Worker Conventions',
+                ],
+                requiresApproval: false,
+                isActive: true,
+                sortOrder: 2,
+            },
+            {
+                tenantId: tenant._id,
+                name: 'Patron Member / संरक्षक सदस्य',
+                code: 'PATRON',
+                description: 'Elite lifetime patron membership for core leaders and leadership advisors.',
+                price: 1000,
+                currency: 'INR',
+                validityDays: 0,
+                badgeText: 'PATRON',
+                badgeColor: '#8b5cf6',
+                benefits: [
+                    'Lifetime Executive Gold Digital ID Card',
+                    'Direct Access to Constituency Advisory Board',
+                    'VIP Pass to State & Regional Conventions',
+                    'Personalized Briefings from Leader Secretariat',
+                ],
+                requiresApproval: true,
+                isActive: true,
+                sortOrder: 3,
+            },
+        ];
+        await this.planModel.insertMany(defaultPlans);
+    }
+    async createPlan(tenant, dto) {
+        const code = dto.code.trim().toUpperCase();
+        const existing = await this.planModel.findOne({ tenantId: tenant._id, code });
+        if (existing) {
+            throw new common_1.ConflictException(`Membership plan with code "${code}" already exists for this organization`);
+        }
+        return this.planModel.create({
+            tenantId: tenant._id,
+            name: dto.name.trim(),
+            code,
+            description: dto.description || '',
+            price: dto.price !== undefined ? dto.price : 0,
+            currency: dto.currency || 'INR',
+            validityDays: dto.validityDays !== undefined ? dto.validityDays : 365,
+            badgeText: dto.badgeText || 'MEMBER',
+            badgeColor: dto.badgeColor || '#f59e0b',
+            benefits: dto.benefits || [],
+            requiresApproval: dto.requiresApproval !== undefined ? dto.requiresApproval : false,
+            isActive: dto.isActive !== undefined ? dto.isActive : true,
+            sortOrder: dto.sortOrder !== undefined ? dto.sortOrder : 0,
+        });
+    }
+    async findAllPlans(tenant, onlyActive = true) {
+        await this.seedDefaultPlansIfEmpty(tenant);
+        const query = { tenantId: tenant._id };
+        if (onlyActive) {
+            query.isActive = true;
+        }
+        return this.planModel.find(query).sort({ sortOrder: 1, createdAt: 1 }).lean();
+    }
+    async findPlanById(tenant, id) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid plan ID format');
+        }
+        const plan = await this.planModel.findOne({ _id: id, tenantId: tenant._id });
+        if (!plan) {
+            throw new common_1.NotFoundException(`Membership plan #${id} not found`);
+        }
+        return plan;
+    }
+    async updatePlan(tenant, id, dto) {
+        const plan = await this.findPlanById(tenant, id);
+        if (dto.name !== undefined)
+            plan.name = dto.name.trim();
+        if (dto.code !== undefined) {
+            const code = dto.code.trim().toUpperCase();
+            if (code !== plan.code) {
+                const existing = await this.planModel.findOne({ tenantId: tenant._id, code });
+                if (existing) {
+                    throw new common_1.ConflictException(`Plan code "${code}" is already in use`);
+                }
+                plan.code = code;
+            }
+        }
+        if (dto.description !== undefined)
+            plan.description = dto.description;
+        if (dto.price !== undefined)
+            plan.price = dto.price;
+        if (dto.currency !== undefined)
+            plan.currency = dto.currency;
+        if (dto.validityDays !== undefined)
+            plan.validityDays = dto.validityDays;
+        if (dto.badgeText !== undefined)
+            plan.badgeText = dto.badgeText;
+        if (dto.badgeColor !== undefined)
+            plan.badgeColor = dto.badgeColor;
+        if (dto.benefits !== undefined)
+            plan.benefits = dto.benefits;
+        if (dto.requiresApproval !== undefined)
+            plan.requiresApproval = dto.requiresApproval;
+        if (dto.isActive !== undefined)
+            plan.isActive = dto.isActive;
+        if (dto.sortOrder !== undefined)
+            plan.sortOrder = dto.sortOrder;
+        return plan.save();
+    }
+    async deletePlan(tenant, id) {
+        const plan = await this.findPlanById(tenant, id);
+        const usedCount = await this.membershipModel.countDocuments({
+            tenantId: tenant._id,
+            planId: plan._id,
+        });
+        if (usedCount > 0) {
+            plan.isActive = false;
+            await plan.save();
+            return {
+                message: `Plan #${id} has ${usedCount} associated members. It has been deactivated instead of deleted.`,
+                plan,
+            };
+        }
+        await this.planModel.deleteOne({ _id: plan._id });
+        return { message: `Plan #${id} deleted successfully.` };
     }
     async generateDigitalCard(tenant, membership, userDoc) {
         const user = userDoc ||
@@ -376,16 +540,91 @@ let MembershipService = class MembershipService {
     async apply(tenant, userId, dto) {
         const existing = await this.membershipModel.findOne({ tenantId: tenant._id, userId });
         if (existing) {
-            throw new common_1.ConflictException('Membership application already exists for this citizen');
+            if (existing.status === types_1.MembershipStatus.APPROVED) {
+                throw new common_1.ConflictException('You are already an active approved member.');
+            }
+            if (existing.status === types_1.MembershipStatus.PENDING) {
+                throw new common_1.ConflictException('Your membership application is already under review.');
+            }
         }
-        return this.membershipModel.create({
+        let plan = null;
+        if (dto?.planId) {
+            plan = await this.planModel.findOne({ _id: dto.planId, tenantId: tenant._id });
+            if (!plan) {
+                throw new common_1.NotFoundException(`Selected membership plan #${dto.planId} does not exist`);
+            }
+        }
+        const designation = plan?.name || dto?.designation || 'Active Member';
+        const validityDays = plan?.validityDays !== undefined ? plan.validityDays : 365;
+        const expiresAt = validityDays > 0 ? new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000) : null;
+        const canAutoApprove = plan ? plan.price === 0 && !plan.requiresApproval : false;
+        if (canAutoApprove) {
+            const count = await this.membershipModel.countDocuments({
+                tenantId: tenant._id,
+                status: types_1.MembershipStatus.APPROVED,
+            });
+            const membershipNumber = this.generateMemberNumber(tenant.slug, count);
+            const membership = await this.membershipModel.create({
+                tenantId: tenant._id,
+                userId: new mongoose_2.Types.ObjectId(userId),
+                planId: plan._id,
+                designation,
+                photoUrl: dto?.photoUrl || undefined,
+                customData: dto?.customData || {},
+                status: types_1.MembershipStatus.APPROVED,
+                membershipNumber,
+                approvedAt: new Date(),
+                expiresAt: expiresAt || undefined,
+                cardIssuedAt: new Date(),
+            });
+            try {
+                const { cardUrl } = await this.generateDigitalCard(tenant, membership);
+                membership.cardUrl = cardUrl;
+                membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membershipNumber}`;
+                await membership.save();
+            }
+            catch (err) {
+            }
+            return {
+                message: 'Congratulations! Your membership has been instantly activated.',
+                autoApproved: true,
+                membership: await this.membershipModel
+                    .findById(membership._id)
+                    .populate('userId', 'name mobile areaId customFields')
+                    .populate('planId'),
+            };
+        }
+        const membership = await this.membershipModel.create({
             tenantId: tenant._id,
             userId: new mongoose_2.Types.ObjectId(userId),
-            designation: dto?.designation || 'Active Member',
+            planId: plan ? plan._id : undefined,
+            designation,
             photoUrl: dto?.photoUrl || undefined,
             customData: dto?.customData || {},
             status: types_1.MembershipStatus.PENDING,
+            expiresAt: expiresAt || undefined,
         });
+        const isPaidPlan = plan && plan.price > 0;
+        return {
+            message: isPaidPlan
+                ? `Membership application submitted. Please complete payment of ₹${plan.price} to activate your official ID card.`
+                : 'Membership application submitted successfully and is pending admin approval.',
+            autoApproved: false,
+            requiresPayment: isPaidPlan,
+            paymentDetails: isPaidPlan
+                ? {
+                    amount: plan.price,
+                    currency: plan.currency || 'INR',
+                    planId: plan._id,
+                    planName: plan.name,
+                    paymentOrderUrl: '/payments/orders',
+                }
+                : null,
+            membership: await this.membershipModel
+                .findById(membership._id)
+                .populate('userId', 'name mobile areaId customFields')
+                .populate('planId'),
+        };
     }
     async findByUser(tenant, userId) {
         const userObjectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
@@ -395,6 +634,7 @@ let MembershipService = class MembershipService {
             $or: [{ userId: userObjectId }, { userId: userId.toString() }],
         })
             .populate('userId', 'name mobile areaId customFields')
+            .populate('planId')
             .populate('approvedBy', 'name');
     }
     async getMyCard(tenant, userId) {
@@ -404,7 +644,8 @@ let MembershipService = class MembershipService {
             tenantId: tenant._id,
             $or: [{ userId: userObjectId }, { userId: userId.toString() }],
         })
-            .populate('userId', 'name mobile areaId customFields');
+            .populate('userId', 'name mobile areaId customFields')
+            .populate('planId');
         if (!membership) {
             throw new common_1.NotFoundException('No membership application found. Please apply first.');
         }
@@ -413,7 +654,7 @@ let MembershipService = class MembershipService {
                 hasCard: false,
                 status: membership.status,
                 message: membership.status === types_1.MembershipStatus.PENDING
-                    ? 'Your membership application is pending approval.'
+                    ? 'Your membership application is pending approval or payment.'
                     : `Your membership application was ${membership.status}.`,
                 membership,
             };
@@ -426,24 +667,37 @@ let MembershipService = class MembershipService {
             membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membership.membershipNumber}`;
             await membership.save();
         }
+        const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+        const verifyUrl = membership.verificationUrl || `http://${domain}/membership/verify/${membership.membershipNumber}`;
+        const shareText = `Proud Member of ${tenant.name}! Here is my official verified digital membership card (ID: ${membership.membershipNumber}). Verify online: ${verifyUrl}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
         return {
             hasCard: true,
             status: membership.status,
             membershipNumber: membership.membershipNumber,
             designation: membership.designation,
+            plan: membership.planId || null,
             cardUrl: membership.cardUrl,
             downloadUrl: `/membership/my/card/download`,
-            verificationUrl: membership.verificationUrl,
+            verificationUrl: verifyUrl,
+            shareData: {
+                title: `${tenant.name} Digital Membership Card`,
+                text: shareText,
+                url: verifyUrl,
+                whatsappUrl,
+            },
             approvedAt: membership.approvedAt,
             expiresAt: membership.expiresAt,
             member: membership.userId,
         };
     }
     async findAll(tenant, filters) {
-        const { status, search, page = 1, limit = 20 } = filters;
+        const { status, planId, search, page = 1, limit = 20 } = filters;
         const query = { tenantId: tenant._id };
         if (status)
             query.status = status;
+        if (planId && mongoose_2.Types.ObjectId.isValid(planId))
+            query.planId = new mongoose_2.Types.ObjectId(planId);
         if (search && search.trim()) {
             const s = search.trim();
             const users = await this.userModel
@@ -467,6 +721,7 @@ let MembershipService = class MembershipService {
             this.membershipModel
                 .find(query)
                 .populate('userId', 'name mobile areaId customFields')
+                .populate('planId')
                 .populate('approvedBy', 'name')
                 .sort({ createdAt: -1 })
                 .skip((page - 1) * limit)
@@ -476,9 +731,13 @@ let MembershipService = class MembershipService {
         return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
     }
     async findOne(tenant, id) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid membership ID format');
+        }
         const membership = await this.membershipModel
             .findOne({ _id: id, tenantId: tenant._id })
             .populate('userId', 'name mobile areaId customFields')
+            .populate('planId')
             .populate('approvedBy', 'name');
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
@@ -486,6 +745,9 @@ let MembershipService = class MembershipService {
         return membership;
     }
     async approve(tenant, id, approvedBy, dto) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid membership ID format');
+        }
         const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
@@ -502,8 +764,12 @@ let MembershipService = class MembershipService {
         membership.approvedAt = new Date();
         if (dto?.designation)
             membership.designation = dto.designation;
-        if (dto?.expiresAt)
+        if (dto?.expiresAt) {
             membership.expiresAt = new Date(dto.expiresAt);
+        }
+        else if (!membership.expiresAt) {
+            membership.expiresAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000);
+        }
         const { cardUrl } = await this.generateDigitalCard(tenant, membership);
         membership.cardUrl = cardUrl;
         membership.cardIssuedAt = new Date();
@@ -513,9 +779,13 @@ let MembershipService = class MembershipService {
         return this.membershipModel
             .findById(membership._id)
             .populate('userId', 'name mobile areaId customFields')
+            .populate('planId')
             .populate('approvedBy', 'name');
     }
     async reject(tenant, id, reason) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid membership ID format');
+        }
         const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
@@ -525,9 +795,13 @@ let MembershipService = class MembershipService {
         return membership.save();
     }
     async regenerateCard(tenant, id, dto) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid membership ID format');
+        }
         const membership = await this.membershipModel
             .findOne({ _id: id, tenantId: tenant._id })
-            .populate('userId', 'name mobile areaId customFields');
+            .populate('userId', 'name mobile areaId customFields')
+            .populate('planId');
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
         }
@@ -549,6 +823,9 @@ let MembershipService = class MembershipService {
         return membership;
     }
     async updateCardDetails(tenant, id, dto) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.BadRequestException('Invalid membership ID format');
+        }
         const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
@@ -570,7 +847,8 @@ let MembershipService = class MembershipService {
         await membership.save();
         return this.membershipModel
             .findById(membership._id)
-            .populate('userId', 'name mobile areaId customFields');
+            .populate('userId', 'name mobile areaId customFields')
+            .populate('planId');
     }
     async verifyCard(tenant, membershipNumber) {
         const cleanNumber = membershipNumber.trim().toUpperCase();
@@ -580,6 +858,7 @@ let MembershipService = class MembershipService {
             membershipNumber: cleanNumber,
         })
             .populate('userId', 'name mobile areaId customFields')
+            .populate('planId')
             .lean();
         if (!membership) {
             return {
@@ -628,6 +907,7 @@ let MembershipService = class MembershipService {
                 area: areaName,
                 designation: membership.designation || 'Active Member',
                 photoUrl: membership.photoUrl || user.customFields?.photo || null,
+                plan: membership.planId ? membership.planId.name : null,
             },
             tenant: {
                 name: tenant.name,
@@ -660,31 +940,170 @@ let MembershipService = class MembershipService {
         return filePath;
     }
     async getStats(tenant) {
-        const stats = await this.membershipModel.aggregate([
-            { $match: { tenantId: tenant._id } },
-            { $group: { _id: '$status', count: { $sum: 1 } } },
+        const [stats, planCounts] = await Promise.all([
+            this.membershipModel.aggregate([
+                { $match: { tenantId: tenant._id } },
+                { $group: { _id: '$status', count: { $sum: 1 } } },
+            ]),
+            this.membershipModel.aggregate([
+                { $match: { tenantId: tenant._id, status: types_1.MembershipStatus.APPROVED } },
+                { $group: { _id: '$designation', count: { $sum: 1 } } },
+            ]),
         ]);
         const result = {
             pending: 0,
             approved: 0,
             rejected: 0,
             total: 0,
+            byDesignation: {},
         };
         stats.forEach((s) => {
             result[s._id] = s.count;
             result.total += s.count;
         });
+        planCounts.forEach((p) => {
+            if (p._id)
+                result.byDesignation[p._id] = p.count;
+        });
         return result;
+    }
+    async exportMembers(tenant, filters, res, adminUser, ipAddress, userAgent) {
+        const { status, planId, search } = filters;
+        const query = { tenantId: tenant._id };
+        if (status)
+            query.status = status;
+        if (planId && mongoose_2.Types.ObjectId.isValid(planId))
+            query.planId = new mongoose_2.Types.ObjectId(planId);
+        if (search && search.trim()) {
+            const s = search.trim();
+            const users = await this.userModel
+                .find({
+                tenantId: tenant._id,
+                $or: [
+                    { name: { $regex: s, $options: 'i' } },
+                    { mobile: { $regex: s, $options: 'i' } },
+                ],
+            })
+                .select('_id')
+                .lean();
+            const userIds = users.map((u) => u._id);
+            query.$or = [
+                { membershipNumber: { $regex: s, $options: 'i' } },
+                { designation: { $regex: s, $options: 'i' } },
+                { userId: { $in: userIds } },
+            ];
+        }
+        const members = await this.membershipModel
+            .find(query)
+            .populate('userId', 'name mobile email areaId customFields')
+            .populate('planId', 'name code price validityDays')
+            .populate('approvedBy', 'name')
+            .sort({ createdAt: -1 })
+            .lean();
+        const areas = await this.areaModel.find({ tenantId: tenant._id }).select('name').lean();
+        const areaMap = new Map();
+        areas.forEach((a) => areaMap.set(a._id.toString(), a.name));
+        const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+        const csvHeaders = [
+            'Membership ID',
+            'Member Name',
+            'Mobile Number',
+            'Area / Constituency',
+            'Plan / Designation',
+            'Status',
+            'Application Date',
+            'Approval Date',
+            'Expiry Date',
+            'Payment Status',
+            'Payment Amount (INR)',
+            'Transaction ID',
+            'Verification URL',
+        ];
+        const escapeCsv = (val) => {
+            if (val === null || val === undefined)
+                return '""';
+            const str = String(val).replace(/"/g, '""');
+            return `"${str}"`;
+        };
+        const csvRows = members.map((m) => {
+            const user = m.userId || {};
+            const areaName = user.areaId
+                ? areaMap.get(user.areaId.toString()) || 'General Constituency'
+                : 'General Constituency';
+            const planName = m.planId?.name || m.designation || 'Active Member';
+            const paymentStatus = m.paymentInfo?.transactionId
+                ? 'Paid'
+                : m.status === types_1.MembershipStatus.APPROVED
+                    ? 'Approved / Free'
+                    : 'Unpaid';
+            const verifyUrl = m.membershipNumber
+                ? `http://${domain}/membership/verify/${m.membershipNumber}`
+                : '';
+            return [
+                escapeCsv(m.membershipNumber || 'N/A'),
+                escapeCsv(user.name || 'Citizen'),
+                escapeCsv(user.mobile || 'N/A'),
+                escapeCsv(areaName),
+                escapeCsv(planName),
+                escapeCsv(m.status),
+                escapeCsv(m.createdAt ? new Date(m.createdAt).toISOString().split('T')[0] : 'N/A'),
+                escapeCsv(m.approvedAt ? new Date(m.approvedAt).toISOString().split('T')[0] : 'N/A'),
+                escapeCsv(m.expiresAt ? new Date(m.expiresAt).toISOString().split('T')[0] : 'Lifetime'),
+                escapeCsv(paymentStatus),
+                escapeCsv(m.paymentInfo?.amount || 0),
+                escapeCsv(m.paymentInfo?.transactionId || 'N/A'),
+                escapeCsv(verifyUrl),
+            ].join(',');
+        });
+        const isExcel = (filters?.format || '').toLowerCase() === 'excel' || (filters?.format || '').toLowerCase() === 'xlsx';
+        const bom = '\uFEFF';
+        const csv = bom + [csvHeaders.join(','), ...csvRows].join('\r\n');
+        const contentType = isExcel
+            ? 'application/vnd.ms-excel; charset=utf-8'
+            : 'text/csv; charset=utf-8';
+        const timestamp = new Date().toISOString().split('T')[0];
+        const filename = `members-${tenant.slug}-${timestamp}.csv`;
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+        if (this.auditLogsService && adminUser) {
+            await this.auditLogsService
+                .log({
+                tenantId: tenant._id,
+                tenantName: tenant.name,
+                action: 'DATA_EXPORT_MEMBERS',
+                performedBy: {
+                    id: adminUser.sub || adminUser.id || 'admin',
+                    email: adminUser.email || 'admin@platform.local',
+                    name: adminUser.name || 'Admin',
+                    role: adminUser.role || 'admin',
+                },
+                details: {
+                    format: isExcel ? 'excel' : 'csv',
+                    recordCount: members.length,
+                    filterQuery: filters,
+                    filename,
+                },
+                ipAddress,
+                userAgent,
+            })
+                .catch(() => { });
+        }
+        return res.status(200).send(csv);
     }
 };
 exports.MembershipService = MembershipService;
 exports.MembershipService = MembershipService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(membership_schema_1.Membership.name)),
-    __param(1, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
-    __param(2, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
+    __param(1, (0, mongoose_1.InjectModel)(membership_plan_schema_1.MembershipPlan.name)),
+    __param(2, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(3, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
+    __param(4, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService])
 ], MembershipService);
 //# sourceMappingURL=membership.service.js.map

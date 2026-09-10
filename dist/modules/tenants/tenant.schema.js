@@ -25,6 +25,10 @@ __decorate([
     __metadata("design:type", String)
 ], Tenant.prototype, "name", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", String)
+], Tenant.prototype, "title", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ unique: true, sparse: true }),
     __metadata("design:type", String)
 ], Tenant.prototype, "customDomain", void 0);

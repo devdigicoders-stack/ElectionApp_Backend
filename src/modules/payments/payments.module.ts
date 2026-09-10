@@ -6,6 +6,7 @@ import { PaymentsController } from './payments.controller';
 import { RazorpayGatewayService } from './razorpay.service';
 import { Payment, PaymentSchema } from './payment.schema';
 import { Membership, MembershipSchema } from '../membership/membership.schema';
+import { MembershipPlan, MembershipPlanSchema } from '../membership/membership-plan.schema';
 import { User, UserSchema } from '../users/user.schema';
 
 @Module({
@@ -14,6 +15,7 @@ import { User, UserSchema } from '../users/user.schema';
     MongooseModule.forFeature([
       { name: Payment.name, schema: PaymentSchema },
       { name: Membership.name, schema: MembershipSchema },
+      { name: MembershipPlan.name, schema: MembershipPlanSchema },
       { name: User.name, schema: UserSchema },
     ]),
   ],

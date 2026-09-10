@@ -127,6 +127,10 @@ export class CitizenQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc' = 'desc';
+
+  @IsOptional()
+  @IsString()
+  format?: string;
 }
 
 export class UpdateCitizenDto {

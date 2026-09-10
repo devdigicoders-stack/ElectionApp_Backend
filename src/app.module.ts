@@ -37,6 +37,7 @@ import { NewsModule } from './modules/news/news.module';
 import { RegistrationFormModule } from './modules/registration-form/registration-form.module';
 import { CitizenDashboardModule } from './modules/citizen-dashboard/citizen-dashboard.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { ExportsModule } from './modules/exports/exports.module';
 
 @Module({
   imports: [
@@ -89,6 +90,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
     RegistrationFormModule,
     CitizenDashboardModule,
     PaymentsModule,
+    ExportsModule,
   ],
 })
 export class AppModule {

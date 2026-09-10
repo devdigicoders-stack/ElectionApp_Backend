@@ -6,6 +6,8 @@ import { Complaint, ComplaintSchema } from './complaint.schema';
 import { ComplaintCategory, ComplaintCategorySchema } from './complaint-category.schema';
 import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.schema';
 
+import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+
 @Module({
   imports: [
     MongooseModule.forFeature([
@@ -13,6 +15,7 @@ import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.s
       { name: ComplaintCategory.name, schema: ComplaintCategorySchema },
       { name: TenantFeature.name, schema: TenantFeatureSchema },
     ]),
+    AuditLogsModule,
   ],
   controllers: [ComplaintsController],
   providers: [ComplaintsService],

@@ -4,6 +4,7 @@ export type TenantDocument = Tenant & Document;
 export declare class Tenant {
     slug: string;
     name: string;
+    title?: string;
     customDomain?: string;
     isCustomDomainVerified?: boolean;
     customDomainVerifiedAt?: Date;
@@ -30,7 +31,9 @@ export declare class Tenant {
     status: TenantStatus;
     branding: {
         platformName?: string;
+        title?: string;
         logoUrl?: string;
+        logo?: string;
         faviconUrl?: string;
         pwaIconUrl?: string;
         leaderPhotoUrl?: string;
@@ -70,6 +73,15 @@ export declare const TenantSchema: import("mongoose").Schema<Tenant, import("mon
         id: string;
     }>> | undefined;
     name?: import("mongoose").SchemaDefinitionProperty<string, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    title?: import("mongoose").SchemaDefinitionProperty<string | undefined, Tenant, Document<unknown, {}, Tenant, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
         _id: Types.ObjectId;
@@ -184,7 +196,9 @@ export declare const TenantSchema: import("mongoose").Schema<Tenant, import("mon
     }>> | undefined;
     branding?: import("mongoose").SchemaDefinitionProperty<{
         platformName?: string;
+        title?: string;
         logoUrl?: string;
+        logo?: string;
         faviconUrl?: string;
         pwaIconUrl?: string;
         leaderPhotoUrl?: string;

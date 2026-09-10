@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { AreaLevel, AreaLevelDocument, Area, AreaDocument } from './area.schema';
@@ -12,6 +12,7 @@ export class AreasService {
   ) {}
 
   // --- Levels ---
+
   async createLevel(tenant: TenantDocument, data: { levelOrder: number; name: string; isRequired?: boolean }) {
     return this.levelModel.create({ tenantId: tenant._id, ...data });
   }
@@ -29,10 +30,21 @@ export class AreasService {
   }
 
   async deleteLevel(tenant: TenantDocument, levelId: string) {
+    // Safety: don't delete if areas are using this level
+    const usageCount = await this.areaModel.countDocuments({
+      tenantId: tenant._id,
+      levelId: new Types.ObjectId(levelId),
+    });
+    if (usageCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete level — ${usageCount} area(s) are using it. Delete those areas first.`,
+      );
+    }
     return this.levelModel.findOneAndDelete({ _id: levelId, tenantId: tenant._id });
   }
 
   // --- Areas ---
+
   async createArea(tenant: TenantDocument, data: { levelId: string; parentId?: string; name: string; code?: string }) {
     return this.areaModel.create({ tenantId: tenant._id, ...data });
   }
@@ -76,5 +88,23 @@ export class AreasService {
     const area = await this.areaModel.findOne({ _id: areaId, tenantId: tenant._id }).populate('levelId');
     if (!area) throw new NotFoundException('Area not found');
     return area;
+  }
+
+  async getAncestors(tenant: TenantDocument, areaId: string): Promise<any[]> {
+    const ancestors: any[] = [];
+    let currentId: string | null = areaId;
+
+    while (currentId) {
+      const area: (AreaDocument & Record<string, any>) | null = await this.areaModel
+        .findOne({ _id: currentId, tenantId: tenant._id })
+        .populate('levelId', 'name levelOrder')
+        .lean();
+
+      if (!area) break;
+      ancestors.unshift(area);
+      currentId = area.parentId ? area.parentId.toString() : null;
+    }
+
+    return ancestors;
   }
 }

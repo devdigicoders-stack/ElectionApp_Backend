@@ -38,20 +38,36 @@ export class TenantsService {
     const exists = await this.tenantModel.findOne({ slug: dto.slug.toLowerCase().trim() });
     if (exists) throw new ConflictException(`Slug "${dto.slug}" is already taken.`);
 
+    const finalName = (dto.name || dto.title || '').trim();
+    if (!finalName) {
+      throw new BadRequestException('Either "name" or "title" is required for tenant creation.');
+    }
+    const finalTitle = (dto.title || dto.name || '').trim();
+
+    // Resolve logo from top-level dto or dto.branding
+    const finalLogo = dto.logoUrl || dto.logo || dto.branding?.logoUrl || dto.branding?.logo || null;
+
     // Initialize branding
     const branding = { ...(dto.branding || {}) };
     if (dto.leaderName && !branding.leaderName) {
       branding.leaderName = dto.leaderName;
     }
-    if (dto.name && !branding.platformName) {
-      branding.platformName = dto.name;
+    const resolvedTitle = branding.title || branding.platformName || finalTitle;
+    branding.title = resolvedTitle;
+    branding.platformName = resolvedTitle;
+
+    if (finalLogo) {
+      branding.logo = branding.logo || finalLogo;
+      branding.logoUrl = branding.logoUrl || finalLogo;
     }
+
     branding.primaryColor = branding.primaryColor || '#1a56db';
     branding.secondaryColor = branding.secondaryColor || '#f59e0b';
 
     const newTenant = new this.tenantModel({
       slug: dto.slug.toLowerCase().trim(),
-      name: dto.name,
+      name: finalName,
+      title: finalTitle,
       contactPerson: dto.contactPerson || null,
       mobileNumber: dto.mobileNumber || null,
       email: dto.email || null,
@@ -216,11 +232,14 @@ export class TenantsService {
     const enabledFeatures = features.filter((f) => f.isEnabled).map((f) => f.featureKey);
 
     // 7 Steps Validation
-    const hasProfile = Boolean(tenant.name && tenant.slug && (tenant.contactPerson || tenant.mobileNumber || tenant.email));
+    const hasProfile = Boolean((tenant.name || tenant.title) && tenant.slug && (tenant.contactPerson || tenant.mobileNumber || tenant.email));
     const b = tenant.branding || {};
-    const hasBranding = Boolean(b.leaderName && (b.logoUrl || b.primaryColor));
+    const logo = b.logoUrl || b.logo || null;
+    const resolvedTitle = b.title || b.platformName || tenant.title || tenant.name || null;
+    const hasBranding = Boolean(b.leaderName && (logo || b.primaryColor));
     const hasDomain = Boolean(tenant.customDomain || tenant.slug);
     const hasPlan = Boolean(tenant.planId || subscription);
+    const enabledModules = enabledFeatures;
     const hasEnabledModules = enabledFeatures.length > 0;
     const hasAreaLevels = areaLevels.length > 0;
     const regFields = tenant.settings?.registrationFields || [];
@@ -244,6 +263,7 @@ export class TenantsService {
       tenantId: tenant._id,
       slug: tenant.slug,
       name: tenant.name,
+      title: tenant.title || tenant.name,
       status: tenant.status,
       isPublished: tenant.isPublished ?? (tenant.status === TenantStatus.ACTIVE),
       completionPercentage,
@@ -255,6 +275,7 @@ export class TenantsService {
           completed: hasProfile,
           data: {
             name: tenant.name,
+            title: tenant.title || tenant.name,
             slug: tenant.slug,
             leaderName: b.leaderName || null,
             electionType: tenant.electionType || 'other',
@@ -268,9 +289,11 @@ export class TenantsService {
           name: 'Branding Setup',
           completed: hasBranding,
           data: {
-            platformName: b.platformName || tenant.name,
+            title: resolvedTitle,
+            platformName: resolvedTitle,
+            logo: logo,
+            logoUrl: logo,
             leaderName: b.leaderName || null,
-            logoUrl: b.logoUrl || null,
             leaderPhotoUrl: b.leaderPhotoUrl || null,
             faviconUrl: b.faviconUrl || null,
             pwaIconUrl: b.pwaIconUrl || null,
@@ -386,12 +409,55 @@ export class TenantsService {
   }
 
   async update(id: string, dto: UpdateTenantDto) {
+    const existing = await this.tenantModel.findById(id);
+    if (!existing) throw new NotFoundException('Tenant not found');
+
+    const updateSet: any = { ...dto };
+
+    // Sync name and title if one is updated
+    if (dto.title && !dto.name) {
+      updateSet.name = dto.title;
+      updateSet.title = dto.title;
+    } else if (dto.name && !dto.title) {
+      updateSet.name = dto.name;
+      if (!existing.title) updateSet.title = dto.name;
+    }
+
+    // Sync logo/logoUrl if updated at root
+    const logo = dto.logoUrl || dto.logo;
+    if (logo) {
+      updateSet['branding.logo'] = logo;
+      updateSet['branding.logoUrl'] = logo;
+    }
+    if (dto.title) {
+      updateSet['branding.title'] = dto.title;
+      updateSet['branding.platformName'] = dto.title;
+    }
+
+    // If branding object passed, merge it properly
+    if (dto.branding) {
+      const bTitle = dto.branding.title || dto.branding.platformName;
+      const bLogo = dto.branding.logoUrl || dto.branding.logo;
+      const mergedBranding = {
+        ...(existing.branding || {}),
+        ...dto.branding,
+      };
+      if (bTitle) {
+        mergedBranding.title = bTitle;
+        mergedBranding.platformName = bTitle;
+      }
+      if (bLogo) {
+        mergedBranding.logo = bLogo;
+        mergedBranding.logoUrl = bLogo;
+      }
+      updateSet.branding = mergedBranding;
+    }
+
     const tenant = await this.tenantModel.findByIdAndUpdate(
       id,
-      { $set: dto },
+      { $set: updateSet },
       { new: true },
     );
-    if (!tenant) throw new NotFoundException('Tenant not found');
     return tenant;
   }
 
@@ -399,14 +465,32 @@ export class TenantsService {
     const existing = await this.tenantModel.findById(id);
     if (!existing) throw new NotFoundException('Tenant not found');
 
+    const title = branding.title || branding.platformName;
+    const logo = branding.logoUrl || branding.logo;
+
+    const normalized = { ...branding };
+    if (title) {
+      normalized.title = title;
+      normalized.platformName = title;
+    }
+    if (logo) {
+      normalized.logo = logo;
+      normalized.logoUrl = logo;
+    }
+
     const mergedBranding = {
       ...(existing.branding || {}),
-      ...branding,
+      ...normalized,
     };
+
+    const updatePayload: any = { branding: mergedBranding };
+    if (title && !existing.title) {
+      updatePayload.title = title;
+    }
 
     return this.tenantModel.findByIdAndUpdate(
       id,
-      { $set: { branding: mergedBranding } },
+      { $set: updatePayload },
       { new: true },
     );
   }

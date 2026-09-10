@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -12,6 +13,7 @@ import { Membership, MembershipDocument } from '../membership/membership.schema'
 import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
 import { Complaint, ComplaintDocument } from '../complaints/complaint.schema';
 import { Area, AreaDocument } from '../areas/area.schema';
+import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import {
   CitizenQueryDto,
   UpdateCitizenDto,
@@ -33,6 +35,7 @@ export class UsersService {
     @InjectModel(Volunteer.name) private volunteerModel: Model<VolunteerDocument>,
     @InjectModel(Complaint.name) private complaintModel: Model<ComplaintDocument>,
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
+    @Optional() private auditLogsService?: AuditLogsService,
   ) {}
 
   // ---------------------------------------------------------
@@ -771,9 +774,16 @@ export class UsersService {
   // ---------------------------------------------------------
 
   /**
-   * Export filtered citizen records as CSV download
+   * Export filtered citizen records as CSV / Excel download (SRS Sec 40 & 58)
    */
-  async exportCitizens(tenant: TenantDocument, queryDto: CitizenQueryDto, res: Response) {
+  async exportCitizens(
+    tenant: TenantDocument,
+    queryDto: CitizenQueryDto,
+    res: Response,
+    adminUser?: any,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
     const mongoQuery = await this.buildCitizenFilterQuery(tenant, queryDto);
 
     const users = await this.userModel
@@ -851,14 +861,45 @@ export class UsersService {
       ].join(',');
     });
 
-    const csvContent = [headers.join(','), ...rows].join('\r\n');
+    const isExcel = (queryDto.format || '').toLowerCase() === 'excel' || (queryDto.format || '').toLowerCase() === 'xlsx';
+    const bom = '\uFEFF';
+    const csvContent = bom + [headers.join(','), ...rows].join('\r\n');
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
     const filename = `citizens-${tenant.slug || 'export'}-${timestamp}.csv`;
 
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    const contentType = isExcel
+      ? 'application/vnd.ms-excel; charset=utf-8'
+      : 'text/csv; charset=utf-8';
+
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition');
+
+    // Audit log (SRS Sec 58 & 59)
+    if (this.auditLogsService && adminUser) {
+      await this.auditLogsService
+        .log({
+          tenantId: tenant._id,
+          tenantName: tenant.name,
+          action: 'DATA_EXPORT_CITIZENS',
+          performedBy: {
+            id: adminUser.sub || adminUser.id || 'admin',
+            email: adminUser.email || 'admin@platform.local',
+            name: adminUser.name || 'Admin',
+            role: adminUser.role || 'admin',
+          },
+          details: {
+            format: isExcel ? 'excel' : 'csv',
+            recordCount: users.length,
+            filterQuery: queryDto,
+            filename,
+          },
+          ipAddress,
+          userAgent,
+        })
+        .catch(() => {});
+    }
 
     return res.status(200).send(csvContent);
   }
