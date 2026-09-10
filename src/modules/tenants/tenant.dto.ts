@@ -1,5 +1,5 @@
-import { IsString, IsOptional, IsEnum, IsObject } from 'class-validator';
-import { TenantStatus } from '../../shared/types';
+import { IsString, IsOptional, IsEnum, IsObject, IsBoolean, IsDateString } from 'class-validator';
+import { TenantStatus, UserRole } from '../../shared/types';
 
 export class CreateTenantDto {
   @IsString()
@@ -7,6 +7,38 @@ export class CreateTenantDto {
 
   @IsString()
   name: string;
+
+  @IsOptional()
+  @IsString()
+  leaderName?: string;
+
+  @IsOptional()
+  @IsString()
+  contactPerson?: string;
+
+  @IsOptional()
+  @IsString()
+  mobileNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  electionType?: string;
+
+  @IsOptional()
+  @IsString()
+  planId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  subscriptionStartDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  subscriptionEndDate?: string;
 
   @IsOptional()
   @IsString()
@@ -28,11 +60,31 @@ export class UpdateTenantDto {
 
   @IsOptional()
   @IsString()
+  contactPerson?: string;
+
+  @IsOptional()
+  @IsString()
+  mobileNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  electionType?: string;
+
+  @IsOptional()
+  @IsString()
   customDomain?: string;
 
   @IsOptional()
   @IsEnum(TenantStatus)
   status?: TenantStatus;
+
+  @IsOptional()
+  @IsBoolean()
+  isPublished?: boolean;
 
   @IsOptional()
   @IsObject()
@@ -41,6 +93,70 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsObject()
   settings?: Record<string, any>;
+}
+
+export class UpdateBrandingDto {
+  @IsOptional()
+  @IsString()
+  platformName?: string;
+
+  @IsOptional()
+  @IsString()
+  logoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  leaderPhotoUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  faviconUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  pwaIconUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  loginBgUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  splashScreenUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  primaryColor?: string;
+
+  @IsOptional()
+  @IsString()
+  secondaryColor?: string;
+
+  @IsOptional()
+  @IsString()
+  leaderName?: string;
+
+  @IsOptional()
+  @IsString()
+  tagline?: string;
+
+  @IsOptional()
+  @IsObject()
+  socialLinks?: Record<string, string>;
+}
+
+export class OnboardFullTenantDto extends CreateTenantDto {
+  @IsOptional()
+  @IsObject()
+  adminUser?: {
+    name: string;
+    email: string;
+    password: string;
+    role?: UserRole;
+  };
+
+  @IsOptional()
+  areaLevels?: Array<{ levelOrder: number; name: string; isRequired?: boolean }>;
 }
 
 export class ImpersonateTenantDto {

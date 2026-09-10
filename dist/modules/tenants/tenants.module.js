@@ -17,6 +17,9 @@ const custom_domains_service_1 = require("./custom-domains.service");
 const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const admin_user_schema_1 = require("../admin-users/admin-user.schema");
+const area_schema_1 = require("../areas/area.schema");
+const subscription_schema_1 = require("../subscriptions/subscription.schema");
+const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
 let TenantsModule = class TenantsModule {
 };
@@ -28,6 +31,9 @@ exports.TenantsModule = TenantsModule = __decorate([
                 { name: tenant_schema_1.Tenant.name, schema: tenant_schema_1.TenantSchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
                 { name: admin_user_schema_1.AdminUser.name, schema: admin_user_schema_1.AdminUserSchema },
+                { name: area_schema_1.AreaLevel.name, schema: area_schema_1.AreaLevelSchema },
+                { name: subscription_schema_1.Subscription.name, schema: subscription_schema_1.SubscriptionSchema },
+                { name: plan_schema_1.Plan.name, schema: plan_schema_1.PlanSchema },
             ]),
             audit_logs_module_1.AuditLogsModule,
         ],

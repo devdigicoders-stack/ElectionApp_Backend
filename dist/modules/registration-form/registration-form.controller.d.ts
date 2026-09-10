@@ -10,9 +10,13 @@ export declare class RegistrationFormController {
             name: string;
             slug: string;
             branding: {
+                platformName?: string;
                 logoUrl?: string;
                 faviconUrl?: string;
                 pwaIconUrl?: string;
+                leaderPhotoUrl?: string;
+                loginBgUrl?: string;
+                splashScreenUrl?: string;
                 primaryColor?: string;
                 secondaryColor?: string;
                 leaderName?: string;

@@ -52,6 +52,26 @@ __decorate([
     __metadata("design:type", Object)
 ], Tenant.prototype, "customDomainVerification", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "contactPerson", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "mobileNumber", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "email", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: 'other' }),
+    __metadata("design:type", String)
+], Tenant.prototype, "electionType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Tenant.prototype, "isPublished", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: types_1.TenantStatus.TRIAL, enum: Object.values(types_1.TenantStatus) }),
     __metadata("design:type", String)
 ], Tenant.prototype, "status", void 0);

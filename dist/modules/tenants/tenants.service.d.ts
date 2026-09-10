@@ -1,62 +1,272 @@
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
 import { AdminUserDocument } from '../admin-users/admin-user.schema';
+import { AreaLevelDocument } from '../areas/area.schema';
+import { SubscriptionDocument } from '../subscriptions/subscription.schema';
+import { PlanDocument } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { CreateTenantDto, UpdateTenantDto, ImpersonateTenantDto, ExitImpersonationDto } from './tenant.dto';
-import { FeatureKey, UserRole } from '../../shared/types';
+import { CreateTenantDto, UpdateTenantDto, ImpersonateTenantDto, ExitImpersonationDto, OnboardFullTenantDto } from './tenant.dto';
+import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
 export declare class TenantsService {
     private tenantModel;
     private featureModel;
     private adminUserModel;
+    private areaLevelModel;
+    private subscriptionModel;
+    private planModel;
     private configService;
     private auditLogsService;
-    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
-    create(dto: CreateTenantDto): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
+    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
+    create(dto: CreateTenantDto): Promise<TenantDocument>;
+    onboardFull(dto: OnboardFullTenantDto, user?: any, ip?: string, userAgent?: string): Promise<{
+        message: string;
+        tenant: TenantDocument;
+        adminUser: {
+            id: any;
+            name: any;
+            email: any;
+            role: any;
+        } | null;
+        onboardingStatus: {
+            tenantId: Types.ObjectId;
+            slug: string;
+            name: string;
+            status: TenantStatus;
+            isPublished: boolean;
+            completionPercentage: number;
+            isReadyToPublish: boolean;
+            steps: {
+                step1_tenantProfile: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        name: string;
+                        slug: string;
+                        leaderName: string | null;
+                        electionType: string;
+                        contactPerson: string | null;
+                        mobileNumber: string | null;
+                        email: string | null;
+                    };
+                };
+                step2_branding: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        platformName: string;
+                        leaderName: string | null;
+                        logoUrl: string | null;
+                        leaderPhotoUrl: string | null;
+                        faviconUrl: string | null;
+                        pwaIconUrl: string | null;
+                        loginBgUrl: string | null;
+                        splashScreenUrl: string | null;
+                        primaryColor: string | null;
+                        secondaryColor: string | null;
+                        tagline: string | null;
+                    };
+                };
+                step3_domain: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        subdomain: string;
+                        customDomain: string | null;
+                        isCustomDomainVerified: boolean;
+                    };
+                };
+                step4_modulesAndPlan: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        plan: Types.ObjectId | null;
+                        subscriptionStatus: string;
+                        enabledModulesCount: number;
+                        enabledModules: FeatureKey[];
+                    };
+                };
+                step5_areaHierarchy: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        configuredLevelCount: number;
+                        levels: string[];
+                    };
+                };
+                step6_registrationForm: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        fieldCount: number;
+                        fields: any[];
+                    };
+                };
+                step7_adminAccount: {
+                    step: number;
+                    name: string;
+                    completed: boolean;
+                    data: {
+                        adminCount: number;
+                        admins: {
+                            name: string;
+                            email: string;
+                            role: string;
+                        }[];
+                    };
+                };
+            };
+        };
     }>;
-    findAll(): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    getOnboardingStatus(id: string): Promise<{
+        tenantId: Types.ObjectId;
+        slug: string;
+        name: string;
+        status: TenantStatus;
+        isPublished: boolean;
+        completionPercentage: number;
+        isReadyToPublish: boolean;
+        steps: {
+            step1_tenantProfile: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    name: string;
+                    slug: string;
+                    leaderName: string | null;
+                    electionType: string;
+                    contactPerson: string | null;
+                    mobileNumber: string | null;
+                    email: string | null;
+                };
+            };
+            step2_branding: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    platformName: string;
+                    leaderName: string | null;
+                    logoUrl: string | null;
+                    leaderPhotoUrl: string | null;
+                    faviconUrl: string | null;
+                    pwaIconUrl: string | null;
+                    loginBgUrl: string | null;
+                    splashScreenUrl: string | null;
+                    primaryColor: string | null;
+                    secondaryColor: string | null;
+                    tagline: string | null;
+                };
+            };
+            step3_domain: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    subdomain: string;
+                    customDomain: string | null;
+                    isCustomDomainVerified: boolean;
+                };
+            };
+            step4_modulesAndPlan: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    plan: Types.ObjectId | null;
+                    subscriptionStatus: string;
+                    enabledModulesCount: number;
+                    enabledModules: FeatureKey[];
+                };
+            };
+            step5_areaHierarchy: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    configuredLevelCount: number;
+                    levels: string[];
+                };
+            };
+            step6_registrationForm: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    fieldCount: number;
+                    fields: any[];
+                };
+            };
+            step7_adminAccount: {
+                step: number;
+                name: string;
+                completed: boolean;
+                data: {
+                    adminCount: number;
+                    admins: {
+                        name: string;
+                        email: string;
+                        role: string;
+                    }[];
+                };
+            };
+        };
+    }>;
+    publishTenant(id: string, user?: any, ip?: string, userAgent?: string): Promise<{
+        message: string;
+        tenant: {
+            id: Types.ObjectId;
+            slug: string;
+            name: string;
+            status: TenantStatus.ACTIVE;
+            isPublished: boolean;
+        };
+    }>;
+    findAll(): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     })[]>;
-    findOne(id: string): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    findOne(id: string): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }>;
-    update(id: string, dto: UpdateTenantDto): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    update(id: string, dto: UpdateTenantDto): Promise<import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }>;
-    updateBranding(id: string, branding: Record<string, any>): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    updateBranding(id: string, branding: Record<string, any>): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }) | null>;
-    toggleFeature(tenantId: string, featureKey: FeatureKey, isEnabled: boolean): Promise<import("mongoose").Document<unknown, {}, TenantFeatureDocument, {}, import("mongoose").DefaultSchemaOptions> & TenantFeature & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    toggleFeature(tenantId: string, featureKey: FeatureKey, isEnabled: boolean): Promise<import("mongoose").Document<unknown, {}, TenantFeatureDocument, {}, import("mongoose").DefaultSchemaOptions> & TenantFeature & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }>;
-    getFeatures(tenantId: string): Promise<(import("mongoose").Document<unknown, {}, TenantFeatureDocument, {}, import("mongoose").DefaultSchemaOptions> & TenantFeature & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    getFeatures(tenantId: string): Promise<(import("mongoose").Document<unknown, {}, TenantFeatureDocument, {}, import("mongoose").DefaultSchemaOptions> & TenantFeature & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
@@ -68,15 +278,15 @@ export declare class TenantsService {
         password: string;
         role: UserRole;
     }): Promise<any>;
-    suspend(id: string): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    suspend(id: string): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }) | null>;
-    activate(id: string): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    activate(id: string): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
@@ -86,14 +296,14 @@ export declare class TenantsService {
         token: string;
         expiresIn: number;
         tenant: {
-            id: import("mongoose").Types.ObjectId;
+            id: Types.ObjectId;
             name: string;
             slug: string;
             customDomain: string | null;
-            status: import("../../shared/types").TenantStatus;
+            status: TenantStatus;
         };
         adminUser: {
-            id: import("mongoose").Types.ObjectId;
+            id: Types.ObjectId;
             name: string;
             email: string;
             role: string;
@@ -113,12 +323,12 @@ export declare class TenantsService {
     }>;
     exitImpersonation(tenantId: string, dto: ExitImpersonationDto, user: any, ipAddress?: string, userAgent?: string): Promise<{
         message: string;
-        tenantId: import("mongoose").Types.ObjectId;
+        tenantId: Types.ObjectId;
         endedAt: Date;
     }>;
     getImpersonationHistory(tenantId: string): Promise<{
-        items: (import("../audit-logs/audit-log.schema").AuditLog & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-            _id: import("mongoose").Types.ObjectId;
+        items: (import("../audit-logs/audit-log.schema").AuditLog & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
         }> & {
             __v: number;
         })[];

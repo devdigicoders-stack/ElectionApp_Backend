@@ -14,9 +14,13 @@ export declare class PublicConfigService {
             status: import("../../shared/types").TenantStatus;
         };
         branding: {
+            platformName?: string;
             logoUrl?: string;
             faviconUrl?: string;
             pwaIconUrl?: string;
+            leaderPhotoUrl?: string;
+            loginBgUrl?: string;
+            splashScreenUrl?: string;
             primaryColor?: string;
             secondaryColor?: string;
             leaderName?: string;

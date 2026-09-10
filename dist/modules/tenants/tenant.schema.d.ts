@@ -22,11 +22,20 @@ export declare class Tenant {
         lastCheckedAt?: Date | null;
         failureReason?: string | null;
     };
+    contactPerson?: string | null;
+    mobileNumber?: string | null;
+    email?: string | null;
+    electionType?: string;
+    isPublished: boolean;
     status: TenantStatus;
     branding: {
+        platformName?: string;
         logoUrl?: string;
         faviconUrl?: string;
         pwaIconUrl?: string;
+        leaderPhotoUrl?: string;
+        loginBgUrl?: string;
+        splashScreenUrl?: string;
         primaryColor?: string;
         secondaryColor?: string;
         leaderName?: string;
@@ -119,6 +128,51 @@ export declare const TenantSchema: import("mongoose").Schema<Tenant, import("mon
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    contactPerson?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    mobileNumber?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    email?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    electionType?: import("mongoose").SchemaDefinitionProperty<string | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    isPublished?: import("mongoose").SchemaDefinitionProperty<boolean, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     status?: import("mongoose").SchemaDefinitionProperty<TenantStatus, Tenant, Document<unknown, {}, Tenant, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
@@ -129,9 +183,13 @@ export declare const TenantSchema: import("mongoose").Schema<Tenant, import("mon
         id: string;
     }>> | undefined;
     branding?: import("mongoose").SchemaDefinitionProperty<{
+        platformName?: string;
         logoUrl?: string;
         faviconUrl?: string;
         pwaIconUrl?: string;
+        leaderPhotoUrl?: string;
+        loginBgUrl?: string;
+        splashScreenUrl?: string;
         primaryColor?: string;
         secondaryColor?: string;
         leaderName?: string;

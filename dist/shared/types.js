@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
+exports.ElectionType = exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
 var TenantStatus;
 (function (TenantStatus) {
     TenantStatus["ACTIVE"] = "active";
@@ -123,4 +123,17 @@ var EventRsvpStatus;
     EventRsvpStatus["INTERESTED"] = "interested";
     EventRsvpStatus["GOING"] = "going";
 })(EventRsvpStatus || (exports.EventRsvpStatus = EventRsvpStatus = {}));
+var ElectionType;
+(function (ElectionType) {
+    ElectionType["GRAM_PRADHAN"] = "gram_pradhan";
+    ElectionType["BDC_MEMBER"] = "bdc_member";
+    ElectionType["BLOCK_PRAMUKH"] = "block_pramukh";
+    ElectionType["ZILA_PANCHAYAT"] = "zila_panchayat";
+    ElectionType["MUNICIPAL_COUNCILLOR"] = "municipal_councillor";
+    ElectionType["MAYOR"] = "mayor";
+    ElectionType["MLA"] = "mla";
+    ElectionType["MP"] = "mp";
+    ElectionType["POLITICAL_PARTY"] = "political_party";
+    ElectionType["OTHER"] = "other";
+})(ElectionType || (exports.ElectionType = ElectionType = {}));
 //# sourceMappingURL=types.js.map

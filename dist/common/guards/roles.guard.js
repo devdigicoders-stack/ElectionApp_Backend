@@ -34,7 +34,7 @@ let RolesGuard = class RolesGuard {
             return true;
         }
         if (!requiredRoles.includes(user?.role)) {
-            throw new common_1.ForbiddenException('Insufficient permissions');
+            throw new common_1.ForbiddenException(`Insufficient permissions. Route requires role [${requiredRoles.join(', ')}], but current token has role: "${user?.role || 'none'}" (isSuperAdmin: ${user?.isSuperAdmin ?? false}). Please login with a Super Admin or Leader/Admin account.`);
         }
         return true;
     }

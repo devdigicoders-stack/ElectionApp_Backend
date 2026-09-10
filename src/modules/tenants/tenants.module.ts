@@ -8,6 +8,9 @@ import { CustomDomainsService } from './custom-domains.service';
 import { Tenant, TenantSchema } from './tenant.schema';
 import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.schema';
 import { AdminUser, AdminUserSchema } from '../admin-users/admin-user.schema';
+import { AreaLevel, AreaLevelSchema } from '../areas/area.schema';
+import { Subscription, SubscriptionSchema } from '../subscriptions/subscription.schema';
+import { Plan, PlanSchema } from '../plans/plan.schema';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
 @Module({
@@ -16,6 +19,9 @@ import { AuditLogsModule } from '../audit-logs/audit-logs.module';
       { name: Tenant.name, schema: TenantSchema },
       { name: TenantFeature.name, schema: TenantFeatureSchema },
       { name: AdminUser.name, schema: AdminUserSchema },
+      { name: AreaLevel.name, schema: AreaLevelSchema },
+      { name: Subscription.name, schema: SubscriptionSchema },
+      { name: Plan.name, schema: PlanSchema },
     ]),
     AuditLogsModule,
   ],

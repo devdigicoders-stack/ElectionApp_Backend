@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ExitImpersonationDto = exports.ImpersonateTenantDto = exports.UpdateTenantDto = exports.CreateTenantDto = void 0;
+exports.ExitImpersonationDto = exports.ImpersonateTenantDto = exports.OnboardFullTenantDto = exports.UpdateBrandingDto = exports.UpdateTenantDto = exports.CreateTenantDto = void 0;
 const class_validator_1 = require("class-validator");
 const types_1 = require("../../shared/types");
 class CreateTenantDto {
@@ -23,6 +23,46 @@ __decorate([
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateTenantDto.prototype, "name", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "leaderName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "contactPerson", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "mobileNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "electionType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "planId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "subscriptionStartDate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreateTenantDto.prototype, "subscriptionEndDate", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
@@ -50,12 +90,37 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
+], UpdateTenantDto.prototype, "contactPerson", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateTenantDto.prototype, "mobileNumber", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateTenantDto.prototype, "email", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateTenantDto.prototype, "electionType", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
 ], UpdateTenantDto.prototype, "customDomain", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(types_1.TenantStatus),
     __metadata("design:type", String)
 ], UpdateTenantDto.prototype, "status", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], UpdateTenantDto.prototype, "isPublished", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsObject)(),
@@ -66,6 +131,81 @@ __decorate([
     (0, class_validator_1.IsObject)(),
     __metadata("design:type", Object)
 ], UpdateTenantDto.prototype, "settings", void 0);
+class UpdateBrandingDto {
+}
+exports.UpdateBrandingDto = UpdateBrandingDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "platformName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "logoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "leaderPhotoUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "faviconUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "pwaIconUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "loginBgUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "splashScreenUrl", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "primaryColor", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "secondaryColor", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "leaderName", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateBrandingDto.prototype, "tagline", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], UpdateBrandingDto.prototype, "socialLinks", void 0);
+class OnboardFullTenantDto extends CreateTenantDto {
+}
+exports.OnboardFullTenantDto = OnboardFullTenantDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsObject)(),
+    __metadata("design:type", Object)
+], OnboardFullTenantDto.prototype, "adminUser", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", Array)
+], OnboardFullTenantDto.prototype, "areaLevels", void 0);
 class ImpersonateTenantDto {
 }
 exports.ImpersonateTenantDto = ImpersonateTenantDto;

@@ -49,14 +49,33 @@ export class Tenant {
     failureReason?: string | null;
   };
 
+  @Prop({ type: String, default: null })
+  contactPerson?: string | null;
+
+  @Prop({ type: String, default: null })
+  mobileNumber?: string | null;
+
+  @Prop({ type: String, default: null })
+  email?: string | null;
+
+  @Prop({ type: String, default: 'other' })
+  electionType?: string;
+
+  @Prop({ default: false })
+  isPublished: boolean;
+
   @Prop({ default: TenantStatus.TRIAL, enum: Object.values(TenantStatus) })
   status: TenantStatus;
 
   @Prop({ type: Object, default: {} })
   branding: {
+    platformName?: string;
     logoUrl?: string;
     faviconUrl?: string;
     pwaIconUrl?: string;
+    leaderPhotoUrl?: string;
+    loginBgUrl?: string;
+    splashScreenUrl?: string;
     primaryColor?: string;
     secondaryColor?: string;
     leaderName?: string;

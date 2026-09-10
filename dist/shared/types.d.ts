@@ -104,10 +104,26 @@ export declare enum EventRsvpStatus {
     INTERESTED = "interested",
     GOING = "going"
 }
+export declare enum ElectionType {
+    GRAM_PRADHAN = "gram_pradhan",
+    BDC_MEMBER = "bdc_member",
+    BLOCK_PRAMUKH = "block_pramukh",
+    ZILA_PANCHAYAT = "zila_panchayat",
+    MUNICIPAL_COUNCILLOR = "municipal_councillor",
+    MAYOR = "mayor",
+    MLA = "mla",
+    MP = "mp",
+    POLITICAL_PARTY = "political_party",
+    OTHER = "other"
+}
 export interface BrandingConfig {
+    platformName?: string;
     logoUrl?: string;
     faviconUrl?: string;
     pwaIconUrl?: string;
+    leaderPhotoUrl?: string;
+    loginBgUrl?: string;
+    splashScreenUrl?: string;
     primaryColor: string;
     secondaryColor: string;
     leaderName: string;

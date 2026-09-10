@@ -17,20 +17,55 @@ const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const tenant_schema_1 = require("../../modules/tenants/tenant.schema");
+const types_1 = require("../../shared/types");
 let TenantMiddleware = class TenantMiddleware {
     constructor(tenantModel) {
         this.tenantModel = tenantModel;
     }
     async use(req, res, next) {
-        const host = req.hostname;
-        const slug = host.split('.')[0];
-        const tenant = await this.tenantModel.findOne({
-            $or: [{ customDomain: host }, { slug }],
-        });
-        if (!tenant)
-            throw new common_1.NotFoundException('Tenant not found');
-        if (tenant.status === 'suspended')
+        const headerSlug = req.headers['x-tenant-slug'] || req.headers['x-tenant'];
+        const headerTenantId = req.headers['x-tenant-id'];
+        const querySlug = req.query?.['tenant'];
+        const queryTenantId = req.query?.['tenantId'];
+        const host = req.hostname || '';
+        const isLocalhost = host === 'localhost' || host === '127.0.0.1';
+        const subdomain = !isLocalhost && host.includes('.') ? host.split('.')[0] : null;
+        let tenant = null;
+        if (headerTenantId) {
+            if (!(0, mongoose_2.isValidObjectId)(headerTenantId)) {
+                throw new common_1.BadRequestException(`Invalid "x-tenant-id" value: "${headerTenantId}". It must be a 24-character MongoDB ObjectId (or use "x-tenant-slug" header instead, e.g. "x-tenant-slug: demo").`);
+            }
+            tenant = await this.tenantModel.findById(headerTenantId);
+        }
+        else if (queryTenantId) {
+            if (!(0, mongoose_2.isValidObjectId)(queryTenantId)) {
+                throw new common_1.BadRequestException(`Invalid "tenantId" query param: "${queryTenantId}". It must be a 24-character MongoDB ObjectId.`);
+            }
+            tenant = await this.tenantModel.findById(queryTenantId);
+        }
+        else if (headerSlug) {
+            tenant = await this.tenantModel.findOne({ slug: headerSlug.toLowerCase().trim() });
+        }
+        else if (querySlug) {
+            tenant = await this.tenantModel.findOne({ slug: querySlug.toLowerCase().trim() });
+        }
+        else if (subdomain) {
+            tenant = await this.tenantModel.findOne({
+                $or: [{ customDomain: host }, { slug: subdomain.toLowerCase() }],
+            });
+        }
+        else {
+            tenant = await this.tenantModel.findOne({ customDomain: host });
+            if (!tenant && isLocalhost) {
+                tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: types_1.TenantStatus.ACTIVE }));
+            }
+        }
+        if (!tenant) {
+            throw new common_1.NotFoundException('Tenant not found. Please provide a valid "x-tenant-slug" or "x-tenant-id" header, or access via a valid subdomain/custom domain.');
+        }
+        if (tenant.status === 'suspended') {
             throw new common_1.ForbiddenException('This account has been suspended');
+        }
         req.tenant = tenant;
         next();
     }
