@@ -20,6 +20,7 @@ async function bootstrap() {
 
   const allowedOrigins = [
     'https://election-app-superadmin.vercel.app',
+    'https://election-app-admin-panel.vercel.app',
     'https://election-app-pwa.vercel.app',
     'http://localhost:3000',
     'http://localhost:3001',
