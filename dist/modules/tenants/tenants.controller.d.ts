@@ -265,6 +265,11 @@ export declare class TenantsController {
     } & {
         id: string;
     }>;
+    getAdminUsers(tenantId: string): Promise<(import("../admin-users/admin-user.schema").AdminUser & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    })[]>;
     createAdminUser(tenantId: string, body: {
         name: string;
         email: string;

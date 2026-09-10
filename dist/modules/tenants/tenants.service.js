@@ -643,6 +643,16 @@ let TenantsService = class TenantsService {
             limit: 50,
         });
     }
+    async getAdminUsers(tenantId) {
+        const tenant = await this.tenantModel.findById(tenantId);
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        const admins = await this.adminUserModel
+            .find({ tenantId: new mongoose_2.Types.ObjectId(tenantId) })
+            .select('name email role isActive createdAt')
+            .lean();
+        return admins;
+    }
 };
 exports.TenantsService = TenantsService;
 exports.TenantsService = TenantsService = __decorate([

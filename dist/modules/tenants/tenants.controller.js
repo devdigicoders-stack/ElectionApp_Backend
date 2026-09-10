@@ -53,6 +53,9 @@ let TenantsController = class TenantsController {
     toggleFeature(id, featureKey, isEnabled) {
         return this.tenantsService.toggleFeature(id, featureKey, isEnabled);
     }
+    getAdminUsers(tenantId) {
+        return this.tenantsService.getAdminUsers(tenantId);
+    }
     createAdminUser(tenantId, body) {
         return this.tenantsService.createAdminUser(tenantId, body);
     }
@@ -151,6 +154,13 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Boolean]),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "toggleFeature", null);
+__decorate([
+    (0, common_1.Get)(':id/admin-users'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "getAdminUsers", null);
 __decorate([
     (0, common_1.Post)(':id/admin-users'),
     __param(0, (0, common_1.Param)('id')),

@@ -2,7 +2,7 @@ import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
-import { AdminUserDocument } from '../admin-users/admin-user.schema';
+import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
 import { AreaLevelDocument } from '../areas/area.schema';
 import { SubscriptionDocument } from '../subscriptions/subscription.schema';
 import { PlanDocument } from '../plans/plan.schema';
@@ -347,4 +347,9 @@ export declare class TenantsService {
             totalPages: number;
         };
     }>;
+    getAdminUsers(tenantId: string): Promise<(AdminUser & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    })[]>;
 }
