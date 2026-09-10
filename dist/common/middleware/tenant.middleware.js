@@ -29,7 +29,12 @@ let TenantMiddleware = class TenantMiddleware {
         const queryTenantId = req.query?.['tenantId'];
         const host = req.hostname || '';
         const isLocalhost = host === 'localhost' || host === '127.0.0.1';
-        const subdomain = !isLocalhost && host.includes('.') ? host.split('.')[0] : null;
+        const isCloudHosting = host.endsWith('onrender.com') ||
+            host.endsWith('vercel.app') ||
+            host.endsWith('railway.app') ||
+            host.endsWith('fly.dev') ||
+            host.endsWith('herokuapp.com');
+        const subdomain = !isLocalhost && !isCloudHosting && host.includes('.') ? host.split('.')[0] : null;
         let tenant = null;
         if (headerTenantId) {
             if (!(0, mongoose_2.isValidObjectId)(headerTenantId)) {
@@ -56,9 +61,9 @@ let TenantMiddleware = class TenantMiddleware {
         }
         else {
             tenant = await this.tenantModel.findOne({ customDomain: host });
-            if (!tenant && isLocalhost) {
-                tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: types_1.TenantStatus.ACTIVE }));
-            }
+        }
+        if (!tenant && (isLocalhost || isCloudHosting)) {
+            tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: types_1.TenantStatus.ACTIVE }));
         }
         if (!tenant) {
             throw new common_1.NotFoundException('Tenant not found. Please provide a valid "x-tenant-slug" or "x-tenant-id" header, or access via a valid subdomain/custom domain.');

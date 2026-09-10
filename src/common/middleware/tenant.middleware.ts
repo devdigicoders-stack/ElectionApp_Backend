@@ -22,7 +22,14 @@ export class TenantMiddleware implements NestMiddleware {
 
     const host = req.hostname || '';
     const isLocalhost = host === 'localhost' || host === '127.0.0.1';
-    const subdomain = !isLocalhost && host.includes('.') ? host.split('.')[0] : null;
+    const isCloudHosting =
+      host.endsWith('onrender.com') ||
+      host.endsWith('vercel.app') ||
+      host.endsWith('railway.app') ||
+      host.endsWith('fly.dev') ||
+      host.endsWith('herokuapp.com');
+
+    const subdomain = !isLocalhost && !isCloudHosting && host.includes('.') ? host.split('.')[0] : null;
 
     let tenant: TenantDocument | null = null;
 
@@ -50,10 +57,11 @@ export class TenantMiddleware implements NestMiddleware {
       } as any);
     } else {
       tenant = await this.tenantModel.findOne({ customDomain: host });
-      // If still not found and in local dev (localhost), fallback to 'demo' or first active tenant
-      if (!tenant && isLocalhost) {
-        tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: TenantStatus.ACTIVE }));
-      }
+    }
+
+    // Fallback: If still not found and in local dev (localhost) or cloud hosting (e.g. onrender.com), fallback to 'demo' or first active tenant
+    if (!tenant && (isLocalhost || isCloudHosting)) {
+      tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: TenantStatus.ACTIVE }));
     }
 
     if (!tenant) {
