@@ -1,10 +1,43 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
@@ -26,6 +59,8 @@ const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const types_1 = require("../../shared/types");
+const fs = __importStar(require("fs"));
+const path = __importStar(require("path"));
 let DashboardService = class DashboardService {
     constructor(userModel, complaintModel, workModel, eventModel, membershipModel, volunteerModel, tenantModel, subscriptionModel, planModel) {
         this.userModel = userModel;
@@ -162,11 +197,57 @@ let DashboardService = class DashboardService {
                 },
             },
         ]);
-        const estimatedStorageBytes = (totalCitizens * 25000) + (totalComplaints * 1500000);
-        const estimatedTotalMB = Math.round(estimatedStorageBytes / (1024 * 1024));
-        const estimatedTotalFormatted = estimatedTotalMB > 1024
-            ? `${(estimatedTotalMB / 1024).toFixed(2)} GB`
-            : `${estimatedTotalMB} MB`;
+        let physicalUploadsBytes = 0;
+        let uploadedFilesCount = 0;
+        const uploadRoot = path.join(process.cwd(), 'uploads');
+        if (fs.existsSync(uploadRoot)) {
+            const scanDir = (dir) => {
+                try {
+                    const entries = fs.readdirSync(dir, { withFileTypes: true });
+                    for (const entry of entries) {
+                        const fullPath = path.join(dir, entry.name);
+                        if (entry.isDirectory()) {
+                            scanDir(fullPath);
+                        }
+                        else if (entry.isFile()) {
+                            physicalUploadsBytes += fs.statSync(fullPath).size;
+                            uploadedFilesCount++;
+                        }
+                    }
+                }
+                catch {
+                }
+            };
+            scanDir(uploadRoot);
+        }
+        const physicalUploadsMB = Math.round((physicalUploadsBytes / (1024 * 1024)) * 100) / 100;
+        const estimatedDbBytes = (totalCitizens * 8000) + (totalComplaints * 25000);
+        const estimatedDbMB = Math.round((estimatedDbBytes / (1024 * 1024)) * 100) / 100;
+        const totalUsedMB = Math.round((physicalUploadsMB + estimatedDbMB) * 100) / 100;
+        const totalUsedBytes = physicalUploadsBytes + estimatedDbBytes;
+        const formatSize = (mb) => {
+            if (mb >= 1024)
+                return `${(mb / 1024).toFixed(2)} GB`;
+            return `${mb.toFixed(2)} MB`;
+        };
+        const activeSubs = await this.subscriptionModel
+            .find({ status: { $in: [subscription_schema_1.SubscriptionStatus.ACTIVE, subscription_schema_1.SubscriptionStatus.TRIALING] } })
+            .populate('planId');
+        let totalAllocatedMB = 0;
+        let hasUnlimitedStorage = false;
+        for (const sub of activeSubs) {
+            const plan = sub.planId;
+            const limit = plan?.limits?.maxStorageMB;
+            if (limit === -1) {
+                hasUnlimitedStorage = true;
+            }
+            else if (typeof limit === 'number' && limit > 0) {
+                totalAllocatedMB += limit;
+            }
+        }
+        const baselineCapacityMB = totalAllocatedMB > 0 ? totalAllocatedMB : 51200;
+        const percentUsed = Math.min(Math.round((totalUsedMB / baselineCapacityMB) * 1000) / 10, 100);
+        const storageStatus = percentUsed >= 90 ? 'critical' : percentUsed >= 75 ? 'warning' : 'normal';
         return {
             tenants: {
                 total: totalTenants,
@@ -201,8 +282,20 @@ let DashboardService = class DashboardService {
                 active: activePlans,
             },
             storage: {
-                estimatedMB: estimatedTotalMB,
-                formatted: estimatedTotalFormatted,
+                usedMB: totalUsedMB,
+                usedBytes: totalUsedBytes,
+                usedFormatted: formatSize(totalUsedMB),
+                physicalUploadsMB,
+                physicalUploadsFormatted: formatSize(physicalUploadsMB),
+                databaseMB: estimatedDbMB,
+                databaseFormatted: formatSize(estimatedDbMB),
+                fileCount: uploadedFilesCount,
+                allocatedMB: totalAllocatedMB > 0 ? totalAllocatedMB : (hasUnlimitedStorage ? -1 : 51200),
+                allocatedFormatted: totalAllocatedMB > 0 ? formatSize(totalAllocatedMB) : (hasUnlimitedStorage ? 'Unlimited' : '50.00 GB'),
+                percentUsed,
+                status: storageStatus,
+                estimatedMB: totalUsedMB,
+                formatted: formatSize(totalUsedMB),
             },
             recentTenants,
             recentInvoices: recentInvoicesAgg,

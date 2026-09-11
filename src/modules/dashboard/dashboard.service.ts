@@ -11,6 +11,8 @@ import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
 import { Subscription, SubscriptionDocument, SubscriptionStatus } from '../subscriptions/subscription.schema';
 import { Plan, PlanDocument } from '../plans/plan.schema';
 import { TenantStatus } from '../../shared/types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 @Injectable()
 export class DashboardService {
@@ -209,12 +211,65 @@ export class DashboardService {
       },
     ]);
 
-    // 8. Storage estimation (based on registered citizens and complaints)
-    const estimatedStorageBytes = (totalCitizens * 25000) + (totalComplaints * 1500000);
-    const estimatedTotalMB = Math.round(estimatedStorageBytes / (1024 * 1024));
-    const estimatedTotalFormatted = estimatedTotalMB > 1024
-      ? `${(estimatedTotalMB / 1024).toFixed(2)} GB`
-      : `${estimatedTotalMB} MB`;
+    // 8. Real Dynamic Storage Calculation (Physical uploads + Database footprint + Plan Quotas)
+    let physicalUploadsBytes = 0;
+    let uploadedFilesCount = 0;
+    const uploadRoot = path.join(process.cwd(), 'uploads');
+
+    if (fs.existsSync(uploadRoot)) {
+      const scanDir = (dir: string) => {
+        try {
+          const entries = fs.readdirSync(dir, { withFileTypes: true });
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name);
+            if (entry.isDirectory()) {
+              scanDir(fullPath);
+            } else if (entry.isFile()) {
+              physicalUploadsBytes += fs.statSync(fullPath).size;
+              uploadedFilesCount++;
+            }
+          }
+        } catch {
+          // ignore unreadable/transient files
+        }
+      };
+      scanDir(uploadRoot);
+    }
+
+    const physicalUploadsMB = Math.round((physicalUploadsBytes / (1024 * 1024)) * 100) / 100;
+    // Dynamic database footprint estimation based on active documents
+    const estimatedDbBytes = (totalCitizens * 8000) + (totalComplaints * 25000);
+    const estimatedDbMB = Math.round((estimatedDbBytes / (1024 * 1024)) * 100) / 100;
+    const totalUsedMB = Math.round((physicalUploadsMB + estimatedDbMB) * 100) / 100;
+    const totalUsedBytes = physicalUploadsBytes + estimatedDbBytes;
+
+    const formatSize = (mb: number): string => {
+      if (mb >= 1024) return `${(mb / 1024).toFixed(2)} GB`;
+      return `${mb.toFixed(2)} MB`;
+    };
+
+    // Calculate total allocated storage across all active tenant subscriptions
+    const activeSubs = await this.subscriptionModel
+      .find({ status: { $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING] } })
+      .populate('planId');
+
+    let totalAllocatedMB = 0;
+    let hasUnlimitedStorage = false;
+
+    for (const sub of activeSubs) {
+      const plan = sub.planId as any;
+      const limit = plan?.limits?.maxStorageMB;
+      if (limit === -1) {
+        hasUnlimitedStorage = true;
+      } else if (typeof limit === 'number' && limit > 0) {
+        totalAllocatedMB += limit;
+      }
+    }
+
+    // Baseline platform pool (50 GB if no custom quotas set)
+    const baselineCapacityMB = totalAllocatedMB > 0 ? totalAllocatedMB : 51200;
+    const percentUsed = Math.min(Math.round((totalUsedMB / baselineCapacityMB) * 1000) / 10, 100);
+    const storageStatus = percentUsed >= 90 ? 'critical' : percentUsed >= 75 ? 'warning' : 'normal';
 
     return {
       tenants: {
@@ -250,8 +305,22 @@ export class DashboardService {
         active: activePlans,
       },
       storage: {
-        estimatedMB: estimatedTotalMB,
-        formatted: estimatedTotalFormatted,
+        // High-precision dynamic storage metrics (SRS Sec 45.1 & 48)
+        usedMB: totalUsedMB,
+        usedBytes: totalUsedBytes,
+        usedFormatted: formatSize(totalUsedMB),
+        physicalUploadsMB,
+        physicalUploadsFormatted: formatSize(physicalUploadsMB),
+        databaseMB: estimatedDbMB,
+        databaseFormatted: formatSize(estimatedDbMB),
+        fileCount: uploadedFilesCount,
+        allocatedMB: totalAllocatedMB > 0 ? totalAllocatedMB : (hasUnlimitedStorage ? -1 : 51200),
+        allocatedFormatted: totalAllocatedMB > 0 ? formatSize(totalAllocatedMB) : (hasUnlimitedStorage ? 'Unlimited' : '50.00 GB'),
+        percentUsed,
+        status: storageStatus,
+        // Backward compatibility
+        estimatedMB: totalUsedMB,
+        formatted: formatSize(totalUsedMB),
       },
       recentTenants,
       recentInvoices: recentInvoicesAgg,

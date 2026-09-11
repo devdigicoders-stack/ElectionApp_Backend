@@ -84,6 +84,18 @@ export declare class DashboardService {
             active: number;
         };
         storage: {
+            usedMB: number;
+            usedBytes: number;
+            usedFormatted: string;
+            physicalUploadsMB: number;
+            physicalUploadsFormatted: string;
+            databaseMB: number;
+            databaseFormatted: string;
+            fileCount: number;
+            allocatedMB: number;
+            allocatedFormatted: string;
+            percentUsed: number;
+            status: string;
             estimatedMB: number;
             formatted: string;
         };
