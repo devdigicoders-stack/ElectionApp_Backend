@@ -30,6 +30,13 @@ export declare class AboutLeader {
         title: string;
         description?: string;
     }[];
+    seniorLeaders: {
+        name: string;
+        designation?: string;
+        partyRole?: string;
+        photoUrl?: string;
+        order?: number;
+    }[];
 }
 export declare const AboutLeaderSchema: import("mongoose").Schema<AboutLeader, import("mongoose").Model<AboutLeader, any, any, any, any, any, AboutLeader>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, AboutLeader, Document<unknown, {}, AboutLeader, {
     id: string;
@@ -164,6 +171,21 @@ export declare const AboutLeaderSchema: import("mongoose").Schema<AboutLeader, i
         year: string;
         title: string;
         description?: string;
+    }[], AboutLeader, Document<unknown, {}, AboutLeader, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<AboutLeader & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    seniorLeaders?: import("mongoose").SchemaDefinitionProperty<{
+        name: string;
+        designation?: string;
+        partyRole?: string;
+        photoUrl?: string;
+        order?: number;
     }[], AboutLeader, Document<unknown, {}, AboutLeader, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AboutLeader & {

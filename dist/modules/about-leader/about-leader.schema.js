@@ -67,6 +67,21 @@ __decorate([
     (0, mongoose_1.Prop)({ type: [{ year: String, title: String, description: String }], default: [] }),
     __metadata("design:type", Array)
 ], AboutLeader.prototype, "timeline", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        type: [
+            {
+                name: { type: String, required: true },
+                designation: { type: String, default: null },
+                partyRole: { type: String, default: null },
+                photoUrl: { type: String, default: null },
+                order: { type: Number, default: 0 },
+            },
+        ],
+        default: [],
+    }),
+    __metadata("design:type", Array)
+], AboutLeader.prototype, "seniorLeaders", void 0);
 exports.AboutLeader = AboutLeader = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], AboutLeader);

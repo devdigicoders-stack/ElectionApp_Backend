@@ -18,7 +18,7 @@ export declare function getPollComputedState(poll: PollDocument | any, now?: Dat
     isResultDeclared: boolean;
     canViewResults: boolean;
     resultDeclaredAt: Date | null;
-    resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+    resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
     resultMessage: string;
 };
 export declare class PollsService {
@@ -38,7 +38,7 @@ export declare class PollsService {
         isEnded: boolean;
         isUpcoming: boolean;
         isResultDeclared: boolean;
-        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
         resultMessage: string;
         tenantId: Types.ObjectId;
         question: string;
@@ -111,7 +111,7 @@ export declare class PollsService {
             resultVisibility: PollResultVisibility;
             resultDeclaredAt: Date | null;
             isResultDeclared: boolean;
-            resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+            resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
             resultMessage: string;
             hasVoted: boolean;
             myOptionId: string | null;
@@ -161,7 +161,7 @@ export declare class PollsService {
         resultVisibility: PollResultVisibility;
         resultDeclaredAt: Date | null;
         isResultDeclared: boolean;
-        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
         resultMessage: string;
         hasVoted: boolean;
         myOptionId: string | null;
@@ -179,7 +179,7 @@ export declare class PollsService {
         status: PollStatus;
         isResultDeclared: boolean;
         resultDeclaredAt: Date | null;
-        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
         resultMessage: string;
         totalVotes: number | undefined;
     }>;
@@ -244,7 +244,7 @@ export declare class PollsService {
         isEnded: boolean;
         isUpcoming: boolean;
         isResultDeclared: boolean;
-        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
         resultMessage: string;
         tenantId: Types.ObjectId;
         question: string;
@@ -288,7 +288,7 @@ export declare class PollsService {
         isResultDeclared: boolean;
         resultDeclaredAt: Date;
         resultVisibility: PollResultVisibility.ALWAYS_PUBLIC;
-        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
         totalVotes: number;
         options: {
             optionId: string;
