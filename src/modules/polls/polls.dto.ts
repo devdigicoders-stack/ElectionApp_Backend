@@ -41,6 +41,22 @@ export class CreatePollDto {
   endsAt?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  durationHours?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  durationDays?: number;
+
+  @IsOptional()
+  @IsDateString()
+  resultDeclaredAt?: string;
+
+  @IsOptional()
   @IsEnum(PollTargetAudience)
   targetAudience?: PollTargetAudience;
 
@@ -73,6 +89,16 @@ export class CreatePollDto {
   @IsOptional()
   @IsBoolean()
   allowRevote?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  allowMultipleChoices?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  maxChoices?: number;
 
   @IsOptional()
   @IsBoolean()
@@ -107,6 +133,22 @@ export class UpdatePollDto {
   endsAt?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  durationHours?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.1)
+  durationDays?: number;
+
+  @IsOptional()
+  @IsDateString()
+  resultDeclaredAt?: string;
+
+  @IsOptional()
   @IsEnum(PollTargetAudience)
   targetAudience?: PollTargetAudience;
 
@@ -138,13 +180,28 @@ export class UpdatePollDto {
 
   @IsOptional()
   @IsBoolean()
+  allowMultipleChoices?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  maxChoices?: number;
+
+  @IsOptional()
+  @IsBoolean()
   isActive?: boolean;
 }
 
 export class VotePollDto {
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  optionId: string;
+  optionId?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  optionIds?: string[];
 }
 
 export class QueryPollsDto {
@@ -158,7 +215,7 @@ export class QueryPollsDto {
 
   @IsOptional()
   @IsString()
-  status?: 'active' | 'ended' | 'all';
+  status?: 'active' | 'upcoming' | 'ended' | 'closed' | 'all';
 
   @IsOptional()
   @Type(() => Number)

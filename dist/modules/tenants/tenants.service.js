@@ -201,6 +201,9 @@ let TenantsService = class TenantsService {
             contactPerson: dto.contactPerson || null,
             mobileNumber: dto.mobileNumber || null,
             email: dto.email || null,
+            gstin: dto.gstin ? dto.gstin.trim().toUpperCase() : null,
+            billingState: dto.billingState?.trim() || null,
+            billingAddress: dto.billingAddress?.trim() || null,
             electionType: dto.electionType || 'other',
             customDomain: dto.customDomain || undefined,
             branding: sanitizedBranding,
@@ -393,6 +396,9 @@ let TenantsService = class TenantsService {
                         contactPerson: tenant.contactPerson || null,
                         mobileNumber: tenant.mobileNumber || null,
                         email: tenant.email || null,
+                        gstin: tenant.gstin || null,
+                        billingState: tenant.billingState || null,
+                        billingAddress: tenant.billingAddress || null,
                     },
                 },
                 step2_branding: {
@@ -579,6 +585,12 @@ let TenantsService = class TenantsService {
         if (!existing)
             throw new common_1.NotFoundException('Tenant not found');
         const updateSet = { ...dto };
+        if (dto.gstin !== undefined)
+            updateSet.gstin = dto.gstin ? dto.gstin.trim().toUpperCase() : null;
+        if (dto.billingState !== undefined)
+            updateSet.billingState = dto.billingState?.trim() || null;
+        if (dto.billingAddress !== undefined)
+            updateSet.billingAddress = dto.billingAddress?.trim() || null;
         if (dto.title && !dto.name) {
             updateSet.name = dto.title;
             updateSet.title = dto.title;

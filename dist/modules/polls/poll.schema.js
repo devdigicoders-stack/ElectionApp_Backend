@@ -76,6 +76,14 @@ __decorate([
     __metadata("design:type", Boolean)
 ], Poll.prototype, "allowRevote", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Poll.prototype, "allowMultipleChoices", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 1 }),
+    __metadata("design:type", Number)
+], Poll.prototype, "maxChoices", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)
 ], Poll.prototype, "isActive", void 0);
@@ -88,6 +96,14 @@ __decorate([
     __metadata("design:type", Date)
 ], Poll.prototype, "endsAt", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Number)
+], Poll.prototype, "durationHours", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Poll.prototype, "resultDeclaredAt", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ default: 0 }),
     __metadata("design:type", Number)
 ], Poll.prototype, "totalVotes", void 0);
@@ -98,6 +114,8 @@ exports.PollSchema = mongoose_1.SchemaFactory.createForClass(Poll);
 exports.PollSchema.index({ tenantId: 1, isActive: 1 });
 exports.PollSchema.index({ tenantId: 1, category: 1 });
 exports.PollSchema.index({ tenantId: 1, targetAreaId: 1 });
+exports.PollSchema.index({ tenantId: 1, startsAt: 1, endsAt: 1 });
+exports.PollSchema.index({ tenantId: 1, resultDeclaredAt: 1 });
 let PollVote = class PollVote {
 };
 exports.PollVote = PollVote;
@@ -114,9 +132,13 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], PollVote.prototype, "userId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ default: null }),
     __metadata("design:type", String)
 ], PollVote.prototype, "optionId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
+    __metadata("design:type", Array)
+], PollVote.prototype, "optionIds", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Area', default: null }),
     __metadata("design:type", mongoose_2.Types.ObjectId)

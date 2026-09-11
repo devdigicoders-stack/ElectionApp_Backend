@@ -90,7 +90,7 @@ let PollsController = class PollsController {
         return this.pollsService.findOne(req.tenant, id, user, isAdmin);
     }
     vote(req, id, dto) {
-        return this.pollsService.vote(req.tenant, id, req.user.sub, dto.optionId);
+        return this.pollsService.vote(req.tenant, id, req.user.sub, dto);
     }
     getMyVote(req, id) {
         return this.pollsService.getUserVote(req.tenant, id, req.user.sub);
@@ -106,6 +106,12 @@ let PollsController = class PollsController {
     }
     update(req, id, dto) {
         return this.pollsService.update(req.tenant, id, dto);
+    }
+    declareResult(req, id) {
+        return this.pollsService.declareResult(req.tenant, id);
+    }
+    closePoll(req, id) {
+        return this.pollsService.closePoll(req.tenant, id);
     }
     remove(req, id) {
         return this.pollsService.remove(req.tenant, id);
@@ -192,6 +198,28 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, polls_dto_1.UpdatePollDto]),
     __metadata("design:returntype", void 0)
 ], PollsController.prototype, "update", null);
+__decorate([
+    (0, common_1.Post)(':id/declare-result'),
+    (0, common_1.Patch)(':id/declare-result'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.CONTENT_MANAGER),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PollsController.prototype, "declareResult", null);
+__decorate([
+    (0, common_1.Post)(':id/close'),
+    (0, common_1.Patch)(':id/close'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.CONTENT_MANAGER),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], PollsController.prototype, "closePoll", null);
 __decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

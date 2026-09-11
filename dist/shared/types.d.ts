@@ -171,9 +171,15 @@ export declare enum PollTargetAudience {
     AGE_GROUP = "AGE_GROUP",
     GENDER = "GENDER"
 }
+export declare enum PollStatus {
+    UPCOMING = "UPCOMING",
+    ACTIVE = "ACTIVE",
+    CLOSED = "CLOSED"
+}
 export declare enum PollResultVisibility {
     ALWAYS_PUBLIC = "ALWAYS_PUBLIC",
     AFTER_VOTE = "AFTER_VOTE",
     AFTER_END = "AFTER_END",
+    SCHEDULED_DATE = "SCHEDULED_DATE",
     ADMIN_ONLY = "ADMIN_ONLY"
 }

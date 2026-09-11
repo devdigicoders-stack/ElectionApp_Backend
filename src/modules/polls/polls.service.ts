@@ -18,12 +18,110 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import {
   PollTargetAudience,
   PollResultVisibility,
+  PollStatus,
   MembershipStatus,
   VolunteerStatus,
 } from '../../shared/types';
-import { CreatePollDto, UpdatePollDto, QueryPollsDto } from './polls.dto';
+import { CreatePollDto, UpdatePollDto, QueryPollsDto, VotePollDto } from './polls.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Response } from 'express';
+
+export function getPollComputedState(
+  poll: PollDocument | any,
+  now: Date = new Date(),
+  isAdmin: boolean = false,
+  hasVoted: boolean = false,
+) {
+  const startsAt = poll.startsAt ? new Date(poll.startsAt) : null;
+  const endsAt = poll.endsAt ? new Date(poll.endsAt) : null;
+  const resultDeclaredAt = poll.resultDeclaredAt ? new Date(poll.resultDeclaredAt) : null;
+
+  // 1. Dynamic Status
+  let status: PollStatus = PollStatus.ACTIVE;
+  if (startsAt && now < startsAt) {
+    status = PollStatus.UPCOMING;
+  } else if (!poll.isActive || (endsAt && now >= endsAt)) {
+    status = PollStatus.CLOSED;
+  } else {
+    status = PollStatus.ACTIVE;
+  }
+
+  const isEnded = status === PollStatus.CLOSED;
+  const isUpcoming = status === PollStatus.UPCOMING;
+  const isOpenForVoting = status === PollStatus.ACTIVE;
+
+  // 2. Result Declaration timing
+  let isResultDeclared = false;
+  let effectiveResultDeclaredAt: Date | null = resultDeclaredAt;
+
+  if (poll.resultVisibility === PollResultVisibility.ADMIN_ONLY) {
+    isResultDeclared = false;
+  } else if (poll.resultVisibility === PollResultVisibility.SCHEDULED_DATE) {
+    isResultDeclared = Boolean(resultDeclaredAt && now >= resultDeclaredAt);
+  } else if (poll.resultVisibility === PollResultVisibility.AFTER_END) {
+    const threshold = resultDeclaredAt || endsAt;
+    effectiveResultDeclaredAt = threshold;
+    isResultDeclared = Boolean(threshold && now >= threshold) || (!endsAt && !poll.isActive);
+  } else if (poll.resultVisibility === PollResultVisibility.AFTER_VOTE) {
+    // If a future declaration date was set, hide results until that date arrives
+    if (resultDeclaredAt && now < resultDeclaredAt) {
+      isResultDeclared = false;
+    } else {
+      isResultDeclared = hasVoted;
+    }
+  } else if (poll.resultVisibility === PollResultVisibility.ALWAYS_PUBLIC) {
+    if (resultDeclaredAt && now < resultDeclaredAt) {
+      isResultDeclared = false;
+    } else {
+      isResultDeclared = true;
+    }
+  }
+
+  const canViewResults = isAdmin || isResultDeclared;
+
+  let resultStatus: 'DECLARED' | 'SCHEDULED' | 'PENDING' | 'ADMIN_ONLY' = 'PENDING';
+  let resultMessage = '';
+
+  if (isResultDeclared) {
+    resultStatus = 'DECLARED';
+    resultMessage = 'Poll results have been declared.';
+  } else if (poll.resultVisibility === PollResultVisibility.ADMIN_ONLY) {
+    resultStatus = 'ADMIN_ONLY';
+    resultMessage = 'Poll results are restricted to Campaign Admin only.';
+  } else if (effectiveResultDeclaredAt && now < effectiveResultDeclaredAt) {
+    resultStatus = 'SCHEDULED';
+    resultMessage = `Results will be declared on ${effectiveResultDeclaredAt.toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    })}.`;
+  } else if (poll.resultVisibility === PollResultVisibility.AFTER_END) {
+    resultStatus = 'SCHEDULED';
+    resultMessage = endsAt
+      ? `Results will be declared after the poll ends on ${endsAt.toLocaleString('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        })}.`
+      : 'Results will be declared once the poll is closed.';
+  } else if (poll.resultVisibility === PollResultVisibility.AFTER_VOTE) {
+    resultStatus = 'PENDING';
+    resultMessage = 'Results will be revealed after you cast your vote.';
+  } else {
+    resultStatus = 'PENDING';
+    resultMessage = 'Results declaration is pending.';
+  }
+
+  return {
+    status,
+    isEnded,
+    isUpcoming,
+    isOpenForVoting,
+    isResultDeclared,
+    canViewResults,
+    resultDeclaredAt: effectiveResultDeclaredAt,
+    resultStatus,
+    resultMessage,
+  };
+}
 
 @Injectable()
 export class PollsService {
@@ -94,6 +192,7 @@ export class PollsService {
 
   /**
    * Create a new poll (Admin / Leader / Content Manager)
+   * Supports custom startsAt, endsAt, durationHours, durationDays, and scheduled resultDeclaredAt
    */
   async create(tenant: TenantDocument, dto: CreatePollDto) {
     if (!dto.options || dto.options.length < 2) {
@@ -112,13 +211,48 @@ export class PollsService {
     }));
 
     const startsAt = dto.startsAt ? new Date(dto.startsAt) : new Date();
-    const endsAt = dto.endsAt ? new Date(dto.endsAt) : undefined;
+    let endsAt: Date | undefined = undefined;
+
+    if (dto.endsAt) {
+      endsAt = new Date(dto.endsAt);
+    } else if (dto.durationHours) {
+      endsAt = new Date(startsAt.getTime() + dto.durationHours * 3600 * 1000);
+    } else if (dto.durationDays) {
+      endsAt = new Date(startsAt.getTime() + dto.durationDays * 86400 * 1000);
+    }
 
     if (endsAt && endsAt <= startsAt) {
       throw new BadRequestException('End date must be after the start date');
     }
 
+    const durationHours = endsAt
+      ? Math.round(((endsAt.getTime() - startsAt.getTime()) / (3600 * 1000)) * 10) / 10
+      : (dto.durationHours || (dto.durationDays ? dto.durationDays * 24 : undefined));
+
+    // Result Declaration scheduling
+    let resultDeclaredAt: Date | undefined = undefined;
+    let resultVisibility = dto.resultVisibility || PollResultVisibility.AFTER_END;
+
+    if (dto.resultDeclaredAt) {
+      resultDeclaredAt = new Date(dto.resultDeclaredAt);
+      if (resultDeclaredAt < startsAt) {
+        throw new BadRequestException('Result declaration date cannot be earlier than poll start date');
+      }
+      if (!dto.resultVisibility) {
+        resultVisibility = PollResultVisibility.SCHEDULED_DATE;
+      }
+    } else if (resultVisibility === PollResultVisibility.AFTER_END && endsAt) {
+      resultDeclaredAt = endsAt;
+    } else if (resultVisibility === PollResultVisibility.SCHEDULED_DATE) {
+      resultDeclaredAt = endsAt || new Date(startsAt.getTime() + 24 * 3600 * 1000);
+    }
+
     const targetAreaId = dto.targetAreaId ? new Types.ObjectId(dto.targetAreaId) : undefined;
+
+    const allowMultipleChoices = Boolean(dto.allowMultipleChoices);
+    const maxChoices = allowMultipleChoices
+      ? (dto.maxChoices && dto.maxChoices > 0 ? Math.min(dto.maxChoices, formattedOptions.length) : formattedOptions.length)
+      : 1;
 
     const poll = await this.pollModel.create({
       tenantId: tenant._id,
@@ -128,22 +262,37 @@ export class PollsService {
       options: formattedOptions,
       startsAt,
       endsAt,
+      durationHours,
+      resultDeclaredAt,
       targetAudience: dto.targetAudience || PollTargetAudience.ALL,
       targetAreaId,
       targetGender: dto.targetGender || undefined,
       targetMinAge: dto.targetMinAge !== undefined ? dto.targetMinAge : undefined,
       targetMaxAge: dto.targetMaxAge !== undefined ? dto.targetMaxAge : undefined,
-      resultVisibility: dto.resultVisibility || PollResultVisibility.AFTER_VOTE,
+      resultVisibility,
       allowRevote: dto.allowRevote ?? false,
+      allowMultipleChoices,
+      maxChoices,
       isActive: dto.isActive ?? true,
       totalVotes: 0,
     });
 
-    return poll;
+    const state = getPollComputedState(poll, new Date(), true);
+
+    return {
+      ...poll.toObject(),
+      status: state.status,
+      isOpenForVoting: state.isOpenForVoting,
+      isEnded: state.isEnded,
+      isUpcoming: state.isUpcoming,
+      isResultDeclared: state.isResultDeclared,
+      resultStatus: state.resultStatus,
+      resultMessage: state.resultMessage,
+    };
   }
 
   /**
-   * List polls for citizens and admins with demographic & result masking
+   * List polls for citizens and admins with dynamic status and result masking
    */
   async findAll(tenant: TenantDocument, queryDto: QueryPollsDto, user?: any, isAdmin: boolean = false) {
     await this.seedDefaultPollsIfEmpty(tenant);
@@ -165,8 +314,14 @@ export class PollsService {
     const now = new Date();
     if (queryDto.status === 'active') {
       filter.isActive = true;
-      filter.$or = [{ endsAt: null }, { endsAt: { $gt: now } }];
-    } else if (queryDto.status === 'ended') {
+      filter.$and = [
+        { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
+        { $or: [{ endsAt: null }, { endsAt: { $gt: now } }] },
+      ];
+    } else if (queryDto.status === 'upcoming') {
+      filter.isActive = true;
+      filter.startsAt = { $gt: now };
+    } else if (queryDto.status === 'ended' || queryDto.status === 'closed') {
       filter.$or = [{ isActive: false }, { endsAt: { $lte: now } }];
     }
 
@@ -185,7 +340,7 @@ export class PollsService {
     ]);
 
     // Fetch user votes if user is authenticated
-    let userVoteMap = new Map<string, string>();
+    const userVoteMap = new Map<string, { optionId: string | null; optionIds: string[] }>();
     if (user?.sub) {
       const pollIds = polls.map((p) => p._id);
       const userVotes = await this.voteModel.find({
@@ -193,24 +348,27 @@ export class PollsService {
         userId: new Types.ObjectId(user.sub),
         pollId: { $in: pollIds },
       });
-      userVotes.forEach((v) => userVoteMap.set(v.pollId.toString(), v.optionId));
+      userVotes.forEach((v) => {
+        const optionIds = v.optionIds?.length ? v.optionIds : (v.optionId ? [v.optionId] : []);
+        userVoteMap.set(v.pollId.toString(), {
+          optionId: v.optionId || optionIds[0] || null,
+          optionIds,
+        });
+      });
     }
 
     const items = polls.map((p) => {
-      const myOptionId = userVoteMap.get(p._id.toString());
-      const hasVoted = Boolean(myOptionId);
-      const isEnded = Boolean((p.endsAt && p.endsAt <= now) || !p.isActive);
+      const voteInfo = userVoteMap.get(p._id.toString());
+      const hasVoted = Boolean(voteInfo);
+      const myOptionId = voteInfo?.optionId || null;
+      const myOptionIds = voteInfo?.optionIds || (myOptionId ? [myOptionId] : []);
 
-      // Determine result visibility
-      const canViewResults =
-        isAdmin ||
-        p.resultVisibility === PollResultVisibility.ALWAYS_PUBLIC ||
-        (p.resultVisibility === PollResultVisibility.AFTER_VOTE && hasVoted) ||
-        (p.resultVisibility === PollResultVisibility.AFTER_END && isEnded);
-
+      const state = getPollComputedState(p, now, isAdmin, hasVoted);
       const totalVotes = p.totalVotes || 0;
-      const options = p.options.map((opt) => {
-        if (canViewResults) {
+
+      let winnerOption: any = null;
+      const options = p.options.map((opt: any) => {
+        if (state.canViewResults) {
           const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 1000) / 10 : 0;
           return {
             optionId: opt.optionId,
@@ -219,12 +377,17 @@ export class PollsService {
             percentage,
           };
         }
-        // Result hidden until vote / poll ends
+        // Result hidden until configured declaration time
         return {
           optionId: opt.optionId,
           text: opt.text,
         };
       });
+
+      if (state.canViewResults && totalVotes > 0) {
+        const sorted = [...options].sort((a: any, b: any) => (b.votes || 0) - (a.votes || 0));
+        winnerOption = sorted[0];
+      }
 
       return {
         _id: p._id,
@@ -232,18 +395,30 @@ export class PollsService {
         description: p.description,
         category: p.category,
         options,
-        totalVotes: canViewResults ? totalVotes : undefined,
+        winnerOption,
+        totalVotes: state.canViewResults ? totalVotes : undefined,
         targetAudience: p.targetAudience,
         targetArea: p.targetAreaId,
         startsAt: p.startsAt,
         endsAt: p.endsAt,
+        durationHours: p.durationHours,
         isActive: p.isActive,
-        isEnded,
+        status: state.status,
+        isOpenForVoting: state.isOpenForVoting,
+        isEnded: state.isEnded,
+        isUpcoming: state.isUpcoming,
         allowRevote: p.allowRevote,
+        allowMultipleChoices: p.allowMultipleChoices ?? false,
+        maxChoices: p.maxChoices || 1,
         resultVisibility: p.resultVisibility,
+        resultDeclaredAt: state.resultDeclaredAt,
+        isResultDeclared: state.isResultDeclared,
+        resultStatus: state.resultStatus,
+        resultMessage: state.resultMessage,
         hasVoted,
-        myOptionId: myOptionId || null,
-        canViewResults,
+        myOptionId,
+        myOptionIds,
+        canViewResults: state.canViewResults,
         createdAt: (p as any).createdAt,
       };
     });
@@ -258,7 +433,7 @@ export class PollsService {
   }
 
   /**
-   * Get single poll details with eligibility and vote status
+   * Get single poll details with eligibility, dynamic status, and result masking
    */
   async findOne(tenant: TenantDocument, id: string, user?: any, isAdmin: boolean = false) {
     const poll = await this.pollModel
@@ -280,17 +455,13 @@ export class PollsService {
 
     const now = new Date();
     const hasVoted = Boolean(userVote);
-    const isEnded = Boolean((poll.endsAt && poll.endsAt <= now) || !poll.isActive);
 
-    const canViewResults =
-      isAdmin ||
-      poll.resultVisibility === PollResultVisibility.ALWAYS_PUBLIC ||
-      (poll.resultVisibility === PollResultVisibility.AFTER_VOTE && hasVoted) ||
-      (poll.resultVisibility === PollResultVisibility.AFTER_END && isEnded);
-
+    const state = getPollComputedState(poll, now, isAdmin, hasVoted);
     const totalVotes = poll.totalVotes || 0;
-    const options = poll.options.map((opt) => {
-      if (canViewResults) {
+
+    let winnerOption: any = null;
+    const options = poll.options.map((opt: any) => {
+      if (state.canViewResults) {
         const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 1000) / 10 : 0;
         return {
           optionId: opt.optionId,
@@ -305,13 +476,19 @@ export class PollsService {
       };
     });
 
+    if (state.canViewResults && totalVotes > 0) {
+      const sorted = [...options].sort((a: any, b: any) => (b.votes || 0) - (a.votes || 0));
+      winnerOption = sorted[0];
+    }
+
     return {
       _id: poll._id,
       question: poll.question,
       description: poll.description,
       category: poll.category,
       options,
-      totalVotes: canViewResults ? totalVotes : undefined,
+      winnerOption,
+      totalVotes: state.canViewResults ? totalVotes : undefined,
       targetAudience: poll.targetAudience,
       targetArea: poll.targetAreaId,
       targetGender: poll.targetGender,
@@ -319,45 +496,105 @@ export class PollsService {
       targetMaxAge: poll.targetMaxAge,
       startsAt: poll.startsAt,
       endsAt: poll.endsAt,
+      durationHours: poll.durationHours,
       isActive: poll.isActive,
-      isEnded,
+      status: state.status,
+      isOpenForVoting: state.isOpenForVoting,
+      isEnded: state.isEnded,
+      isUpcoming: state.isUpcoming,
       allowRevote: poll.allowRevote,
+      allowMultipleChoices: poll.allowMultipleChoices ?? false,
+      maxChoices: poll.maxChoices || 1,
       resultVisibility: poll.resultVisibility,
+      resultDeclaredAt: state.resultDeclaredAt,
+      isResultDeclared: state.isResultDeclared,
+      resultStatus: state.resultStatus,
+      resultMessage: state.resultMessage,
       hasVoted,
-      myOptionId: userVote?.optionId || null,
+      myOptionId: userVote?.optionId || (userVote?.optionIds?.[0] || null),
+      myOptionIds: userVote?.optionIds?.length ? userVote.optionIds : (userVote?.optionId ? [userVote.optionId] : []),
       votedAt: userVote?.createdAt || null,
-      canViewResults,
+      canViewResults: state.canViewResults,
       createdAt: (poll as any).createdAt,
       updatedAt: (poll as any).updatedAt,
     };
   }
 
   /**
-   * Cast or change a vote in an opinion poll with strict eligibility enforcement
+   * Cast or change a vote in an opinion poll with strict time duration, single/multiple choice rules, and eligibility enforcement
    */
-  async vote(tenant: TenantDocument, pollId: string, userId: string, optionId: string) {
+  async vote(tenant: TenantDocument, pollId: string, userId: string, dto: VotePollDto | string) {
     const poll = await this.pollModel.findOne({
       _id: pollId,
       tenantId: tenant._id,
-      isActive: true,
     });
 
     if (!poll) {
-      throw new NotFoundException('Poll not found or inactive');
+      throw new NotFoundException('Poll not found');
     }
 
     const now = new Date();
+
+    // 1. Time Duration: Check if poll has not started yet
     if (poll.startsAt && poll.startsAt > now) {
-      throw new BadRequestException('This opinion poll has not started yet');
+      throw new BadRequestException(
+        `Voting has not started yet. This opinion poll will open on ${poll.startsAt.toLocaleString('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short',
+        })}.`,
+      );
     }
 
-    if (poll.endsAt && poll.endsAt <= now) {
-      throw new BadRequestException('This opinion poll has already ended');
+    // 2. Time Duration: Check if poll has ended / auto-closed
+    if ((poll.endsAt && poll.endsAt <= now) || !poll.isActive) {
+      throw new BadRequestException(
+        `This opinion poll has ended and is now closed. Voting is no longer accepted.${
+          poll.endsAt ? ` (Ended on: ${poll.endsAt.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })})` : ''
+        }`,
+      );
     }
 
-    const targetOption = poll.options.find((o) => o.optionId === optionId);
-    if (!targetOption) {
-      throw new BadRequestException('Invalid option selected');
+    // 3. Extract and sanitize selected options
+    const voteDto: VotePollDto = typeof dto === 'string' ? { optionId: dto } : dto;
+    let selectedOptionIds: string[] = [];
+
+    if (voteDto.optionIds && Array.isArray(voteDto.optionIds) && voteDto.optionIds.length > 0) {
+      selectedOptionIds = Array.from(
+        new Set(voteDto.optionIds.map((id) => String(id).trim()).filter(Boolean)),
+      );
+    } else if (voteDto.optionId) {
+      selectedOptionIds = [String(voteDto.optionId).trim()];
+    }
+
+    if (selectedOptionIds.length === 0) {
+      throw new BadRequestException('Please select at least one option to cast your vote.');
+    }
+
+    // 4. Single vs Multiple Choices Validation
+    if (!poll.allowMultipleChoices && selectedOptionIds.length > 1) {
+      throw new BadRequestException(
+        'This poll only allows choosing 1 single option. Please select only one option.',
+      );
+    }
+
+    const maxAllowed = poll.allowMultipleChoices
+      ? (poll.maxChoices && poll.maxChoices > 0 ? poll.maxChoices : poll.options.length)
+      : 1;
+
+    if (selectedOptionIds.length > maxAllowed) {
+      throw new BadRequestException(
+        `This poll allows selecting at most ${maxAllowed} option(s). You selected ${selectedOptionIds.length}.`,
+      );
+    }
+
+    // 5. Verify that all chosen options exist in the poll
+    const validOptionMap = new Map<string, string>();
+    poll.options.forEach((o) => validOptionMap.set(o.optionId, o.text));
+
+    for (const optId of selectedOptionIds) {
+      if (!validOptionMap.has(optId)) {
+        throw new BadRequestException(`Invalid option selected: "${optId}" does not exist in this poll.`);
+      }
     }
 
     const existingVote = await this.voteModel.findOne({
@@ -371,33 +608,66 @@ export class PollsService {
         throw new BadRequestException('You have already voted in this poll. Multiple votes are not permitted.');
       }
 
-      if (existingVote.optionId === optionId) {
+      const prevOptionIds: string[] = (existingVote.optionIds && existingVote.optionIds.length > 0)
+        ? existingVote.optionIds
+        : (existingVote.optionId ? [existingVote.optionId] : []);
+
+      const isIdentical =
+        prevOptionIds.length === selectedOptionIds.length &&
+        prevOptionIds.every((id) => selectedOptionIds.includes(id));
+
+      const state = getPollComputedState(poll, now, false, true);
+
+      if (isIdentical) {
         return {
-          message: 'You have already voted for this option',
+          message: state.isResultDeclared
+            ? 'You have already voted for this selection.'
+            : `You have already voted for this selection. ${state.resultMessage}`,
           hasVoted: true,
-          optionId,
-          totalVotes: poll.totalVotes,
+          optionId: selectedOptionIds[0],
+          optionIds: selectedOptionIds,
+          status: state.status,
+          isResultDeclared: state.isResultDeclared,
+          resultDeclaredAt: state.resultDeclaredAt,
+          resultStatus: state.resultStatus,
+          resultMessage: state.resultMessage,
+          totalVotes: state.canViewResults ? poll.totalVotes : undefined,
         };
       }
 
-      // Decrement prior option, increment new option
-      await this.pollModel.updateOne(
-        { _id: pollId, 'options.optionId': existingVote.optionId },
-        { $inc: { 'options.$.votes': -1 } },
-      );
+      // Decrement prior options
+      for (const prevId of prevOptionIds) {
+        await this.pollModel.updateOne(
+          { _id: pollId, 'options.optionId': prevId },
+          { $inc: { 'options.$.votes': -1 } },
+        );
+      }
 
-      await this.pollModel.updateOne(
-        { _id: pollId, 'options.optionId': optionId },
-        { $inc: { 'options.$.votes': 1 } },
-      );
+      // Increment new options
+      for (const newId of selectedOptionIds) {
+        await this.pollModel.updateOne(
+          { _id: pollId, 'options.optionId': newId },
+          { $inc: { 'options.$.votes': 1 } },
+        );
+      }
 
-      existingVote.optionId = optionId;
+      existingVote.optionId = selectedOptionIds[0];
+      existingVote.optionIds = selectedOptionIds;
       await existingVote.save();
 
       return {
-        message: 'Your vote has been updated successfully',
+        message: state.isResultDeclared
+          ? 'Your vote has been updated successfully.'
+          : `Your vote has been updated successfully! ${state.resultMessage}`,
         hasVoted: true,
-        optionId,
+        optionId: selectedOptionIds[0],
+        optionIds: selectedOptionIds,
+        status: state.status,
+        isResultDeclared: state.isResultDeclared,
+        resultDeclaredAt: state.resultDeclaredAt,
+        resultStatus: state.resultStatus,
+        resultMessage: state.resultMessage,
+        totalVotes: state.canViewResults ? poll.totalVotes : undefined,
       };
     }
 
@@ -481,22 +751,43 @@ export class PollsService {
       tenantId: tenant._id,
       pollId: poll._id,
       userId: user._id,
-      optionId,
+      optionId: selectedOptionIds[0],
+      optionIds: selectedOptionIds,
       areaId: user.areaId || undefined,
       gender: user.gender || undefined,
       age: snapshotAge,
     });
 
-    // Increment vote counts atomically
+    // Increment vote counts for each selected option atomically
+    for (const optId of selectedOptionIds) {
+      await this.pollModel.updateOne(
+        { _id: pollId, 'options.optionId': optId },
+        { $inc: { 'options.$.votes': 1 } },
+      );
+    }
+
+    // Increment overall total voter count
     await this.pollModel.updateOne(
-      { _id: pollId, 'options.optionId': optionId },
-      { $inc: { 'options.$.votes': 1, totalVotes: 1 } },
+      { _id: pollId },
+      { $inc: { totalVotes: 1 } },
     );
 
+    const updatedPoll = await this.pollModel.findById(pollId);
+    const state = getPollComputedState(updatedPoll || poll, now, false, true);
+
     return {
-      message: 'Vote recorded successfully',
+      message: state.isResultDeclared
+        ? 'Your vote has been recorded successfully.'
+        : `Your vote has been recorded successfully! ${state.resultMessage}`,
       hasVoted: true,
-      optionId,
+      optionId: selectedOptionIds[0],
+      optionIds: selectedOptionIds,
+      status: state.status,
+      isResultDeclared: state.isResultDeclared,
+      resultDeclaredAt: state.resultDeclaredAt,
+      resultStatus: state.resultStatus,
+      resultMessage: state.resultMessage,
+      totalVotes: state.canViewResults ? (updatedPoll?.totalVotes || poll.totalVotes + 1) : undefined,
     };
   }
 
@@ -511,12 +802,15 @@ export class PollsService {
     });
 
     if (!vote) {
-      return { hasVoted: false, optionId: null };
+      return { hasVoted: false, optionId: null, optionIds: [] };
     }
+
+    const optionIds = vote.optionIds?.length ? vote.optionIds : (vote.optionId ? [vote.optionId] : []);
 
     return {
       hasVoted: true,
-      optionId: vote.optionId,
+      optionId: vote.optionId || optionIds[0] || null,
+      optionIds,
       votedAt: vote.createdAt,
     };
   }
@@ -733,7 +1027,8 @@ export class PollsService {
     votes.forEach((v: any) => {
       const user = v.userId || {};
       const area = v.areaId || {};
-      const optionText = optionMap.get(v.optionId) || v.optionId;
+      const vOptionIds: string[] = v.optionIds?.length ? v.optionIds : (v.optionId ? [v.optionId] : []);
+      const optionText = vOptionIds.map((id) => optionMap.get(id) || id).join('; ');
       const votedAt = v.createdAt ? new Date(v.createdAt).toISOString() : 'N/A';
 
       lines.push(
@@ -792,7 +1087,7 @@ export class PollsService {
   }
 
   /**
-   * Update poll metadata or settings (Admin)
+   * Update poll metadata, time duration, or result declaration settings (Admin)
    */
   async update(tenant: TenantDocument, id: string, dto: UpdatePollDto) {
     const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });
@@ -805,6 +1100,12 @@ export class PollsService {
     if (dto.category !== undefined) poll.category = dto.category;
     if (dto.isActive !== undefined) poll.isActive = dto.isActive;
     if (dto.allowRevote !== undefined) poll.allowRevote = dto.allowRevote;
+    if (dto.allowMultipleChoices !== undefined) poll.allowMultipleChoices = dto.allowMultipleChoices;
+    if (dto.maxChoices !== undefined) {
+      poll.maxChoices = poll.allowMultipleChoices ? Math.max(1, dto.maxChoices) : 1;
+    } else if (dto.allowMultipleChoices === false) {
+      poll.maxChoices = 1;
+    }
     if (dto.targetAudience !== undefined) poll.targetAudience = dto.targetAudience;
     if (dto.resultVisibility !== undefined) poll.resultVisibility = dto.resultVisibility;
     if (dto.targetGender !== undefined) poll.targetGender = dto.targetGender;
@@ -821,6 +1122,26 @@ export class PollsService {
 
     if (dto.endsAt !== undefined) {
       poll.endsAt = dto.endsAt ? new Date(dto.endsAt) : undefined;
+    } else if (dto.durationHours) {
+      const baseStart = poll.startsAt || new Date();
+      poll.endsAt = new Date(baseStart.getTime() + dto.durationHours * 3600 * 1000);
+      poll.durationHours = dto.durationHours;
+    } else if (dto.durationDays) {
+      const baseStart = poll.startsAt || new Date();
+      poll.endsAt = new Date(baseStart.getTime() + dto.durationDays * 86400 * 1000);
+      poll.durationHours = dto.durationDays * 24;
+    }
+
+    if (poll.endsAt && poll.startsAt && poll.endsAt <= poll.startsAt) {
+      throw new BadRequestException('End date must be after start date');
+    }
+
+    if (poll.endsAt && poll.startsAt) {
+      poll.durationHours = Math.round(((poll.endsAt.getTime() - poll.startsAt.getTime()) / (3600 * 1000)) * 10) / 10;
+    }
+
+    if (dto.resultDeclaredAt !== undefined) {
+      poll.resultDeclaredAt = dto.resultDeclaredAt ? new Date(dto.resultDeclaredAt) : undefined;
     }
 
     // If options are updated and poll has 0 votes, allow rewriting options
@@ -835,7 +1156,74 @@ export class PollsService {
       }));
     }
 
-    return poll.save();
+    await poll.save();
+    const state = getPollComputedState(poll, new Date(), true);
+
+    return {
+      ...poll.toObject(),
+      status: state.status,
+      isOpenForVoting: state.isOpenForVoting,
+      isEnded: state.isEnded,
+      isUpcoming: state.isUpcoming,
+      isResultDeclared: state.isResultDeclared,
+      resultStatus: state.resultStatus,
+      resultMessage: state.resultMessage,
+    };
+  }
+
+  /**
+   * Manually declare results immediately (Admin / Leader)
+   * POST /polls/:id/declare-result
+   */
+  async declareResult(tenant: TenantDocument, pollId: string) {
+    const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    poll.resultDeclaredAt = new Date();
+    poll.resultVisibility = PollResultVisibility.ALWAYS_PUBLIC;
+    await poll.save();
+
+    const state = getPollComputedState(poll, new Date(), true);
+
+    return {
+      message: `Poll results for "${poll.question}" have been declared successfully.`,
+      pollId: poll._id,
+      isResultDeclared: true,
+      resultDeclaredAt: poll.resultDeclaredAt,
+      resultVisibility: poll.resultVisibility,
+      resultStatus: state.resultStatus,
+      totalVotes: poll.totalVotes,
+      options: poll.options,
+    };
+  }
+
+  /**
+   * Manually close poll immediately (Admin / Leader)
+   * POST /polls/:id/close
+   */
+  async closePoll(tenant: TenantDocument, pollId: string) {
+    const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+    if (!poll) {
+      throw new NotFoundException('Poll not found');
+    }
+
+    poll.isActive = false;
+    poll.endsAt = new Date();
+    await poll.save();
+
+    const state = getPollComputedState(poll, new Date(), true);
+
+    return {
+      message: `Poll "${poll.question}" has been closed successfully. Further votes will be rejected.`,
+      pollId: poll._id,
+      status: state.status,
+      isActive: poll.isActive,
+      endsAt: poll.endsAt,
+      isResultDeclared: state.isResultDeclared,
+      resultDeclaredAt: state.resultDeclaredAt,
+    };
   }
 
   /**

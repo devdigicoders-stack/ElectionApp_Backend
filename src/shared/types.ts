@@ -193,10 +193,17 @@ export enum PollTargetAudience {
   GENDER = 'GENDER',
 }
 
+export enum PollStatus {
+  UPCOMING = 'UPCOMING',
+  ACTIVE = 'ACTIVE',
+  CLOSED = 'CLOSED',
+}
+
 export enum PollResultVisibility {
   ALWAYS_PUBLIC = 'ALWAYS_PUBLIC',
   AFTER_VOTE = 'AFTER_VOTE',
   AFTER_END = 'AFTER_END',
+  SCHEDULED_DATE = 'SCHEDULED_DATE',
   ADMIN_ONLY = 'ADMIN_ONLY',
 }
 

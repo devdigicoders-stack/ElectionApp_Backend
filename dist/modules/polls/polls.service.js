@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var PollsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.PollsService = void 0;
+exports.getPollComputedState = getPollComputedState;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
@@ -25,6 +26,99 @@ const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const types_1 = require("../../shared/types");
 const uuid_1 = require("uuid");
+function getPollComputedState(poll, now = new Date(), isAdmin = false, hasVoted = false) {
+    const startsAt = poll.startsAt ? new Date(poll.startsAt) : null;
+    const endsAt = poll.endsAt ? new Date(poll.endsAt) : null;
+    const resultDeclaredAt = poll.resultDeclaredAt ? new Date(poll.resultDeclaredAt) : null;
+    let status = types_1.PollStatus.ACTIVE;
+    if (startsAt && now < startsAt) {
+        status = types_1.PollStatus.UPCOMING;
+    }
+    else if (!poll.isActive || (endsAt && now >= endsAt)) {
+        status = types_1.PollStatus.CLOSED;
+    }
+    else {
+        status = types_1.PollStatus.ACTIVE;
+    }
+    const isEnded = status === types_1.PollStatus.CLOSED;
+    const isUpcoming = status === types_1.PollStatus.UPCOMING;
+    const isOpenForVoting = status === types_1.PollStatus.ACTIVE;
+    let isResultDeclared = false;
+    let effectiveResultDeclaredAt = resultDeclaredAt;
+    if (poll.resultVisibility === types_1.PollResultVisibility.ADMIN_ONLY) {
+        isResultDeclared = false;
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.SCHEDULED_DATE) {
+        isResultDeclared = Boolean(resultDeclaredAt && now >= resultDeclaredAt);
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.AFTER_END) {
+        const threshold = resultDeclaredAt || endsAt;
+        effectiveResultDeclaredAt = threshold;
+        isResultDeclared = Boolean(threshold && now >= threshold) || (!endsAt && !poll.isActive);
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.AFTER_VOTE) {
+        if (resultDeclaredAt && now < resultDeclaredAt) {
+            isResultDeclared = false;
+        }
+        else {
+            isResultDeclared = hasVoted;
+        }
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.ALWAYS_PUBLIC) {
+        if (resultDeclaredAt && now < resultDeclaredAt) {
+            isResultDeclared = false;
+        }
+        else {
+            isResultDeclared = true;
+        }
+    }
+    const canViewResults = isAdmin || isResultDeclared;
+    let resultStatus = 'PENDING';
+    let resultMessage = '';
+    if (isResultDeclared) {
+        resultStatus = 'DECLARED';
+        resultMessage = 'Poll results have been declared.';
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.ADMIN_ONLY) {
+        resultStatus = 'ADMIN_ONLY';
+        resultMessage = 'Poll results are restricted to Campaign Admin only.';
+    }
+    else if (effectiveResultDeclaredAt && now < effectiveResultDeclaredAt) {
+        resultStatus = 'SCHEDULED';
+        resultMessage = `Results will be declared on ${effectiveResultDeclaredAt.toLocaleString('en-IN', {
+            dateStyle: 'medium',
+            timeStyle: 'short',
+        })}.`;
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.AFTER_END) {
+        resultStatus = 'SCHEDULED';
+        resultMessage = endsAt
+            ? `Results will be declared after the poll ends on ${endsAt.toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            })}.`
+            : 'Results will be declared once the poll is closed.';
+    }
+    else if (poll.resultVisibility === types_1.PollResultVisibility.AFTER_VOTE) {
+        resultStatus = 'PENDING';
+        resultMessage = 'Results will be revealed after you cast your vote.';
+    }
+    else {
+        resultStatus = 'PENDING';
+        resultMessage = 'Results declaration is pending.';
+    }
+    return {
+        status,
+        isEnded,
+        isUpcoming,
+        isOpenForVoting,
+        isResultDeclared,
+        canViewResults,
+        resultDeclaredAt: effectiveResultDeclaredAt,
+        resultStatus,
+        resultMessage,
+    };
+}
 let PollsService = PollsService_1 = class PollsService {
     constructor(pollModel, voteModel, userModel, areaModel, membershipModel, volunteerModel, auditLogsService) {
         this.pollModel = pollModel;
@@ -96,11 +190,44 @@ let PollsService = PollsService_1 = class PollsService {
             votes: 0,
         }));
         const startsAt = dto.startsAt ? new Date(dto.startsAt) : new Date();
-        const endsAt = dto.endsAt ? new Date(dto.endsAt) : undefined;
+        let endsAt = undefined;
+        if (dto.endsAt) {
+            endsAt = new Date(dto.endsAt);
+        }
+        else if (dto.durationHours) {
+            endsAt = new Date(startsAt.getTime() + dto.durationHours * 3600 * 1000);
+        }
+        else if (dto.durationDays) {
+            endsAt = new Date(startsAt.getTime() + dto.durationDays * 86400 * 1000);
+        }
         if (endsAt && endsAt <= startsAt) {
             throw new common_1.BadRequestException('End date must be after the start date');
         }
+        const durationHours = endsAt
+            ? Math.round(((endsAt.getTime() - startsAt.getTime()) / (3600 * 1000)) * 10) / 10
+            : (dto.durationHours || (dto.durationDays ? dto.durationDays * 24 : undefined));
+        let resultDeclaredAt = undefined;
+        let resultVisibility = dto.resultVisibility || types_1.PollResultVisibility.AFTER_END;
+        if (dto.resultDeclaredAt) {
+            resultDeclaredAt = new Date(dto.resultDeclaredAt);
+            if (resultDeclaredAt < startsAt) {
+                throw new common_1.BadRequestException('Result declaration date cannot be earlier than poll start date');
+            }
+            if (!dto.resultVisibility) {
+                resultVisibility = types_1.PollResultVisibility.SCHEDULED_DATE;
+            }
+        }
+        else if (resultVisibility === types_1.PollResultVisibility.AFTER_END && endsAt) {
+            resultDeclaredAt = endsAt;
+        }
+        else if (resultVisibility === types_1.PollResultVisibility.SCHEDULED_DATE) {
+            resultDeclaredAt = endsAt || new Date(startsAt.getTime() + 24 * 3600 * 1000);
+        }
         const targetAreaId = dto.targetAreaId ? new mongoose_2.Types.ObjectId(dto.targetAreaId) : undefined;
+        const allowMultipleChoices = Boolean(dto.allowMultipleChoices);
+        const maxChoices = allowMultipleChoices
+            ? (dto.maxChoices && dto.maxChoices > 0 ? Math.min(dto.maxChoices, formattedOptions.length) : formattedOptions.length)
+            : 1;
         const poll = await this.pollModel.create({
             tenantId: tenant._id,
             question: dto.question.trim(),
@@ -109,17 +236,31 @@ let PollsService = PollsService_1 = class PollsService {
             options: formattedOptions,
             startsAt,
             endsAt,
+            durationHours,
+            resultDeclaredAt,
             targetAudience: dto.targetAudience || types_1.PollTargetAudience.ALL,
             targetAreaId,
             targetGender: dto.targetGender || undefined,
             targetMinAge: dto.targetMinAge !== undefined ? dto.targetMinAge : undefined,
             targetMaxAge: dto.targetMaxAge !== undefined ? dto.targetMaxAge : undefined,
-            resultVisibility: dto.resultVisibility || types_1.PollResultVisibility.AFTER_VOTE,
+            resultVisibility,
             allowRevote: dto.allowRevote ?? false,
+            allowMultipleChoices,
+            maxChoices,
             isActive: dto.isActive ?? true,
             totalVotes: 0,
         });
-        return poll;
+        const state = getPollComputedState(poll, new Date(), true);
+        return {
+            ...poll.toObject(),
+            status: state.status,
+            isOpenForVoting: state.isOpenForVoting,
+            isEnded: state.isEnded,
+            isUpcoming: state.isUpcoming,
+            isResultDeclared: state.isResultDeclared,
+            resultStatus: state.resultStatus,
+            resultMessage: state.resultMessage,
+        };
     }
     async findAll(tenant, queryDto, user, isAdmin = false) {
         await this.seedDefaultPollsIfEmpty(tenant);
@@ -136,9 +277,16 @@ let PollsService = PollsService_1 = class PollsService {
         const now = new Date();
         if (queryDto.status === 'active') {
             filter.isActive = true;
-            filter.$or = [{ endsAt: null }, { endsAt: { $gt: now } }];
+            filter.$and = [
+                { $or: [{ startsAt: null }, { startsAt: { $lte: now } }] },
+                { $or: [{ endsAt: null }, { endsAt: { $gt: now } }] },
+            ];
         }
-        else if (queryDto.status === 'ended') {
+        else if (queryDto.status === 'upcoming') {
+            filter.isActive = true;
+            filter.startsAt = { $gt: now };
+        }
+        else if (queryDto.status === 'ended' || queryDto.status === 'closed') {
             filter.$or = [{ isActive: false }, { endsAt: { $lte: now } }];
         }
         const page = Math.max(1, Number(queryDto.page) || 1);
@@ -153,7 +301,7 @@ let PollsService = PollsService_1 = class PollsService {
                 .limit(limit),
             this.pollModel.countDocuments(filter),
         ]);
-        let userVoteMap = new Map();
+        const userVoteMap = new Map();
         if (user?.sub) {
             const pollIds = polls.map((p) => p._id);
             const userVotes = await this.voteModel.find({
@@ -161,19 +309,24 @@ let PollsService = PollsService_1 = class PollsService {
                 userId: new mongoose_2.Types.ObjectId(user.sub),
                 pollId: { $in: pollIds },
             });
-            userVotes.forEach((v) => userVoteMap.set(v.pollId.toString(), v.optionId));
+            userVotes.forEach((v) => {
+                const optionIds = v.optionIds?.length ? v.optionIds : (v.optionId ? [v.optionId] : []);
+                userVoteMap.set(v.pollId.toString(), {
+                    optionId: v.optionId || optionIds[0] || null,
+                    optionIds,
+                });
+            });
         }
         const items = polls.map((p) => {
-            const myOptionId = userVoteMap.get(p._id.toString());
-            const hasVoted = Boolean(myOptionId);
-            const isEnded = Boolean((p.endsAt && p.endsAt <= now) || !p.isActive);
-            const canViewResults = isAdmin ||
-                p.resultVisibility === types_1.PollResultVisibility.ALWAYS_PUBLIC ||
-                (p.resultVisibility === types_1.PollResultVisibility.AFTER_VOTE && hasVoted) ||
-                (p.resultVisibility === types_1.PollResultVisibility.AFTER_END && isEnded);
+            const voteInfo = userVoteMap.get(p._id.toString());
+            const hasVoted = Boolean(voteInfo);
+            const myOptionId = voteInfo?.optionId || null;
+            const myOptionIds = voteInfo?.optionIds || (myOptionId ? [myOptionId] : []);
+            const state = getPollComputedState(p, now, isAdmin, hasVoted);
             const totalVotes = p.totalVotes || 0;
+            let winnerOption = null;
             const options = p.options.map((opt) => {
-                if (canViewResults) {
+                if (state.canViewResults) {
                     const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 1000) / 10 : 0;
                     return {
                         optionId: opt.optionId,
@@ -187,24 +340,40 @@ let PollsService = PollsService_1 = class PollsService {
                     text: opt.text,
                 };
             });
+            if (state.canViewResults && totalVotes > 0) {
+                const sorted = [...options].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+                winnerOption = sorted[0];
+            }
             return {
                 _id: p._id,
                 question: p.question,
                 description: p.description,
                 category: p.category,
                 options,
-                totalVotes: canViewResults ? totalVotes : undefined,
+                winnerOption,
+                totalVotes: state.canViewResults ? totalVotes : undefined,
                 targetAudience: p.targetAudience,
                 targetArea: p.targetAreaId,
                 startsAt: p.startsAt,
                 endsAt: p.endsAt,
+                durationHours: p.durationHours,
                 isActive: p.isActive,
-                isEnded,
+                status: state.status,
+                isOpenForVoting: state.isOpenForVoting,
+                isEnded: state.isEnded,
+                isUpcoming: state.isUpcoming,
                 allowRevote: p.allowRevote,
+                allowMultipleChoices: p.allowMultipleChoices ?? false,
+                maxChoices: p.maxChoices || 1,
                 resultVisibility: p.resultVisibility,
+                resultDeclaredAt: state.resultDeclaredAt,
+                isResultDeclared: state.isResultDeclared,
+                resultStatus: state.resultStatus,
+                resultMessage: state.resultMessage,
                 hasVoted,
-                myOptionId: myOptionId || null,
-                canViewResults,
+                myOptionId,
+                myOptionIds,
+                canViewResults: state.canViewResults,
                 createdAt: p.createdAt,
             };
         });
@@ -233,14 +402,11 @@ let PollsService = PollsService_1 = class PollsService {
         }
         const now = new Date();
         const hasVoted = Boolean(userVote);
-        const isEnded = Boolean((poll.endsAt && poll.endsAt <= now) || !poll.isActive);
-        const canViewResults = isAdmin ||
-            poll.resultVisibility === types_1.PollResultVisibility.ALWAYS_PUBLIC ||
-            (poll.resultVisibility === types_1.PollResultVisibility.AFTER_VOTE && hasVoted) ||
-            (poll.resultVisibility === types_1.PollResultVisibility.AFTER_END && isEnded);
+        const state = getPollComputedState(poll, now, isAdmin, hasVoted);
         const totalVotes = poll.totalVotes || 0;
+        let winnerOption = null;
         const options = poll.options.map((opt) => {
-            if (canViewResults) {
+            if (state.canViewResults) {
                 const percentage = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 1000) / 10 : 0;
                 return {
                     optionId: opt.optionId,
@@ -254,13 +420,18 @@ let PollsService = PollsService_1 = class PollsService {
                 text: opt.text,
             };
         });
+        if (state.canViewResults && totalVotes > 0) {
+            const sorted = [...options].sort((a, b) => (b.votes || 0) - (a.votes || 0));
+            winnerOption = sorted[0];
+        }
         return {
             _id: poll._id,
             question: poll.question,
             description: poll.description,
             category: poll.category,
             options,
-            totalVotes: canViewResults ? totalVotes : undefined,
+            winnerOption,
+            totalVotes: state.canViewResults ? totalVotes : undefined,
             targetAudience: poll.targetAudience,
             targetArea: poll.targetAreaId,
             targetGender: poll.targetGender,
@@ -268,37 +439,73 @@ let PollsService = PollsService_1 = class PollsService {
             targetMaxAge: poll.targetMaxAge,
             startsAt: poll.startsAt,
             endsAt: poll.endsAt,
+            durationHours: poll.durationHours,
             isActive: poll.isActive,
-            isEnded,
+            status: state.status,
+            isOpenForVoting: state.isOpenForVoting,
+            isEnded: state.isEnded,
+            isUpcoming: state.isUpcoming,
             allowRevote: poll.allowRevote,
+            allowMultipleChoices: poll.allowMultipleChoices ?? false,
+            maxChoices: poll.maxChoices || 1,
             resultVisibility: poll.resultVisibility,
+            resultDeclaredAt: state.resultDeclaredAt,
+            isResultDeclared: state.isResultDeclared,
+            resultStatus: state.resultStatus,
+            resultMessage: state.resultMessage,
             hasVoted,
-            myOptionId: userVote?.optionId || null,
+            myOptionId: userVote?.optionId || (userVote?.optionIds?.[0] || null),
+            myOptionIds: userVote?.optionIds?.length ? userVote.optionIds : (userVote?.optionId ? [userVote.optionId] : []),
             votedAt: userVote?.createdAt || null,
-            canViewResults,
+            canViewResults: state.canViewResults,
             createdAt: poll.createdAt,
             updatedAt: poll.updatedAt,
         };
     }
-    async vote(tenant, pollId, userId, optionId) {
+    async vote(tenant, pollId, userId, dto) {
         const poll = await this.pollModel.findOne({
             _id: pollId,
             tenantId: tenant._id,
-            isActive: true,
         });
         if (!poll) {
-            throw new common_1.NotFoundException('Poll not found or inactive');
+            throw new common_1.NotFoundException('Poll not found');
         }
         const now = new Date();
         if (poll.startsAt && poll.startsAt > now) {
-            throw new common_1.BadRequestException('This opinion poll has not started yet');
+            throw new common_1.BadRequestException(`Voting has not started yet. This opinion poll will open on ${poll.startsAt.toLocaleString('en-IN', {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+            })}.`);
         }
-        if (poll.endsAt && poll.endsAt <= now) {
-            throw new common_1.BadRequestException('This opinion poll has already ended');
+        if ((poll.endsAt && poll.endsAt <= now) || !poll.isActive) {
+            throw new common_1.BadRequestException(`This opinion poll has ended and is now closed. Voting is no longer accepted.${poll.endsAt ? ` (Ended on: ${poll.endsAt.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })})` : ''}`);
         }
-        const targetOption = poll.options.find((o) => o.optionId === optionId);
-        if (!targetOption) {
-            throw new common_1.BadRequestException('Invalid option selected');
+        const voteDto = typeof dto === 'string' ? { optionId: dto } : dto;
+        let selectedOptionIds = [];
+        if (voteDto.optionIds && Array.isArray(voteDto.optionIds) && voteDto.optionIds.length > 0) {
+            selectedOptionIds = Array.from(new Set(voteDto.optionIds.map((id) => String(id).trim()).filter(Boolean)));
+        }
+        else if (voteDto.optionId) {
+            selectedOptionIds = [String(voteDto.optionId).trim()];
+        }
+        if (selectedOptionIds.length === 0) {
+            throw new common_1.BadRequestException('Please select at least one option to cast your vote.');
+        }
+        if (!poll.allowMultipleChoices && selectedOptionIds.length > 1) {
+            throw new common_1.BadRequestException('This poll only allows choosing 1 single option. Please select only one option.');
+        }
+        const maxAllowed = poll.allowMultipleChoices
+            ? (poll.maxChoices && poll.maxChoices > 0 ? poll.maxChoices : poll.options.length)
+            : 1;
+        if (selectedOptionIds.length > maxAllowed) {
+            throw new common_1.BadRequestException(`This poll allows selecting at most ${maxAllowed} option(s). You selected ${selectedOptionIds.length}.`);
+        }
+        const validOptionMap = new Map();
+        poll.options.forEach((o) => validOptionMap.set(o.optionId, o.text));
+        for (const optId of selectedOptionIds) {
+            if (!validOptionMap.has(optId)) {
+                throw new common_1.BadRequestException(`Invalid option selected: "${optId}" does not exist in this poll.`);
+            }
         }
         const existingVote = await this.voteModel.findOne({
             pollId: poll._id,
@@ -308,22 +515,50 @@ let PollsService = PollsService_1 = class PollsService {
             if (!poll.allowRevote) {
                 throw new common_1.BadRequestException('You have already voted in this poll. Multiple votes are not permitted.');
             }
-            if (existingVote.optionId === optionId) {
+            const prevOptionIds = (existingVote.optionIds && existingVote.optionIds.length > 0)
+                ? existingVote.optionIds
+                : (existingVote.optionId ? [existingVote.optionId] : []);
+            const isIdentical = prevOptionIds.length === selectedOptionIds.length &&
+                prevOptionIds.every((id) => selectedOptionIds.includes(id));
+            const state = getPollComputedState(poll, now, false, true);
+            if (isIdentical) {
                 return {
-                    message: 'You have already voted for this option',
+                    message: state.isResultDeclared
+                        ? 'You have already voted for this selection.'
+                        : `You have already voted for this selection. ${state.resultMessage}`,
                     hasVoted: true,
-                    optionId,
-                    totalVotes: poll.totalVotes,
+                    optionId: selectedOptionIds[0],
+                    optionIds: selectedOptionIds,
+                    status: state.status,
+                    isResultDeclared: state.isResultDeclared,
+                    resultDeclaredAt: state.resultDeclaredAt,
+                    resultStatus: state.resultStatus,
+                    resultMessage: state.resultMessage,
+                    totalVotes: state.canViewResults ? poll.totalVotes : undefined,
                 };
             }
-            await this.pollModel.updateOne({ _id: pollId, 'options.optionId': existingVote.optionId }, { $inc: { 'options.$.votes': -1 } });
-            await this.pollModel.updateOne({ _id: pollId, 'options.optionId': optionId }, { $inc: { 'options.$.votes': 1 } });
-            existingVote.optionId = optionId;
+            for (const prevId of prevOptionIds) {
+                await this.pollModel.updateOne({ _id: pollId, 'options.optionId': prevId }, { $inc: { 'options.$.votes': -1 } });
+            }
+            for (const newId of selectedOptionIds) {
+                await this.pollModel.updateOne({ _id: pollId, 'options.optionId': newId }, { $inc: { 'options.$.votes': 1 } });
+            }
+            existingVote.optionId = selectedOptionIds[0];
+            existingVote.optionIds = selectedOptionIds;
             await existingVote.save();
             return {
-                message: 'Your vote has been updated successfully',
+                message: state.isResultDeclared
+                    ? 'Your vote has been updated successfully.'
+                    : `Your vote has been updated successfully! ${state.resultMessage}`,
                 hasVoted: true,
-                optionId,
+                optionId: selectedOptionIds[0],
+                optionIds: selectedOptionIds,
+                status: state.status,
+                isResultDeclared: state.isResultDeclared,
+                resultDeclaredAt: state.resultDeclaredAt,
+                resultStatus: state.resultStatus,
+                resultMessage: state.resultMessage,
+                totalVotes: state.canViewResults ? poll.totalVotes : undefined,
             };
         }
         const user = await this.userModel.findOne({ _id: userId, tenantId: tenant._id });
@@ -386,16 +621,31 @@ let PollsService = PollsService_1 = class PollsService {
             tenantId: tenant._id,
             pollId: poll._id,
             userId: user._id,
-            optionId,
+            optionId: selectedOptionIds[0],
+            optionIds: selectedOptionIds,
             areaId: user.areaId || undefined,
             gender: user.gender || undefined,
             age: snapshotAge,
         });
-        await this.pollModel.updateOne({ _id: pollId, 'options.optionId': optionId }, { $inc: { 'options.$.votes': 1, totalVotes: 1 } });
+        for (const optId of selectedOptionIds) {
+            await this.pollModel.updateOne({ _id: pollId, 'options.optionId': optId }, { $inc: { 'options.$.votes': 1 } });
+        }
+        await this.pollModel.updateOne({ _id: pollId }, { $inc: { totalVotes: 1 } });
+        const updatedPoll = await this.pollModel.findById(pollId);
+        const state = getPollComputedState(updatedPoll || poll, now, false, true);
         return {
-            message: 'Vote recorded successfully',
+            message: state.isResultDeclared
+                ? 'Your vote has been recorded successfully.'
+                : `Your vote has been recorded successfully! ${state.resultMessage}`,
             hasVoted: true,
-            optionId,
+            optionId: selectedOptionIds[0],
+            optionIds: selectedOptionIds,
+            status: state.status,
+            isResultDeclared: state.isResultDeclared,
+            resultDeclaredAt: state.resultDeclaredAt,
+            resultStatus: state.resultStatus,
+            resultMessage: state.resultMessage,
+            totalVotes: state.canViewResults ? (updatedPoll?.totalVotes || poll.totalVotes + 1) : undefined,
         };
     }
     async getUserVote(tenant, pollId, userId) {
@@ -405,11 +655,13 @@ let PollsService = PollsService_1 = class PollsService {
             userId: new mongoose_2.Types.ObjectId(userId),
         });
         if (!vote) {
-            return { hasVoted: false, optionId: null };
+            return { hasVoted: false, optionId: null, optionIds: [] };
         }
+        const optionIds = vote.optionIds?.length ? vote.optionIds : (vote.optionId ? [vote.optionId] : []);
         return {
             hasVoted: true,
-            optionId: vote.optionId,
+            optionId: vote.optionId || optionIds[0] || null,
+            optionIds,
             votedAt: vote.createdAt,
         };
     }
@@ -576,7 +828,8 @@ let PollsService = PollsService_1 = class PollsService {
         votes.forEach((v) => {
             const user = v.userId || {};
             const area = v.areaId || {};
-            const optionText = optionMap.get(v.optionId) || v.optionId;
+            const vOptionIds = v.optionIds?.length ? v.optionIds : (v.optionId ? [v.optionId] : []);
+            const optionText = vOptionIds.map((id) => optionMap.get(id) || id).join('; ');
             const votedAt = v.createdAt ? new Date(v.createdAt).toISOString() : 'N/A';
             lines.push([
                 escapeCsv(votedAt),
@@ -639,6 +892,14 @@ let PollsService = PollsService_1 = class PollsService {
             poll.isActive = dto.isActive;
         if (dto.allowRevote !== undefined)
             poll.allowRevote = dto.allowRevote;
+        if (dto.allowMultipleChoices !== undefined)
+            poll.allowMultipleChoices = dto.allowMultipleChoices;
+        if (dto.maxChoices !== undefined) {
+            poll.maxChoices = poll.allowMultipleChoices ? Math.max(1, dto.maxChoices) : 1;
+        }
+        else if (dto.allowMultipleChoices === false) {
+            poll.maxChoices = 1;
+        }
         if (dto.targetAudience !== undefined)
             poll.targetAudience = dto.targetAudience;
         if (dto.resultVisibility !== undefined)
@@ -658,6 +919,25 @@ let PollsService = PollsService_1 = class PollsService {
         if (dto.endsAt !== undefined) {
             poll.endsAt = dto.endsAt ? new Date(dto.endsAt) : undefined;
         }
+        else if (dto.durationHours) {
+            const baseStart = poll.startsAt || new Date();
+            poll.endsAt = new Date(baseStart.getTime() + dto.durationHours * 3600 * 1000);
+            poll.durationHours = dto.durationHours;
+        }
+        else if (dto.durationDays) {
+            const baseStart = poll.startsAt || new Date();
+            poll.endsAt = new Date(baseStart.getTime() + dto.durationDays * 86400 * 1000);
+            poll.durationHours = dto.durationDays * 24;
+        }
+        if (poll.endsAt && poll.startsAt && poll.endsAt <= poll.startsAt) {
+            throw new common_1.BadRequestException('End date must be after start date');
+        }
+        if (poll.endsAt && poll.startsAt) {
+            poll.durationHours = Math.round(((poll.endsAt.getTime() - poll.startsAt.getTime()) / (3600 * 1000)) * 10) / 10;
+        }
+        if (dto.resultDeclaredAt !== undefined) {
+            poll.resultDeclaredAt = dto.resultDeclaredAt ? new Date(dto.resultDeclaredAt) : undefined;
+        }
         if (dto.options && dto.options.length >= 2) {
             if (poll.totalVotes > 0) {
                 throw new common_1.BadRequestException('Cannot replace options after votes have already been recorded');
@@ -668,7 +948,57 @@ let PollsService = PollsService_1 = class PollsService {
                 votes: 0,
             }));
         }
-        return poll.save();
+        await poll.save();
+        const state = getPollComputedState(poll, new Date(), true);
+        return {
+            ...poll.toObject(),
+            status: state.status,
+            isOpenForVoting: state.isOpenForVoting,
+            isEnded: state.isEnded,
+            isUpcoming: state.isUpcoming,
+            isResultDeclared: state.isResultDeclared,
+            resultStatus: state.resultStatus,
+            resultMessage: state.resultMessage,
+        };
+    }
+    async declareResult(tenant, pollId) {
+        const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+        if (!poll) {
+            throw new common_1.NotFoundException('Poll not found');
+        }
+        poll.resultDeclaredAt = new Date();
+        poll.resultVisibility = types_1.PollResultVisibility.ALWAYS_PUBLIC;
+        await poll.save();
+        const state = getPollComputedState(poll, new Date(), true);
+        return {
+            message: `Poll results for "${poll.question}" have been declared successfully.`,
+            pollId: poll._id,
+            isResultDeclared: true,
+            resultDeclaredAt: poll.resultDeclaredAt,
+            resultVisibility: poll.resultVisibility,
+            resultStatus: state.resultStatus,
+            totalVotes: poll.totalVotes,
+            options: poll.options,
+        };
+    }
+    async closePoll(tenant, pollId) {
+        const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+        if (!poll) {
+            throw new common_1.NotFoundException('Poll not found');
+        }
+        poll.isActive = false;
+        poll.endsAt = new Date();
+        await poll.save();
+        const state = getPollComputedState(poll, new Date(), true);
+        return {
+            message: `Poll "${poll.question}" has been closed successfully. Further votes will be rejected.`,
+            pollId: poll._id,
+            status: state.status,
+            isActive: poll.isActive,
+            endsAt: poll.endsAt,
+            isResultDeclared: state.isResultDeclared,
+            resultDeclaredAt: state.resultDeclaredAt,
+        };
     }
     async remove(tenant, id) {
         const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });

@@ -37,6 +37,9 @@ export declare class TenantsController {
                         contactPerson: string | null;
                         mobileNumber: string | null;
                         email: string | null;
+                        gstin: string | null;
+                        billingState: string | null;
+                        billingAddress: string | null;
                     };
                 };
                 step2_branding: {
@@ -157,6 +160,9 @@ export declare class TenantsController {
                     contactPerson: string | null;
                     mobileNumber: string | null;
                     email: string | null;
+                    gstin: string | null;
+                    billingState: string | null;
+                    billingAddress: string | null;
                 };
             };
             step2_branding: {
@@ -323,6 +329,9 @@ export declare class TenantsController {
         contactPerson?: string | null;
         mobileNumber?: string | null;
         email?: string | null;
+        gstin?: string | null;
+        billingState?: string | null;
+        billingAddress?: string | null;
         electionType?: string;
         isPublished: boolean;
         status: import("../../shared/types").TenantStatus;

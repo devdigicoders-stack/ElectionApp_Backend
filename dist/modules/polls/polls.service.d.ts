@@ -1,14 +1,25 @@
 import { Model, Types } from 'mongoose';
-import { Poll, PollDocument, PollVoteDocument } from './poll.schema';
+import { PollDocument, PollVoteDocument } from './poll.schema';
 import { UserDocument } from '../users/user.schema';
 import { AreaDocument } from '../areas/area.schema';
 import { MembershipDocument } from '../membership/membership.schema';
 import { VolunteerDocument } from '../volunteers/volunteer.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
-import { PollTargetAudience, PollResultVisibility } from '../../shared/types';
-import { CreatePollDto, UpdatePollDto, QueryPollsDto } from './polls.dto';
+import { PollTargetAudience, PollResultVisibility, PollStatus } from '../../shared/types';
+import { CreatePollDto, UpdatePollDto, QueryPollsDto, VotePollDto } from './polls.dto';
 import { Response } from 'express';
+export declare function getPollComputedState(poll: PollDocument | any, now?: Date, isAdmin?: boolean, hasVoted?: boolean): {
+    status: PollStatus;
+    isEnded: boolean;
+    isUpcoming: boolean;
+    isOpenForVoting: boolean;
+    isResultDeclared: boolean;
+    canViewResults: boolean;
+    resultDeclaredAt: Date | null;
+    resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+    resultMessage: string;
+};
 export declare class PollsService {
     private pollModel;
     private voteModel;
@@ -20,12 +31,49 @@ export declare class PollsService {
     private readonly logger;
     constructor(pollModel: Model<PollDocument>, voteModel: Model<PollVoteDocument>, userModel: Model<UserDocument>, areaModel: Model<AreaDocument>, membershipModel: Model<MembershipDocument>, volunteerModel: Model<VolunteerDocument>, auditLogsService?: AuditLogsService | undefined);
     seedDefaultPollsIfEmpty(tenant: TenantDocument): Promise<void>;
-    create(tenant: TenantDocument, dto: CreatePollDto): Promise<import("mongoose").Document<unknown, {}, PollDocument, {}, import("mongoose").DefaultSchemaOptions> & Poll & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    create(tenant: TenantDocument, dto: CreatePollDto): Promise<{
+        status: PollStatus;
+        isOpenForVoting: boolean;
+        isEnded: boolean;
+        isUpcoming: boolean;
+        isResultDeclared: boolean;
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultMessage: string;
+        tenantId: Types.ObjectId;
+        question: string;
+        description?: string;
+        category?: string;
+        options: {
+            optionId: string;
+            text: string;
+            votes: number;
+        }[];
+        targetAreaId?: Types.ObjectId;
+        targetAudience: PollTargetAudience;
+        targetGender?: string;
+        targetMinAge?: number;
+        targetMaxAge?: number;
+        resultVisibility: PollResultVisibility;
+        allowRevote: boolean;
+        allowMultipleChoices: boolean;
+        maxChoices: number;
+        isActive: boolean;
+        startsAt?: Date;
+        endsAt?: Date;
+        durationHours?: number;
+        resultDeclaredAt?: Date;
+        totalVotes: number;
         _id: Types.ObjectId;
-    }> & {
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
         __v: number;
-    } & {
-        id: string;
     }>;
     findAll(tenant: TenantDocument, queryDto: QueryPollsDto, user?: any, isAdmin?: boolean): Promise<{
         items: {
@@ -34,27 +82,39 @@ export declare class PollsService {
             description: string | undefined;
             category: string | undefined;
             options: ({
-                optionId: string;
-                text: string;
-                votes: number;
+                optionId: any;
+                text: any;
+                votes: any;
                 percentage: number;
             } | {
-                optionId: string;
-                text: string;
+                optionId: any;
+                text: any;
                 votes?: undefined;
                 percentage?: undefined;
             })[];
+            winnerOption: any;
             totalVotes: number | undefined;
             targetAudience: PollTargetAudience;
             targetArea: Types.ObjectId | undefined;
             startsAt: Date | undefined;
             endsAt: Date | undefined;
+            durationHours: number | undefined;
             isActive: boolean;
+            status: PollStatus;
+            isOpenForVoting: boolean;
             isEnded: boolean;
+            isUpcoming: boolean;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             resultVisibility: PollResultVisibility;
+            resultDeclaredAt: Date | null;
+            isResultDeclared: boolean;
+            resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+            resultMessage: string;
             hasVoted: boolean;
             myOptionId: string | null;
+            myOptionIds: string[];
             canViewResults: boolean;
             createdAt: any;
         }[];
@@ -69,16 +129,17 @@ export declare class PollsService {
         description: string | undefined;
         category: string | undefined;
         options: ({
-            optionId: string;
-            text: string;
-            votes: number;
+            optionId: any;
+            text: any;
+            votes: any;
             percentage: number;
         } | {
-            optionId: string;
-            text: string;
+            optionId: any;
+            text: any;
             votes?: undefined;
             percentage?: undefined;
         })[];
+        winnerOption: any;
         totalVotes: number | undefined;
         targetAudience: PollTargetAudience;
         targetArea: Types.ObjectId | undefined;
@@ -87,35 +148,49 @@ export declare class PollsService {
         targetMaxAge: number | undefined;
         startsAt: Date | undefined;
         endsAt: Date | undefined;
+        durationHours: number | undefined;
         isActive: boolean;
+        status: PollStatus;
+        isOpenForVoting: boolean;
         isEnded: boolean;
+        isUpcoming: boolean;
         allowRevote: boolean;
+        allowMultipleChoices: boolean;
+        maxChoices: number;
         resultVisibility: PollResultVisibility;
+        resultDeclaredAt: Date | null;
+        isResultDeclared: boolean;
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultMessage: string;
         hasVoted: boolean;
         myOptionId: string | null;
+        myOptionIds: string[];
         votedAt: Date | null;
         canViewResults: boolean;
         createdAt: any;
         updatedAt: any;
     }>;
-    vote(tenant: TenantDocument, pollId: string, userId: string, optionId: string): Promise<{
+    vote(tenant: TenantDocument, pollId: string, userId: string, dto: VotePollDto | string): Promise<{
         message: string;
         hasVoted: boolean;
         optionId: string;
-        totalVotes: number;
-    } | {
-        message: string;
-        hasVoted: boolean;
-        optionId: string;
-        totalVotes?: undefined;
+        optionIds: string[];
+        status: PollStatus;
+        isResultDeclared: boolean;
+        resultDeclaredAt: Date | null;
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultMessage: string;
+        totalVotes: number | undefined;
     }>;
     getUserVote(tenant: TenantDocument, pollId: string, userId: string): Promise<{
         hasVoted: boolean;
         optionId: null;
+        optionIds: never[];
         votedAt?: undefined;
     } | {
         hasVoted: boolean;
-        optionId: string;
+        optionId: string | null;
+        optionIds: string[];
         votedAt: Date | undefined;
     }>;
     getAnalytics(tenant: TenantDocument, pollId: string): Promise<{
@@ -162,12 +237,72 @@ export declare class PollsService {
         }[];
     }>;
     exportPollCsv(tenant: TenantDocument, pollId: string, res: Response, format?: string, adminUser?: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
-    update(tenant: TenantDocument, id: string, dto: UpdatePollDto): Promise<import("mongoose").Document<unknown, {}, PollDocument, {}, import("mongoose").DefaultSchemaOptions> & Poll & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    update(tenant: TenantDocument, id: string, dto: UpdatePollDto): Promise<{
+        status: PollStatus;
+        isOpenForVoting: boolean;
+        isEnded: boolean;
+        isUpcoming: boolean;
+        isResultDeclared: boolean;
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultMessage: string;
+        tenantId: Types.ObjectId;
+        question: string;
+        description?: string;
+        category?: string;
+        options: {
+            optionId: string;
+            text: string;
+            votes: number;
+        }[];
+        targetAreaId?: Types.ObjectId;
+        targetAudience: PollTargetAudience;
+        targetGender?: string;
+        targetMinAge?: number;
+        targetMaxAge?: number;
+        resultVisibility: PollResultVisibility;
+        allowRevote: boolean;
+        allowMultipleChoices: boolean;
+        maxChoices: number;
+        isActive: boolean;
+        startsAt?: Date;
+        endsAt?: Date;
+        durationHours?: number;
+        resultDeclaredAt?: Date;
+        totalVotes: number;
         _id: Types.ObjectId;
-    }> & {
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
         __v: number;
-    } & {
-        id: string;
+    }>;
+    declareResult(tenant: TenantDocument, pollId: string): Promise<{
+        message: string;
+        pollId: Types.ObjectId;
+        isResultDeclared: boolean;
+        resultDeclaredAt: Date;
+        resultVisibility: PollResultVisibility.ALWAYS_PUBLIC;
+        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        totalVotes: number;
+        options: {
+            optionId: string;
+            text: string;
+            votes: number;
+        }[];
+    }>;
+    closePoll(tenant: TenantDocument, pollId: string): Promise<{
+        message: string;
+        pollId: Types.ObjectId;
+        status: PollStatus;
+        isActive: boolean;
+        endsAt: Date;
+        isResultDeclared: boolean;
+        resultDeclaredAt: Date | null;
     }>;
     remove(tenant: TenantDocument, id: string): Promise<{
         message: string;

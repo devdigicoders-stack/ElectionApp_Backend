@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PollResultVisibility = exports.PollTargetAudience = exports.ElectionType = exports.EventStatus = exports.EventType = exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
+exports.PollResultVisibility = exports.PollStatus = exports.PollTargetAudience = exports.ElectionType = exports.EventStatus = exports.EventType = exports.EventRsvpStatus = exports.GalleryType = exports.NotificationTarget = exports.VolunteerTaskStatus = exports.TaskPriority = exports.VolunteerStatus = exports.PaymentPurpose = exports.PaymentStatus = exports.MembershipStatus = exports.WorkStatus = exports.ComplaintPriority = exports.ComplaintStatus = exports.NewsStatus = exports.FeatureKey = exports.UserRole = exports.TenantStatus = void 0;
 var TenantStatus;
 (function (TenantStatus) {
     TenantStatus["ACTIVE"] = "active";
@@ -164,11 +164,18 @@ var PollTargetAudience;
     PollTargetAudience["AGE_GROUP"] = "AGE_GROUP";
     PollTargetAudience["GENDER"] = "GENDER";
 })(PollTargetAudience || (exports.PollTargetAudience = PollTargetAudience = {}));
+var PollStatus;
+(function (PollStatus) {
+    PollStatus["UPCOMING"] = "UPCOMING";
+    PollStatus["ACTIVE"] = "ACTIVE";
+    PollStatus["CLOSED"] = "CLOSED";
+})(PollStatus || (exports.PollStatus = PollStatus = {}));
 var PollResultVisibility;
 (function (PollResultVisibility) {
     PollResultVisibility["ALWAYS_PUBLIC"] = "ALWAYS_PUBLIC";
     PollResultVisibility["AFTER_VOTE"] = "AFTER_VOTE";
     PollResultVisibility["AFTER_END"] = "AFTER_END";
+    PollResultVisibility["SCHEDULED_DATE"] = "SCHEDULED_DATE";
     PollResultVisibility["ADMIN_ONLY"] = "ADMIN_ONLY";
 })(PollResultVisibility || (exports.PollResultVisibility = PollResultVisibility = {}));
 //# sourceMappingURL=types.js.map

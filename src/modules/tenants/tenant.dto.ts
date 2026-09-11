@@ -39,6 +39,18 @@ export class CreateTenantDto {
 
   @IsOptional()
   @IsString()
+  gstin?: string;
+
+  @IsOptional()
+  @IsString()
+  billingState?: string;
+
+  @IsOptional()
+  @IsString()
+  billingAddress?: string;
+
+  @IsOptional()
+  @IsString()
   electionType?: string;
 
   @IsOptional()
@@ -94,6 +106,18 @@ export class UpdateTenantDto {
   @IsOptional()
   @IsString()
   email?: string;
+
+  @IsOptional()
+  @IsString()
+  gstin?: string;
+
+  @IsOptional()
+  @IsString()
+  billingState?: string;
+
+  @IsOptional()
+  @IsString()
+  billingAddress?: string;
 
   @IsOptional()
   @IsString()

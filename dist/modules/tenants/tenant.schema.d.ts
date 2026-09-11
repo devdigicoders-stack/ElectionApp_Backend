@@ -26,6 +26,9 @@ export declare class Tenant {
     contactPerson?: string | null;
     mobileNumber?: string | null;
     email?: string | null;
+    gstin?: string | null;
+    billingState?: string | null;
+    billingAddress?: string | null;
     electionType?: string;
     isPublished: boolean;
     status: TenantStatus;
@@ -173,6 +176,33 @@ export declare const TenantSchema: import("mongoose").Schema<Tenant, import("mon
         id: string;
     }>> | undefined;
     email?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    gstin?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    billingState?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    billingAddress?: import("mongoose").SchemaDefinitionProperty<string | null | undefined, Tenant, Document<unknown, {}, Tenant, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Tenant & {
         _id: Types.ObjectId;

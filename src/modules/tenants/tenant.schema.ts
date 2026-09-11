@@ -61,6 +61,15 @@ export class Tenant {
   @Prop({ type: String, default: null })
   email?: string | null;
 
+  @Prop({ type: String, default: null })
+  gstin?: string | null;
+
+  @Prop({ type: String, default: null })
+  billingState?: string | null;
+
+  @Prop({ type: String, default: null })
+  billingAddress?: string | null;
+
   @Prop({ type: String, default: 'other' })
   electionType?: string;
 

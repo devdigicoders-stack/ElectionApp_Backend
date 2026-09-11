@@ -54,6 +54,12 @@ export class Poll {
   @Prop({ default: false })
   allowRevote: boolean;
 
+  @Prop({ default: false })
+  allowMultipleChoices: boolean;
+
+  @Prop({ default: 1 })
+  maxChoices: number;
+
   @Prop({ default: true })
   isActive: boolean;
 
@@ -63,6 +69,12 @@ export class Poll {
   @Prop({ default: null })
   endsAt?: Date;
 
+  @Prop({ default: null })
+  durationHours?: number;
+
+  @Prop({ default: null })
+  resultDeclaredAt?: Date;
+
   @Prop({ default: 0 })
   totalVotes: number;
 }
@@ -71,6 +83,8 @@ export const PollSchema = SchemaFactory.createForClass(Poll);
 PollSchema.index({ tenantId: 1, isActive: 1 });
 PollSchema.index({ tenantId: 1, category: 1 });
 PollSchema.index({ tenantId: 1, targetAreaId: 1 });
+PollSchema.index({ tenantId: 1, startsAt: 1, endsAt: 1 });
+PollSchema.index({ tenantId: 1, resultDeclaredAt: 1 });
 
 @Schema({ timestamps: true })
 export class PollVote {
@@ -83,8 +97,11 @@ export class PollVote {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true, index: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true })
-  optionId: string;
+  @Prop({ default: null })
+  optionId?: string;
+
+  @Prop({ type: [String], default: [] })
+  optionIds: string[];
 
   @Prop({ type: Types.ObjectId, ref: 'Area', default: null })
   areaId?: Types.ObjectId;
