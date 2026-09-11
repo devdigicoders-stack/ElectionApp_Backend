@@ -34,16 +34,28 @@ export class NotificationsService {
   // =========================================================================
 
   async create(tenant: TenantDocument, data: any) {
-    return this.notificationModel.create({ tenantId: tenant._id, ...data });
+    const payload = {
+      tenantId: tenant._id,
+      ...data,
+      body: data.body || data.message || '',
+      target: data.target || data.targetAudience || NotificationTarget.ALL,
+    };
+    return this.notificationModel.create(payload);
   }
 
   async send(tenant: TenantDocument, id: string) {
-    const notification = await this.notificationModel.findOne({ _id: id, tenantId: tenant._id });
+    const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    const tenantObjectId = Types.ObjectId.isValid(tenant._id) ? new Types.ObjectId(tenant._id) : tenant._id;
+
+    const notification = await this.notificationModel.findOne({
+      _id: objectId,
+      $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }],
+    });
     if (!notification) throw new NotFoundException('Notification not found');
 
     // Resolve target users
     let userIds: Types.ObjectId[] = [];
-    const query: any = { tenantId: tenant._id, isActive: true };
+    const query: any = { tenantId: tenantObjectId, isActive: true };
 
     if (notification.target === NotificationTarget.ALL) {
       const users = await this.userModel.find(query).select('_id');
@@ -54,10 +66,10 @@ export class NotificationsService {
     } else if (notification.target === NotificationTarget.SPECIFIC) {
       userIds = notification.targetUserIds || [];
     } else if (notification.target === NotificationTarget.MEMBERS) {
-      const members = await this.membershipModel.find({ tenantId: tenant._id, status: MembershipStatus.APPROVED }).select('userId');
+      const members = await this.membershipModel.find({ tenantId: tenantObjectId, status: MembershipStatus.APPROVED }).select('userId');
       userIds = members.map((m) => m.userId as Types.ObjectId);
     } else if (notification.target === NotificationTarget.VOLUNTEERS) {
-      const volunteers = await this.volunteerModel.find({ tenantId: tenant._id, status: VolunteerStatus.ACTIVE }).select('userId');
+      const volunteers = await this.volunteerModel.find({ tenantId: tenantObjectId, status: VolunteerStatus.ACTIVE }).select('userId');
       userIds = volunteers.map((v) => v.userId as Types.ObjectId);
     }
 
@@ -67,17 +79,70 @@ export class NotificationsService {
       await this.readModel.insertMany(readDocs, { ordered: false }).catch(() => {}); // ignore duplicates
     }
 
+    // ── Dispatch Real FCM Push Notification ──
+    const isPushChannel = !notification.channel || notification.channel === 'push' || notification.channel === 'both';
+    let tokensPushed = 0;
+
+    if (isPushChannel && this.firebaseService.isReady()) {
+      try {
+        const [usersWithTokens, adminsWithTokens] = await Promise.all([
+          userIds.length > 0 ? this.userModel.find({ _id: { $in: userIds } }).select('fcmTokens') : [],
+          this.adminUserModel.find({ tenantId: tenant._id }).select('fcmTokens'),
+        ]);
+
+        const fcmTokens: string[] = [];
+        for (const u of [...usersWithTokens, ...adminsWithTokens]) {
+          if (Array.isArray(u.fcmTokens)) {
+            for (const tok of u.fcmTokens) {
+              if (tok && typeof tok === 'string' && tok.length > 10 && !fcmTokens.includes(tok.trim())) {
+                fcmTokens.push(tok.trim());
+              }
+            }
+          }
+        }
+
+        if (fcmTokens.length > 0) {
+          tokensPushed = fcmTokens.length;
+          this.firebaseService
+            .sendMulticastPush(fcmTokens, {
+              title: notification.title,
+              body: notification.body,
+              imageUrl: notification.imageUrl || undefined,
+              data: {
+                notificationId: notification._id.toString(),
+                tenantId: tenant._id.toString(),
+                click_action: notification.linkUrl || '/notifications',
+              },
+            })
+            .then((res) => {
+              this.logger.log(`FCM Multicast push dispatched to ${res.successCount}/${fcmTokens.length} devices.`);
+            })
+            .catch((err) => {
+              this.logger.error(`FCM Multicast error: ${err.message}`);
+            });
+        }
+      } catch (fcmErr: any) {
+        this.logger.warn(`Could not query FCM tokens: ${fcmErr.message}`);
+      }
+    }
+
     notification.isSent = true;
     notification.sentAt = new Date();
     await notification.save();
 
-    return { message: 'Notification sent', recipientCount: userIds.length };
+    return {
+      message: 'Notification sent',
+      recipientCount: userIds.length,
+      pushTokensDispatched: tokensPushed,
+    };
   }
 
   async findAll(tenant: TenantDocument, page = 1, limit = 20) {
+    const tenantObjectId = Types.ObjectId.isValid(tenant._id) ? new Types.ObjectId(tenant._id) : tenant._id;
+    const query = { $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }] };
     const [data, total] = await Promise.all([
-      this.notificationModel.find({ tenantId: tenant._id }).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
-      this.notificationModel.countDocuments({ tenantId: tenant._id }),
+      this.notificationModel.find(query).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+      this.notificationModel.countDocuments(query),
     ]);
     return { data, total, page, limit };
   }
@@ -102,7 +167,21 @@ export class NotificationsService {
   }
 
   async remove(tenant: TenantDocument, id: string) {
-    return this.notificationModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    const tenantObjectId = Types.ObjectId.isValid(tenant._id) ? new Types.ObjectId(tenant._id) : tenant._id;
+
+    let deleted = await this.notificationModel.findOneAndDelete({
+      _id: objectId,
+      $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }],
+    });
+
+    if (!deleted) {
+      deleted = await this.notificationModel.findOneAndDelete({ _id: objectId });
+    }
+
+    await this.readModel.deleteMany({ notificationId: objectId }).catch(() => {});
+
+    return { success: true, message: 'Notification deleted successfully', deletedId: id };
   }
 
   // =========================================================================
@@ -377,11 +456,13 @@ export class NotificationsService {
       return { success: false, message: 'Invalid FCM token' };
     }
 
-    await this.adminUserModel.findByIdAndUpdate(
-      userId,
-      { $addToSet: { fcmTokens: token.trim() } },
-      { new: true },
-    );
+    const cleanToken = token.trim();
+    const objectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+
+    await Promise.all([
+      this.userModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+      this.adminUserModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+    ]);
 
     return { success: true, message: 'FCM push token registered successfully' };
   }

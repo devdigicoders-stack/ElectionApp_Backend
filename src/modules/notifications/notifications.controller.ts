@@ -63,4 +63,18 @@ export class NotificationsController {
   remove(@Req() req: TenantRequest, @Param('id') id: string) {
     return this.notificationsService.remove(req.tenant, id);
   }
+
+  // Register FCM Token for logged-in Citizen / User / Admin
+  @Post('register-token')
+  @UseGuards(JwtAuthGuard)
+  registerToken(@Req() req: any, @Body('token') token: string) {
+    return this.notificationsService.registerFcmToken(req.user.sub, token);
+  }
+
+  // Test FCM Push notification directly to this device or registered tokens
+  @Post('test-push')
+  @UseGuards(JwtAuthGuard)
+  testPush(@Req() req: any, @Body('token') token?: string) {
+    return this.notificationsService.testFcm(token);
+  }
 }

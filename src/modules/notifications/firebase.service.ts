@@ -130,7 +130,7 @@ export class FirebaseService implements OnModuleInit {
             notification: {
               title: payload.title,
               body: payload.body,
-              icon: '/favicon.ico',
+              icon: payload.imageUrl || '/logo.png',
               image: payload.imageUrl || undefined,
               requireInteraction: true,
             },
@@ -198,7 +198,7 @@ export class FirebaseService implements OnModuleInit {
           notification: {
             title: payload.title,
             body: payload.body,
-            icon: '/favicon.ico',
+            icon: payload.imageUrl || '/logo.png',
             requireInteraction: true,
           },
           fcmOptions: {

@@ -56,6 +56,9 @@ export class User {
   @Prop({ default: null })
   lastActiveAt?: Date;
 
+  @Prop({ type: [String], default: [] })
+  fcmTokens: string[];
+
   createdAt?: Date;
   updatedAt?: Date;
 }

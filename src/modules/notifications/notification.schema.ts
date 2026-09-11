@@ -22,6 +22,9 @@ export class Notification {
   @Prop({ default: null })
   linkUrl?: string;
 
+  @Prop({ default: 'push' })
+  channel?: string;
+
   @Prop({ required: true, enum: Object.values(NotificationTarget) })
   target: NotificationTarget;
 
