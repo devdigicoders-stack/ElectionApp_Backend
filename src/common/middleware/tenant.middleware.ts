@@ -20,7 +20,7 @@ export class TenantMiddleware implements NestMiddleware {
     const querySlug = req.query?.['tenant'] as string;
     const queryTenantId = req.query?.['tenantId'] as string;
 
-    const host = req.hostname || '';
+    const host = (req.hostname || '').toLowerCase().trim();
     const isLocalhost = host === 'localhost' || host === '127.0.0.1';
     const isCloudHosting =
       host.endsWith('onrender.com') ||
@@ -29,24 +29,54 @@ export class TenantMiddleware implements NestMiddleware {
       host.endsWith('fly.dev') ||
       host.endsWith('herokuapp.com');
 
-    const subdomain = !isLocalhost && !isCloudHosting && host.includes('.') ? host.split('.')[0] : null;
+    // Base API hostnames that are NOT tenant subdomains
+    const isBaseApiDomain =
+      host === 'election.digicoders.in' ||
+      host === 'api.election.digicoders.in' ||
+      host === 'elelection.digicoders.in';
+
+    // Subdomain extraction: only if a prefix exists before the base domain
+    let subdomain: string | null = null;
+    if (!isLocalhost && !isCloudHosting && !isBaseApiDomain && host.includes('.')) {
+      if (host.endsWith('.election.digicoders.in')) {
+        subdomain = host.replace('.election.digicoders.in', '').split('.')[0];
+      } else if (host.endsWith('.elelection.digicoders.in')) {
+        subdomain = host.replace('.elelection.digicoders.in', '').split('.')[0];
+      } else {
+        const parts = host.split('.');
+        if (parts.length > 2) {
+          subdomain = parts[0];
+        }
+      }
+    }
 
     let tenant: TenantDocument | null = null;
 
     if (headerTenantId) {
-      if (!isValidObjectId(headerTenantId)) {
+      if (isValidObjectId(headerTenantId)) {
+        tenant = await this.tenantModel.findById(headerTenantId);
+      }
+      // Graceful fallback: If developer/user passed a slug in "x-tenant-id" (e.g. "demo")
+      if (!tenant) {
+        tenant = await this.tenantModel.findOne({ slug: headerTenantId.toLowerCase().trim() });
+      }
+      if (!tenant) {
         throw new BadRequestException(
-          `Invalid "x-tenant-id" value: "${headerTenantId}". It must be a 24-character MongoDB ObjectId (or use "x-tenant-slug" header instead, e.g. "x-tenant-slug: demo").`,
+          `Tenant not found for "x-tenant-id": "${headerTenantId}". Provide a valid 24-character ObjectId or tenant slug.`,
         );
       }
-      tenant = await this.tenantModel.findById(headerTenantId);
     } else if (queryTenantId) {
-      if (!isValidObjectId(queryTenantId)) {
+      if (isValidObjectId(queryTenantId)) {
+        tenant = await this.tenantModel.findById(queryTenantId);
+      }
+      if (!tenant) {
+        tenant = await this.tenantModel.findOne({ slug: queryTenantId.toLowerCase().trim() });
+      }
+      if (!tenant) {
         throw new BadRequestException(
-          `Invalid "tenantId" query param: "${queryTenantId}". It must be a 24-character MongoDB ObjectId.`,
+          `Tenant not found for "tenantId": "${queryTenantId}". Provide a valid 24-character ObjectId or tenant slug.`,
         );
       }
-      tenant = await this.tenantModel.findById(queryTenantId);
     } else if (headerSlug) {
       tenant = await this.tenantModel.findOne({ slug: headerSlug.toLowerCase().trim() });
     } else if (querySlug) {
@@ -59,8 +89,8 @@ export class TenantMiddleware implements NestMiddleware {
       tenant = await this.tenantModel.findOne({ customDomain: host });
     }
 
-    // Fallback: If still not found and in local dev (localhost) or cloud hosting (e.g. onrender.com), fallback to 'demo' or first active tenant
-    if (!tenant && (isLocalhost || isCloudHosting)) {
+    // Fallback: If still not found and in local dev, cloud hosting, or base API domain, fallback to 'demo' or first active tenant
+    if (!tenant && (isLocalhost || isCloudHosting || isBaseApiDomain)) {
       tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: TenantStatus.ACTIVE }));
     }
 
