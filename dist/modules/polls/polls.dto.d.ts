@@ -6,6 +6,9 @@ export declare class CreatePollDto {
     category?: string;
     startsAt?: string;
     endsAt?: string;
+    durationHours?: number;
+    durationDays?: number;
+    resultDeclaredAt?: string;
     targetAudience?: PollTargetAudience;
     targetAreaId?: string;
     targetGender?: string;
@@ -13,6 +16,8 @@ export declare class CreatePollDto {
     targetMaxAge?: number;
     resultVisibility?: PollResultVisibility;
     allowRevote?: boolean;
+    allowMultipleChoices?: boolean;
+    maxChoices?: number;
     isActive?: boolean;
 }
 export declare class UpdatePollDto {
@@ -22,6 +27,9 @@ export declare class UpdatePollDto {
     category?: string;
     startsAt?: string;
     endsAt?: string;
+    durationHours?: number;
+    durationDays?: number;
+    resultDeclaredAt?: string;
     targetAudience?: PollTargetAudience;
     targetAreaId?: string;
     targetGender?: string;
@@ -29,15 +37,18 @@ export declare class UpdatePollDto {
     targetMaxAge?: number;
     resultVisibility?: PollResultVisibility;
     allowRevote?: boolean;
+    allowMultipleChoices?: boolean;
+    maxChoices?: number;
     isActive?: boolean;
 }
 export declare class VotePollDto {
-    optionId: string;
+    optionId?: string;
+    optionIds?: string[];
 }
 export declare class QueryPollsDto {
     areaId?: string;
     category?: string;
-    status?: 'active' | 'ended' | 'all';
+    status?: 'active' | 'upcoming' | 'ended' | 'closed' | 'all';
     page?: number;
     limit?: number;
 }

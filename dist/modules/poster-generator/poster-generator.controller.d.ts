@@ -44,7 +44,7 @@ export declare class PosterGeneratorController {
         message: string;
         originalUrl: string;
         cutoutUrl: string;
-        provider: "remove-bg" | "local-canvas" | "external-api";
+        provider: "local-canvas" | "remove-bg" | "external-api";
         dimensions: {
             width: number;
             height: number;

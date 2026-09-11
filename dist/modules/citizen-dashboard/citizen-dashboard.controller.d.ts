@@ -99,7 +99,7 @@ export declare class CitizenDashboardController {
         }[];
         activePoll: {
             hasVoted: boolean;
-            votedOptionId: string | null;
+            votedOptionId: string | null | undefined;
             tenantId: import("mongoose").Types.ObjectId;
             question: string;
             description?: string;
@@ -116,9 +116,13 @@ export declare class CitizenDashboardController {
             targetMaxAge?: number;
             resultVisibility: import("../../shared/types").PollResultVisibility;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             isActive: boolean;
             startsAt?: Date;
             endsAt?: Date;
+            durationHours?: number;
+            resultDeclaredAt?: Date;
             totalVotes: number;
             _id: import("mongoose").Types.ObjectId;
             $locals: Record<string, unknown>;
@@ -380,7 +384,7 @@ export declare class DashboardCitizenAliasController {
         }[];
         activePoll: {
             hasVoted: boolean;
-            votedOptionId: string | null;
+            votedOptionId: string | null | undefined;
             tenantId: import("mongoose").Types.ObjectId;
             question: string;
             description?: string;
@@ -397,9 +401,13 @@ export declare class DashboardCitizenAliasController {
             targetMaxAge?: number;
             resultVisibility: import("../../shared/types").PollResultVisibility;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             isActive: boolean;
             startsAt?: Date;
             endsAt?: Date;
+            durationHours?: number;
+            resultDeclaredAt?: Date;
             totalVotes: number;
             _id: import("mongoose").Types.ObjectId;
             $locals: Record<string, unknown>;

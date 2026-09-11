@@ -49,6 +49,25 @@ __decorate([
 ], CreatePollDto.prototype, "endsAt", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    __metadata("design:type", Number)
+], CreatePollDto.prototype, "durationHours", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    __metadata("design:type", Number)
+], CreatePollDto.prototype, "durationDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], CreatePollDto.prototype, "resultDeclaredAt", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(types_1.PollTargetAudience),
     __metadata("design:type", String)
 ], CreatePollDto.prototype, "targetAudience", void 0);
@@ -92,6 +111,18 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
+], CreatePollDto.prototype, "allowMultipleChoices", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], CreatePollDto.prototype, "maxChoices", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
 ], CreatePollDto.prototype, "isActive", void 0);
 class UpdatePollDto {
 }
@@ -128,6 +159,25 @@ __decorate([
     (0, class_validator_1.IsDateString)(),
     __metadata("design:type", String)
 ], UpdatePollDto.prototype, "endsAt", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    __metadata("design:type", Number)
+], UpdatePollDto.prototype, "durationHours", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0.1),
+    __metadata("design:type", Number)
+], UpdatePollDto.prototype, "durationDays", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], UpdatePollDto.prototype, "resultDeclaredAt", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(types_1.PollTargetAudience),
@@ -169,15 +219,33 @@ __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
+], UpdatePollDto.prototype, "allowMultipleChoices", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_transformer_1.Type)(() => Number),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(1),
+    __metadata("design:type", Number)
+], UpdatePollDto.prototype, "maxChoices", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
 ], UpdatePollDto.prototype, "isActive", void 0);
 class VotePollDto {
 }
 exports.VotePollDto = VotePollDto;
 __decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
     __metadata("design:type", String)
 ], VotePollDto.prototype, "optionId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.IsString)({ each: true }),
+    __metadata("design:type", Array)
+], VotePollDto.prototype, "optionIds", void 0);
 class QueryPollsDto {
 }
 exports.QueryPollsDto = QueryPollsDto;

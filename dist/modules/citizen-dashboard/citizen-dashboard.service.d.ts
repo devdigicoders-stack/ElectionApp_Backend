@@ -267,9 +267,13 @@ export declare class CitizenDashboardService {
             targetMaxAge?: number;
             resultVisibility: import("../../shared/types").PollResultVisibility;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             isActive: boolean;
             startsAt?: Date;
             endsAt?: Date;
+            durationHours?: number;
+            resultDeclaredAt?: Date;
             totalVotes: number;
             _id: Types.ObjectId;
             $locals: Record<string, unknown>;
@@ -427,7 +431,7 @@ export declare class CitizenDashboardService {
         }[];
         activePoll: {
             hasVoted: boolean;
-            votedOptionId: string | null;
+            votedOptionId: string | null | undefined;
             tenantId: Types.ObjectId;
             question: string;
             description?: string;
@@ -444,9 +448,13 @@ export declare class CitizenDashboardService {
             targetMaxAge?: number;
             resultVisibility: import("../../shared/types").PollResultVisibility;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             isActive: boolean;
             startsAt?: Date;
             endsAt?: Date;
+            durationHours?: number;
+            resultDeclaredAt?: Date;
             totalVotes: number;
             _id: Types.ObjectId;
             $locals: Record<string, unknown>;

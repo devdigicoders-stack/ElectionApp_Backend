@@ -227,9 +227,13 @@ export declare class MyAreaController {
             targetMaxAge?: number;
             resultVisibility: import("../../shared/types").PollResultVisibility;
             allowRevote: boolean;
+            allowMultipleChoices: boolean;
+            maxChoices: number;
             isActive: boolean;
             startsAt?: Date;
             endsAt?: Date;
+            durationHours?: number;
+            resultDeclaredAt?: Date;
             totalVotes: number;
             _id: import("mongoose").Types.ObjectId;
             $locals: Record<string, unknown>;
