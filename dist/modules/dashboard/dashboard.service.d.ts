@@ -69,7 +69,12 @@ export declare class DashboardService {
         };
         citizens: {
             total: number;
+            registered: number;
             active: number;
+            inactive: number;
+            activeRate: string;
+            activeRateNum: number;
+            activeLast30Days: number;
             profilesCompleted: number;
             newInLast30Days: number;
         };

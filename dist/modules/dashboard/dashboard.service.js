@@ -123,12 +123,23 @@ let DashboardService = class DashboardService {
         ]);
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        const [totalCitizens, activeCitizens, completedProfiles, newCitizensLast30Days,] = await Promise.all([
+        const [totalCitizens, activeCitizens, completedProfiles, newCitizensLast30Days, activeLast30Days,] = await Promise.all([
             this.userModel.countDocuments(),
-            this.userModel.countDocuments({ isActive: true }),
+            this.userModel.countDocuments({ isActive: true, status: { $ne: 'blocked' } }),
             this.userModel.countDocuments({ isProfileComplete: true }),
             this.userModel.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+            this.userModel.countDocuments({
+                $or: [
+                    { lastActiveAt: { $gte: thirtyDaysAgo } },
+                    { updatedAt: { $gte: thirtyDaysAgo } },
+                    { createdAt: { $gte: thirtyDaysAgo } },
+                ],
+            }),
         ]);
+        const activeRateNum = totalCitizens > 0
+            ? Math.round((activeCitizens / totalCitizens) * 100)
+            : 100;
+        const activeRate = `${activeRateNum}%`;
         const [totalComplaints, resolvedComplaints, pendingComplaints,] = await Promise.all([
             this.complaintModel.countDocuments(),
             this.complaintModel.countDocuments({ status: 'resolved' }),
@@ -267,7 +278,12 @@ let DashboardService = class DashboardService {
             },
             citizens: {
                 total: totalCitizens,
+                registered: totalCitizens,
                 active: activeCitizens,
+                inactive: Math.max(totalCitizens - activeCitizens, 0),
+                activeRate,
+                activeRateNum,
+                activeLast30Days,
                 profilesCompleted: completedProfiles,
                 newInLast30Days: newCitizensLast30Days,
             },

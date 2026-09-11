@@ -104,7 +104,7 @@ export class DashboardService {
       this.tenantModel.countDocuments({ status: TenantStatus.SUSPENDED }),
     ]);
 
-    // 2. Citizens across all tenants
+    // 2. Citizens across all tenants (SRS Sec 45.1: Registered Users vs Active Users)
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
@@ -113,12 +113,25 @@ export class DashboardService {
       activeCitizens,
       completedProfiles,
       newCitizensLast30Days,
+      activeLast30Days,
     ] = await Promise.all([
       this.userModel.countDocuments(),
-      this.userModel.countDocuments({ isActive: true }),
+      this.userModel.countDocuments({ isActive: true, status: { $ne: 'blocked' } }),
       this.userModel.countDocuments({ isProfileComplete: true }),
       this.userModel.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+      this.userModel.countDocuments({
+        $or: [
+          { lastActiveAt: { $gte: thirtyDaysAgo } },
+          { updatedAt: { $gte: thirtyDaysAgo } },
+          { createdAt: { $gte: thirtyDaysAgo } },
+        ],
+      }),
     ]);
+
+    const activeRateNum = totalCitizens > 0
+      ? Math.round((activeCitizens / totalCitizens) * 100)
+      : 100;
+    const activeRate = `${activeRateNum}%`;
 
     // 3. Complaints across all tenants
     const [
@@ -290,7 +303,12 @@ export class DashboardService {
       },
       citizens: {
         total: totalCitizens,
+        registered: totalCitizens,
         active: activeCitizens,
+        inactive: Math.max(totalCitizens - activeCitizens, 0),
+        activeRate,
+        activeRateNum,
+        activeLast30Days,
         profilesCompleted: completedProfiles,
         newInLast30Days: newCitizensLast30Days,
       },
