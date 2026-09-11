@@ -2,7 +2,7 @@ import { Document, Types } from 'mongoose';
 export type BannerDocument = Banner & Document;
 export declare class Banner {
     tenantId: Types.ObjectId;
-    title: string;
+    title?: string;
     imageUrl: string;
     mobileImageUrl?: string;
     linkUrl?: string;
@@ -30,7 +30,7 @@ export declare const BannerSchema: import("mongoose").Schema<Banner, import("mon
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    title?: import("mongoose").SchemaDefinitionProperty<string, Banner, Document<unknown, {}, Banner, {
+    title?: import("mongoose").SchemaDefinitionProperty<string | undefined, Banner, Document<unknown, {}, Banner, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Banner & {
         _id: Types.ObjectId;

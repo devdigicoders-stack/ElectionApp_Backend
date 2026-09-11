@@ -103,6 +103,8 @@ export class AppModule {
         { path: 'plans', method: RequestMethod.GET },
         { path: 'plans/(.*)', method: RequestMethod.GET },
         { path: 'uploads/(.*)', method: RequestMethod.ALL },
+        { path: 'master-areas', method: RequestMethod.ALL },
+        { path: 'master-areas/(.*)', method: RequestMethod.ALL },
         { path: 'payments/webhook', method: RequestMethod.ALL },
       )
       .forRoutes('*');

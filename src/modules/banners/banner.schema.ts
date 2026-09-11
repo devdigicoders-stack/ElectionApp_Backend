@@ -8,8 +8,8 @@ export class Banner {
   @Prop({ type: Types.ObjectId, ref: 'Tenant', required: true })
   tenantId: Types.ObjectId;
 
-  @Prop({ required: true })
-  title: string;
+  @Prop({ default: null })
+  title?: string;
 
   @Prop({ required: true })
   imageUrl: string;

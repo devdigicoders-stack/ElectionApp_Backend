@@ -1,3 +1,4 @@
+import { OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument } from './tenant.schema';
@@ -9,7 +10,7 @@ import { PlanDocument } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateTenantDto, UpdateTenantDto, ImpersonateTenantDto, ExitImpersonationDto, OnboardFullTenantDto } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
-export declare class TenantsService {
+export declare class TenantsService implements OnModuleInit {
     private tenantModel;
     private featureModel;
     private adminUserModel;
@@ -19,6 +20,7 @@ export declare class TenantsService {
     private configService;
     private auditLogsService;
     constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
+    onModuleInit(): Promise<void>;
     create(dto: CreateTenantDto): Promise<TenantDocument>;
     onboardFull(dto: OnboardFullTenantDto, user?: any, ip?: string, userAgent?: string): Promise<{
         message: string;

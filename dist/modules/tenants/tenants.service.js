@@ -52,6 +52,8 @@ const config_1 = require("@nestjs/config");
 const mongoose_2 = require("mongoose");
 const bcrypt = __importStar(require("bcryptjs"));
 const jwt = __importStar(require("jsonwebtoken"));
+const path_1 = require("path");
+const fs_1 = require("fs");
 const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const admin_user_schema_1 = require("../admin-users/admin-user.schema");
@@ -60,6 +62,74 @@ const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const types_1 = require("../../shared/types");
+function saveBase64Image(base64Str, tenantSlug, prefix) {
+    if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
+        return base64Str;
+    }
+    try {
+        const matches = base64Str.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3)
+            return base64Str;
+        let ext = matches[1].toLowerCase();
+        if (ext === 'jpeg')
+            ext = 'jpg';
+        else if (ext === 'svg+xml')
+            ext = 'svg';
+        else if (ext === 'x-icon')
+            ext = 'ico';
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const slug = tenantSlug || 'general';
+        const dir = (0, path_1.join)(process.cwd(), 'uploads', slug, 'branding');
+        if (!(0, fs_1.existsSync)(dir)) {
+            (0, fs_1.mkdirSync)(dir, { recursive: true });
+        }
+        const filename = `${Date.now()}-${prefix}-${Math.round(Math.random() * 1e6)}.${ext}`;
+        const filePath = (0, path_1.join)(dir, filename);
+        (0, fs_1.writeFileSync)(filePath, buffer);
+        return `/uploads/${slug}/branding/${filename}`;
+    }
+    catch (err) {
+        console.error('Error saving base64 image:', err);
+        return base64Str;
+    }
+}
+function sanitizeBrandingImages(branding, tenantSlug) {
+    if (!branding || typeof branding !== 'object')
+        return branding;
+    const result = { ...branding };
+    const imageFields = [
+        'logo',
+        'logoUrl',
+        'faviconUrl',
+        'pwaIconUrl',
+        'leaderPhotoUrl',
+        'loginBgUrl',
+        'splashScreenUrl',
+    ];
+    for (const field of imageFields) {
+        if (result[field] && typeof result[field] === 'string' && result[field].startsWith('data:image/')) {
+            result[field] = saveBase64Image(result[field], tenantSlug, field);
+        }
+    }
+    if (Array.isArray(result.splashScreens)) {
+        result.splashScreens = result.splashScreens.map((slide, idx) => {
+            if (slide && slide.mediaUrl && typeof slide.mediaUrl === 'string' && slide.mediaUrl.startsWith('data:image/')) {
+                return {
+                    ...slide,
+                    mediaUrl: saveBase64Image(slide.mediaUrl, tenantSlug, `splash-${idx}`),
+                };
+            }
+            return slide;
+        });
+    }
+    const finalLogo = result.logoUrl || result.logo;
+    if (finalLogo) {
+        result.logo = finalLogo;
+        result.logoUrl = finalLogo;
+    }
+    return result;
+}
 let TenantsService = class TenantsService {
     constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, subscriptionModel, planModel, configService, auditLogsService) {
         this.tenantModel = tenantModel;
@@ -70,6 +140,24 @@ let TenantsService = class TenantsService {
         this.planModel = planModel;
         this.configService = configService;
         this.auditLogsService = auditLogsService;
+    }
+    async onModuleInit() {
+        try {
+            const tenantsWithBase64 = await this.tenantModel.find({
+                $or: [
+                    { 'branding.logoUrl': { $regex: '^data:image' } },
+                    { 'branding.faviconUrl': { $regex: '^data:image' } },
+                    { 'branding.pwaIconUrl': { $regex: '^data:image' } },
+                    { 'branding.logo': { $regex: '^data:image' } },
+                ],
+            });
+            for (const t of tenantsWithBase64) {
+                const sanitized = sanitizeBrandingImages(t.branding || {}, t.slug);
+                await this.tenantModel.updateOne({ _id: t._id }, { $set: { branding: sanitized } });
+            }
+        }
+        catch {
+        }
     }
     async create(dto) {
         const exists = await this.tenantModel.findOne({ slug: dto.slug.toLowerCase().trim() });
@@ -94,6 +182,7 @@ let TenantsService = class TenantsService {
         }
         branding.primaryColor = branding.primaryColor || '#1a56db';
         branding.secondaryColor = branding.secondaryColor || '#f59e0b';
+        const sanitizedBranding = sanitizeBrandingImages(branding, dto.slug.toLowerCase().trim());
         const newTenant = new this.tenantModel({
             slug: dto.slug.toLowerCase().trim(),
             name: finalName,
@@ -103,7 +192,7 @@ let TenantsService = class TenantsService {
             email: dto.email || null,
             electionType: dto.electionType || 'other',
             customDomain: dto.customDomain || undefined,
-            branding,
+            branding: sanitizedBranding,
             settings: dto.settings || {
                 registrationFields: [
                     { key: 'name', label: 'Full Name', type: 'text', required: true },
@@ -422,8 +511,9 @@ let TenantsService = class TenantsService {
         }
         const logo = dto.logoUrl || dto.logo;
         if (logo) {
-            updateSet['branding.logo'] = logo;
-            updateSet['branding.logoUrl'] = logo;
+            const finalLogo = saveBase64Image(logo, existing.slug, 'logo');
+            updateSet['branding.logo'] = finalLogo;
+            updateSet['branding.logoUrl'] = finalLogo;
         }
         if (dto.title) {
             updateSet['branding.title'] = dto.title;
@@ -444,7 +534,7 @@ let TenantsService = class TenantsService {
                 mergedBranding.logo = bLogo;
                 mergedBranding.logoUrl = bLogo;
             }
-            updateSet.branding = mergedBranding;
+            updateSet.branding = sanitizeBrandingImages(mergedBranding, existing.slug);
         }
         const tenant = await this.tenantModel.findByIdAndUpdate(id, { $set: updateSet }, { new: true });
         return tenant;
@@ -468,7 +558,8 @@ let TenantsService = class TenantsService {
             ...(existing.branding || {}),
             ...normalized,
         };
-        const updatePayload = { branding: mergedBranding };
+        const sanitizedBranding = sanitizeBrandingImages(mergedBranding, existing.slug);
+        const updatePayload = { branding: sanitizedBranding };
         if (title && !existing.title) {
             updatePayload.title = title;
         }

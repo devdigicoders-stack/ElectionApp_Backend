@@ -28,7 +28,13 @@ let PublicConfigService = class PublicConfigService {
             this.featureModel.find({ tenantId: tenant._id, isEnabled: true }).select('featureKey config'),
             this.areaLevelModel.find({ tenantId: tenant._id }).sort({ levelOrder: 1 }).select('levelOrder name isRequired'),
         ]);
-        const branding = tenant.branding || {};
+        const rawBranding = tenant.branding || {};
+        const branding = { ...rawBranding };
+        for (const key of ['logoUrl', 'logo', 'faviconUrl', 'pwaIconUrl', 'leaderPhotoUrl', 'loginBgUrl', 'splashScreenUrl']) {
+            if (branding[key] && typeof branding[key] === 'string' && branding[key].startsWith('data:image/')) {
+                branding[key] = '';
+            }
+        }
         const title = branding.title || branding.platformName || tenant.title || tenant.name;
         const logo = branding.logoUrl || branding.logo || null;
         const normalizedBranding = {

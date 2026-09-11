@@ -8,37 +8,14 @@ export declare class PublicConfigController {
             id: import("mongoose").Types.ObjectId;
             slug: string;
             name: string;
-            title: string;
+            title: any;
             status: import("../../shared/types").TenantStatus;
         };
         branding: {
-            title: string | null;
-            platformName: string | null;
-            logo: string | null;
-            logoUrl: string | null;
-            faviconUrl?: string;
-            pwaIconUrl?: string;
-            leaderPhotoUrl?: string;
-            loginBgUrl?: string;
-            splashScreenUrl?: string;
-            splashScreens?: Array<{
-                title?: string;
-                subtitle?: string;
-                mediaType?: "image" | "video";
-                mediaUrl: string;
-                order?: number;
-            }>;
-            primaryColor?: string;
-            secondaryColor?: string;
-            accentColor?: string;
-            leaderName?: string;
-            tagline?: string;
-            footerText?: string;
-            privacyPolicyUrl?: string;
-            termsUrl?: string;
-            privacyPolicyContent?: string;
-            termsContent?: string;
-            socialLinks?: Record<string, string>;
+            title: any;
+            platformName: any;
+            logo: any;
+            logoUrl: any;
         };
         registrationFields: any[];
         enabledFeatures: {

@@ -38,9 +38,6 @@ export class BannersService {
   }
 
   async create(tenant: TenantDocument, data: any, req?: any) {
-    if (!data.title) {
-      throw new BadRequestException('Banner title is required');
-    }
     if (!data.imageUrl) {
       throw new BadRequestException('Banner image is required (upload image via form-data or provide imageUrl)');
     }

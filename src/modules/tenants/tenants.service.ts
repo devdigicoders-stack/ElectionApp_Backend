@@ -1,9 +1,11 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { join } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
 import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
@@ -21,8 +23,82 @@ import {
 } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
 
+function saveBase64Image(base64Str: string, tenantSlug: string, prefix: string): string {
+  if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
+    return base64Str;
+  }
+  try {
+    const matches = base64Str.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) return base64Str;
+
+    let ext = matches[1].toLowerCase();
+    if (ext === 'jpeg') ext = 'jpg';
+    else if (ext === 'svg+xml') ext = 'svg';
+    else if (ext === 'x-icon') ext = 'ico';
+
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const slug = tenantSlug || 'general';
+    const dir = join(process.cwd(), 'uploads', slug, 'branding');
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
+
+    const filename = `${Date.now()}-${prefix}-${Math.round(Math.random() * 1e6)}.${ext}`;
+    const filePath = join(dir, filename);
+    writeFileSync(filePath, buffer);
+
+    return `/uploads/${slug}/branding/${filename}`;
+  } catch (err) {
+    console.error('Error saving base64 image:', err);
+    return base64Str;
+  }
+}
+
+function sanitizeBrandingImages(branding: Record<string, any>, tenantSlug: string): Record<string, any> {
+  if (!branding || typeof branding !== 'object') return branding;
+  const result = { ...branding };
+
+  const imageFields = [
+    'logo',
+    'logoUrl',
+    'faviconUrl',
+    'pwaIconUrl',
+    'leaderPhotoUrl',
+    'loginBgUrl',
+    'splashScreenUrl',
+  ];
+
+  for (const field of imageFields) {
+    if (result[field] && typeof result[field] === 'string' && result[field].startsWith('data:image/')) {
+      result[field] = saveBase64Image(result[field], tenantSlug, field);
+    }
+  }
+
+  if (Array.isArray(result.splashScreens)) {
+    result.splashScreens = result.splashScreens.map((slide, idx) => {
+      if (slide && slide.mediaUrl && typeof slide.mediaUrl === 'string' && slide.mediaUrl.startsWith('data:image/')) {
+        return {
+          ...slide,
+          mediaUrl: saveBase64Image(slide.mediaUrl, tenantSlug, `splash-${idx}`),
+        };
+      }
+      return slide;
+    });
+  }
+
+  const finalLogo = result.logoUrl || result.logo;
+  if (finalLogo) {
+    result.logo = finalLogo;
+    result.logoUrl = finalLogo;
+  }
+
+  return result;
+}
+
 @Injectable()
-export class TenantsService {
+export class TenantsService implements OnModuleInit {
   constructor(
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     @InjectModel(TenantFeature.name) private featureModel: Model<TenantFeatureDocument>,
@@ -33,6 +109,25 @@ export class TenantsService {
     private configService: ConfigService,
     private auditLogsService: AuditLogsService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      const tenantsWithBase64 = await this.tenantModel.find({
+        $or: [
+          { 'branding.logoUrl': { $regex: '^data:image' } },
+          { 'branding.faviconUrl': { $regex: '^data:image' } },
+          { 'branding.pwaIconUrl': { $regex: '^data:image' } },
+          { 'branding.logo': { $regex: '^data:image' } },
+        ],
+      });
+      for (const t of tenantsWithBase64) {
+        const sanitized = sanitizeBrandingImages(t.branding || {}, t.slug);
+        await this.tenantModel.updateOne({ _id: t._id }, { $set: { branding: sanitized } });
+      }
+    } catch {
+      // ignore on startup if DB not ready
+    }
+  }
 
   async create(dto: CreateTenantDto) {
     const exists = await this.tenantModel.findOne({ slug: dto.slug.toLowerCase().trim() });
@@ -64,6 +159,8 @@ export class TenantsService {
     branding.primaryColor = branding.primaryColor || '#1a56db';
     branding.secondaryColor = branding.secondaryColor || '#f59e0b';
 
+    const sanitizedBranding = sanitizeBrandingImages(branding, dto.slug.toLowerCase().trim());
+
     const newTenant = new this.tenantModel({
       slug: dto.slug.toLowerCase().trim(),
       name: finalName,
@@ -73,7 +170,7 @@ export class TenantsService {
       email: dto.email || null,
       electionType: dto.electionType || 'other',
       customDomain: dto.customDomain || undefined,
-      branding,
+      branding: sanitizedBranding,
       settings: dto.settings || {
         registrationFields: [
           { key: 'name', label: 'Full Name', type: 'text', required: true },
@@ -433,8 +530,9 @@ export class TenantsService {
     // Sync logo/logoUrl if updated at root
     const logo = dto.logoUrl || dto.logo;
     if (logo) {
-      updateSet['branding.logo'] = logo;
-      updateSet['branding.logoUrl'] = logo;
+      const finalLogo = saveBase64Image(logo, existing.slug, 'logo');
+      updateSet['branding.logo'] = finalLogo;
+      updateSet['branding.logoUrl'] = finalLogo;
     }
     if (dto.title) {
       updateSet['branding.title'] = dto.title;
@@ -457,7 +555,7 @@ export class TenantsService {
         mergedBranding.logo = bLogo;
         mergedBranding.logoUrl = bLogo;
       }
-      updateSet.branding = mergedBranding;
+      updateSet.branding = sanitizeBrandingImages(mergedBranding, existing.slug);
     }
 
     const tenant = await this.tenantModel.findByIdAndUpdate(
@@ -490,7 +588,9 @@ export class TenantsService {
       ...normalized,
     };
 
-    const updatePayload: any = { branding: mergedBranding };
+    const sanitizedBranding = sanitizeBrandingImages(mergedBranding, existing.slug);
+
+    const updatePayload: any = { branding: sanitizedBranding };
     if (title && !existing.title) {
       updatePayload.title = title;
     }
