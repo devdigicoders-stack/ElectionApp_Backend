@@ -12,6 +12,7 @@ export declare class SubscriptionsService {
     private featureModel;
     constructor(subscriptionModel: Model<SubscriptionDocument>, tenantModel: Model<TenantDocument>, planModel: Model<PlanDocument>, featureModel: Model<TenantFeatureDocument>);
     private generateInvoiceNumber;
+    private computeGst;
     private syncTenantFeatures;
     create(dto: CreateSubscriptionDto, performedBy?: string): Promise<import("mongoose").Document<unknown, {}, SubscriptionDocument, {}, import("mongoose").DefaultSchemaOptions> & Subscription & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;

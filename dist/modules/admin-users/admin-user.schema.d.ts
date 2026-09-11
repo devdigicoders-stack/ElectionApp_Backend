@@ -11,6 +11,7 @@ export declare class AdminUser {
     assignedAreaId?: Types.ObjectId;
     isActive: boolean;
     isSuperAdmin: boolean;
+    fcmTokens: string[];
 }
 export declare const AdminUserSchema: import("mongoose").Schema<AdminUser, import("mongoose").Model<AdminUser, any, any, any, any, any, AdminUser>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, AdminUser, Document<unknown, {}, AdminUser, {
     id: string;
@@ -103,6 +104,15 @@ export declare const AdminUserSchema: import("mongoose").Schema<AdminUser, impor
         id: string;
     }>> | undefined;
     isSuperAdmin?: import("mongoose").SchemaDefinitionProperty<boolean, AdminUser, Document<unknown, {}, AdminUser, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<AdminUser & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    fcmTokens?: import("mongoose").SchemaDefinitionProperty<string[], AdminUser, Document<unknown, {}, AdminUser, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<AdminUser & {
         _id: Types.ObjectId;

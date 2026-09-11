@@ -47,3 +47,7 @@ tsconfig.build.tsbuildinfo
 .DS_Store
 *.pem
 
+# Firebase Service Account Keys — NEVER commit these!
+*firebase-adminsdk*.json
+firebase-adminsdk*.json
+service-account*.json

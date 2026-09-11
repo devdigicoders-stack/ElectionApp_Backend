@@ -13,7 +13,6 @@ import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { FeatureKey, UserRole } from '../../shared/types';
 
 @Controller('super-admin/tenants')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class TenantsController {
   constructor(private tenantsService: TenantsService) {}
 
@@ -59,6 +58,11 @@ export class TenantsController {
   @Roles(UserRole.SUPER_ADMIN)
   publish(@Param('id') id: string, @Req() req: any) {
     return this.tenantsService.publishTenant(id, req.user, req.ip, req.headers['user-agent']);
+  }
+
+  @Get(':id/full-profile')
+  getFullProfile(@Param('id') id: string) {
+    return this.tenantsService.getFullProfile(id);
   }
 
   @Get(':id')

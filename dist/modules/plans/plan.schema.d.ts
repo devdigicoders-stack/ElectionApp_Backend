@@ -6,12 +6,32 @@ export declare enum BillingCycle {
     YEARLY = "yearly",
     ONE_TIME = "one_time"
 }
+export declare enum SupportLevel {
+    COMMUNITY = "community",
+    EMAIL_24H = "email_24h",
+    PRIORITY_WHATSAPP = "priority_whatsapp",
+    DEDICATED_MANAGER = "dedicated_manager"
+}
+export declare enum TargetSegment {
+    GRAM_PANCHAYAT = "gram_panchayat",
+    MUNICIPAL_WARD = "municipal_ward",
+    VIDHAN_SABHA = "vidhan_sabha",
+    LOK_SABHA = "lok_sabha",
+    POLITICAL_PARTY = "political_party",
+    ALL = "all"
+}
 export declare class PlanLimits {
     maxCitizens: number;
     maxStaffUsers: number;
     maxPostersPerMonth: number;
     maxNotificationsPerMonth: number;
     maxStorageMB: number;
+}
+export declare class PlanOverageRates {
+    citizenPer1kRate: number;
+    storagePerGbRate: number;
+    smsRate: number;
+    whatsappRate: number;
 }
 export declare class Plan {
     name: string;
@@ -21,8 +41,11 @@ export declare class Plan {
     currency: string;
     billingCycle: BillingCycle;
     trialDays: number;
+    supportLevel: SupportLevel;
+    targetSegment: TargetSegment;
     features: string[];
     limits: PlanLimits;
+    overageRates: PlanOverageRates;
     isPopular: boolean;
     isActive: boolean;
     sortOrder: number;
@@ -99,6 +122,24 @@ export declare const PlanSchema: import("mongoose").Schema<Plan, import("mongoos
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    supportLevel?: import("mongoose").SchemaDefinitionProperty<SupportLevel, Plan, Document<unknown, {}, Plan, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Plan & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    targetSegment?: import("mongoose").SchemaDefinitionProperty<TargetSegment, Plan, Document<unknown, {}, Plan, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Plan & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     features?: import("mongoose").SchemaDefinitionProperty<string[], Plan, Document<unknown, {}, Plan, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Plan & {
@@ -109,6 +150,15 @@ export declare const PlanSchema: import("mongoose").Schema<Plan, import("mongoos
         id: string;
     }>> | undefined;
     limits?: import("mongoose").SchemaDefinitionProperty<PlanLimits, Plan, Document<unknown, {}, Plan, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Plan & {
+        _id: import("mongoose").Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    overageRates?: import("mongoose").SchemaDefinitionProperty<PlanOverageRates, Plan, Document<unknown, {}, Plan, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Plan & {
         _id: import("mongoose").Types.ObjectId;

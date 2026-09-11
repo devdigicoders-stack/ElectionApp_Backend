@@ -24,12 +24,16 @@ import { PollsService } from '../polls/polls.service';
 import { VolunteersService } from '../volunteers/volunteers.service';
 import { VolunteerTasksService } from '../volunteers/volunteer-tasks.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Tenant, TenantDocument } from '../tenants/tenant.schema';
 
 @Controller('exports')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN, UserRole.LEADER, UserRole.ADMIN)
 export class ExportsController {
   constructor(
+    @InjectModel(Tenant.name) private readonly tenantModel: Model<TenantDocument>,
     private readonly usersService: UsersService,
     private readonly membershipService: MembershipService,
     private readonly complaintsService: ComplaintsService,
@@ -142,6 +146,13 @@ export class ExportsController {
             'format',
           ],
         },
+        {
+          key: 'tenants',
+          title: 'Platform Tenants & Clients Directory',
+          description: 'Export all registered political clients, candidates, organizations with subscription plans, domains, and statuses.',
+          endpoint: '/exports/tenants',
+          supportedFilters: ['status', 'search', 'format'],
+        },
       ],
     };
   }
@@ -175,40 +186,137 @@ export class ExportsController {
   ) {
     const format = query?.format || 'csv';
 
+    // If Super Admin provided a specific tenantId, use that tenant context
+    let targetTenant = req.tenant;
+    if (query?.tenantId && req.user?.role === UserRole.SUPER_ADMIN) {
+      const specified = await this.tenantModel.findById(query.tenantId);
+      if (specified) {
+        targetTenant = specified;
+      }
+    }
+
     switch (domain.toLowerCase()) {
+      case 'tenants':
+      case 'clients':
+        return this.exportTenantsList(query, res, req.user, ipAddress, userAgent);
+
       case 'citizens':
-        return this.usersService.exportCitizens(req.tenant, query, res, req.user, ipAddress, userAgent);
+        return this.usersService.exportCitizens(targetTenant, query, res, req.user, ipAddress, userAgent);
 
       case 'members':
       case 'membership':
-        return this.membershipService.exportMembers(req.tenant, query, res, req.user, ipAddress, userAgent);
+        return this.membershipService.exportMembers(targetTenant, query, res, req.user, ipAddress, userAgent);
 
       case 'complaints':
-        return this.complaintsService.exportComplaints(req.tenant, query, res, format, req.user, ipAddress, userAgent);
+        return this.complaintsService.exportComplaints(targetTenant, query, res, format, req.user, ipAddress, userAgent);
 
       case 'events':
         if (!query.eventId) {
           throw new BadRequestException('Query parameter "eventId" is required to export event attendees');
         }
-        return this.eventsService.exportAttendeesCsv(req.tenant, query.eventId, res, format, req.user, ipAddress, userAgent);
+        return this.eventsService.exportAttendeesCsv(targetTenant, query.eventId, res, format, req.user, ipAddress, userAgent);
 
       case 'polls':
         if (!query.pollId) {
           throw new BadRequestException('Query parameter "pollId" is required to export poll results');
         }
-        return this.pollsService.exportPollCsv(req.tenant, query.pollId, res, format, req.user, ipAddress, userAgent);
+        return this.pollsService.exportPollCsv(targetTenant, query.pollId, res, format, req.user, ipAddress, userAgent);
 
       case 'volunteers':
-        return this.volunteersService.exportVolunteers(req.tenant, query, res, format, req.user, ipAddress, userAgent);
+        return this.volunteersService.exportVolunteers(targetTenant, query, res, format, req.user, ipAddress, userAgent);
 
       case 'volunteer-tasks':
       case 'tasks':
-        return this.volunteerTasksService.exportVolunteerTasks(req.tenant, query, res, format, req.user, ipAddress, userAgent);
+        return this.volunteerTasksService.exportVolunteerTasks(targetTenant, query, res, format, req.user, ipAddress, userAgent);
 
       default:
         throw new NotFoundException(
-          `Export domain "${domain}" not found. Supported domains: citizens, members, complaints, events, polls, volunteers, volunteer-tasks.`,
+          `Export domain "${domain}" not found. Supported domains: tenants, citizens, members, complaints, events, polls, volunteers, volunteer-tasks.`,
         );
     }
+  }
+
+  private async exportTenantsList(
+    query: any,
+    res: Response,
+    adminUser?: any,
+    ipAddress?: string,
+    userAgent?: string,
+  ) {
+    const filter: any = {};
+    if (query.status && query.status !== 'all') {
+      filter.status = query.status;
+    }
+    if (query.search) {
+      filter.$or = [
+        { name: { $regex: query.search, $options: 'i' } },
+        { leaderName: { $regex: query.search, $options: 'i' } },
+        { email: { $regex: query.search, $options: 'i' } },
+        { mobile: { $regex: query.search, $options: 'i' } },
+      ];
+    }
+
+    const tenants = await this.tenantModel.find(filter).sort({ createdAt: -1 }).lean();
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+      const str = String(val).replace(/"/g, '""');
+      return `"${str}"`;
+    };
+
+    const headers = [
+      'Tenant ID',
+      'Platform / Tenant Name',
+      'Leader / Candidate Name',
+      'Slug / Subdomain',
+      'Custom Domain',
+      'Election Type',
+      'Contact Person',
+      'Mobile Number',
+      'Email Address',
+      'Account Status',
+      'Onboarding Completed',
+      'Created Date',
+    ];
+
+    const rows = tenants.map((t: any) => [
+      escapeCsv(t._id.toString()),
+      escapeCsv(t.name || ''),
+      escapeCsv(t.leaderName || ''),
+      escapeCsv(t.slug || ''),
+      escapeCsv(t.customDomain || 'None'),
+      escapeCsv(t.electionType || 'N/A'),
+      escapeCsv(t.contactPerson || ''),
+      escapeCsv(t.mobile || ''),
+      escapeCsv(t.email || ''),
+      escapeCsv(t.status || 'active'),
+      escapeCsv(t.isOnboardingCompleted ? 'Yes' : 'No'),
+      escapeCsv(t.createdAt ? new Date(t.createdAt).toISOString() : ''),
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');
+
+    try {
+      await this.auditLogsService.log({
+        action: 'DATA_EXPORT_DOWNLOADED',
+        performedBy: {
+          id: adminUser?.sub || adminUser?.id || 'super_admin',
+          name: adminUser?.name || 'Super Admin',
+          email: adminUser?.email || 'admin@madiyayu.com',
+          role: adminUser?.role || 'super_admin',
+        },
+        details: {
+          domain: 'tenants',
+          format: 'csv',
+          recordCount: tenants.length,
+        },
+        ipAddress,
+        userAgent,
+      });
+    } catch {}
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="tenants_directory_export_${Date.now()}.csv"`);
+    return res.status(200).send(csvContent);
   }
 }

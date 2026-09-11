@@ -10,6 +10,22 @@ export enum BillingCycle {
   ONE_TIME = 'one_time',
 }
 
+export enum SupportLevel {
+  COMMUNITY = 'community',
+  EMAIL_24H = 'email_24h',
+  PRIORITY_WHATSAPP = 'priority_whatsapp',
+  DEDICATED_MANAGER = 'dedicated_manager',
+}
+
+export enum TargetSegment {
+  GRAM_PANCHAYAT = 'gram_panchayat',
+  MUNICIPAL_WARD = 'municipal_ward',
+  VIDHAN_SABHA = 'vidhan_sabha',
+  LOK_SABHA = 'lok_sabha',
+  POLITICAL_PARTY = 'political_party',
+  ALL = 'all',
+}
+
 @Schema({ _id: false })
 export class PlanLimits {
   @Prop({ default: -1 })
@@ -26,6 +42,21 @@ export class PlanLimits {
 
   @Prop({ default: -1 })
   maxStorageMB: number;
+}
+
+@Schema({ _id: false })
+export class PlanOverageRates {
+  @Prop({ default: 0 })
+  citizenPer1kRate: number; // e.g. ₹500 per 1,000 citizens
+
+  @Prop({ default: 0 })
+  storagePerGbRate: number; // e.g. ₹100 per 1 GB storage
+
+  @Prop({ default: 0 })
+  smsRate: number; // e.g. ₹0.25 per SMS
+
+  @Prop({ default: 0 })
+  whatsappRate: number; // e.g. ₹0.65 per WhatsApp message
 }
 
 @Schema({ timestamps: true })
@@ -51,11 +82,28 @@ export class Plan {
   @Prop({ default: 14, min: 0 })
   trialDays: number;
 
+  @Prop({
+    required: true,
+    enum: Object.values(SupportLevel),
+    default: SupportLevel.EMAIL_24H,
+  })
+  supportLevel: SupportLevel;
+
+  @Prop({
+    required: true,
+    enum: Object.values(TargetSegment),
+    default: TargetSegment.VIDHAN_SABHA,
+  })
+  targetSegment: TargetSegment;
+
   @Prop({ type: [String], default: [] })
   features: string[]; // enabled feature keys for this plan
 
   @Prop({ type: PlanLimits, default: () => ({}) })
   limits: PlanLimits;
+
+  @Prop({ type: PlanOverageRates, default: () => ({}) })
+  overageRates: PlanOverageRates;
 
   @Prop({ default: false })
   isPopular: boolean;
@@ -69,3 +117,4 @@ export class Plan {
 
 export const PlanSchema = SchemaFactory.createForClass(Plan);
 PlanSchema.index({ isActive: 1, sortOrder: 1 });
+PlanSchema.index({ targetSegment: 1, supportLevel: 1 });

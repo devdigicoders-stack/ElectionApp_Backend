@@ -155,6 +155,54 @@ __decorate([
     __metadata("design:type", String)
 ], Subscription.prototype, "notes", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: '998313' }),
+    __metadata("design:type", String)
+], Subscription.prototype, "sacCode", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'tax_invoice' }),
+    __metadata("design:type", String)
+], Subscription.prototype, "invoiceType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "taxableAmount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 18 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "taxRate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "cgst", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "sgst", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "igst", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], Subscription.prototype, "totalAmount", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Subscription.prototype, "isInterState", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
+    __metadata("design:type", String)
+], Subscription.prototype, "clientGstin", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
+    __metadata("design:type", String)
+], Subscription.prototype, "clientState", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
+    __metadata("design:type", String)
+], Subscription.prototype, "clientAddress", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: [SubscriptionTimelineItem], default: [] }),
     __metadata("design:type", Array)
 ], Subscription.prototype, "timeline", void 0);

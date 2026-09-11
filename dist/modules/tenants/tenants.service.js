@@ -52,24 +52,123 @@ const config_1 = require("@nestjs/config");
 const mongoose_2 = require("mongoose");
 const bcrypt = __importStar(require("bcryptjs"));
 const jwt = __importStar(require("jsonwebtoken"));
+const path_1 = require("path");
+const fs_1 = require("fs");
 const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const admin_user_schema_1 = require("../admin-users/admin-user.schema");
 const area_schema_1 = require("../areas/area.schema");
+const user_schema_1 = require("../users/user.schema");
+const complaint_schema_1 = require("../complaints/complaint.schema");
+const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const event_schema_1 = require("../events/event.schema");
+const poll_schema_1 = require("../polls/poll.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
+const notifications_service_1 = require("../notifications/notifications.service");
+const system_alert_schema_1 = require("../notifications/system-alert.schema");
 const types_1 = require("../../shared/types");
+const registration_form_types_1 = require("../registration-form/registration-form.types");
+function saveBase64Image(base64Str, tenantSlug, prefix) {
+    if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
+        return base64Str;
+    }
+    try {
+        const matches = base64Str.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+        if (!matches || matches.length !== 3)
+            return base64Str;
+        let ext = matches[1].toLowerCase();
+        if (ext === 'jpeg')
+            ext = 'jpg';
+        else if (ext === 'svg+xml')
+            ext = 'svg';
+        else if (ext === 'x-icon')
+            ext = 'ico';
+        const base64Data = matches[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const filename = `${Date.now()}-${prefix}-${Math.floor(Math.random() * 1000000)}.${ext}`;
+        const uploadDir = (0, path_1.join)(process.cwd(), 'uploads', tenantSlug, 'branding');
+        if (!(0, fs_1.existsSync)(uploadDir)) {
+            (0, fs_1.mkdirSync)(uploadDir, { recursive: true });
+        }
+        const filePath = (0, path_1.join)(uploadDir, filename);
+        (0, fs_1.writeFileSync)(filePath, buffer);
+        return `/uploads/${tenantSlug}/branding/${filename}`;
+    }
+    catch (err) {
+        console.error('Failed to save base64 image to disk:', err);
+        return base64Str;
+    }
+}
+function sanitizeBrandingImages(branding, slug) {
+    const result = { ...branding };
+    if (result.logoUrl && typeof result.logoUrl === 'string' && result.logoUrl.startsWith('data:image/')) {
+        result.logoUrl = saveBase64Image(result.logoUrl, slug, 'logoUrl');
+    }
+    if (result.logo && typeof result.logo === 'string' && result.logo.startsWith('data:image/')) {
+        result.logo = saveBase64Image(result.logo, slug, 'logo');
+    }
+    if (result.faviconUrl && typeof result.faviconUrl === 'string' && result.faviconUrl.startsWith('data:image/')) {
+        result.faviconUrl = saveBase64Image(result.faviconUrl, slug, 'faviconUrl');
+    }
+    if (result.pwaIconUrl && typeof result.pwaIconUrl === 'string' && result.pwaIconUrl.startsWith('data:image/')) {
+        result.pwaIconUrl = saveBase64Image(result.pwaIconUrl, slug, 'pwaIconUrl');
+    }
+    if (result.loginBgUrl && typeof result.loginBgUrl === 'string' && result.loginBgUrl.startsWith('data:image/')) {
+        result.loginBgUrl = saveBase64Image(result.loginBgUrl, slug, 'loginBgUrl');
+    }
+    if (result.splashScreenUrl && typeof result.splashScreenUrl === 'string' && result.splashScreenUrl.startsWith('data:image/')) {
+        result.splashScreenUrl = saveBase64Image(result.splashScreenUrl, slug, 'splashScreenUrl');
+    }
+    if (Array.isArray(result.splashScreens)) {
+        result.splashScreens = result.splashScreens.map((screen, idx) => {
+            if (screen && screen.mediaUrl && typeof screen.mediaUrl === 'string' && screen.mediaUrl.startsWith('data:image/')) {
+                return {
+                    ...screen,
+                    mediaUrl: saveBase64Image(screen.mediaUrl, slug, `splash-${idx + 1}`),
+                };
+            }
+            return screen;
+        });
+    }
+    return result;
+}
 let TenantsService = class TenantsService {
-    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, subscriptionModel, planModel, configService, auditLogsService) {
+    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, areaModel, userModel, complaintModel, volunteerModel, eventModel, pollModel, subscriptionModel, planModel, configService, auditLogsService, notificationsService) {
         this.tenantModel = tenantModel;
         this.featureModel = featureModel;
         this.adminUserModel = adminUserModel;
         this.areaLevelModel = areaLevelModel;
+        this.areaModel = areaModel;
+        this.userModel = userModel;
+        this.complaintModel = complaintModel;
+        this.volunteerModel = volunteerModel;
+        this.eventModel = eventModel;
+        this.pollModel = pollModel;
         this.subscriptionModel = subscriptionModel;
         this.planModel = planModel;
         this.configService = configService;
         this.auditLogsService = auditLogsService;
+        this.notificationsService = notificationsService;
+    }
+    async onModuleInit() {
+        try {
+            const tenantsWithBase64 = await this.tenantModel.find({
+                $or: [
+                    { 'branding.logoUrl': { $regex: '^data:image' } },
+                    { 'branding.faviconUrl': { $regex: '^data:image' } },
+                    { 'branding.pwaIconUrl': { $regex: '^data:image' } },
+                    { 'branding.logo': { $regex: '^data:image' } },
+                ],
+            });
+            for (const t of tenantsWithBase64) {
+                const sanitized = sanitizeBrandingImages(t.branding || {}, t.slug);
+                await this.tenantModel.updateOne({ _id: t._id }, { $set: { branding: sanitized } });
+            }
+        }
+        catch {
+        }
     }
     async create(dto) {
         const exists = await this.tenantModel.findOne({ slug: dto.slug.toLowerCase().trim() });
@@ -94,6 +193,7 @@ let TenantsService = class TenantsService {
         }
         branding.primaryColor = branding.primaryColor || '#1a56db';
         branding.secondaryColor = branding.secondaryColor || '#f59e0b';
+        const sanitizedBranding = sanitizeBrandingImages(branding, dto.slug.toLowerCase().trim());
         const newTenant = new this.tenantModel({
             slug: dto.slug.toLowerCase().trim(),
             name: finalName,
@@ -103,7 +203,7 @@ let TenantsService = class TenantsService {
             email: dto.email || null,
             electionType: dto.electionType || 'other',
             customDomain: dto.customDomain || undefined,
-            branding,
+            branding: sanitizedBranding,
             settings: dto.settings || {
                 registrationFields: [
                     { key: 'name', label: 'Full Name', type: 'text', required: true },
@@ -164,6 +264,18 @@ let TenantsService = class TenantsService {
                     await this.featureModel.updateOne({ tenantId: tenant._id, featureKey: fKey }, { $set: { isEnabled: planFeatures.has(fKey) } });
                 }
             }
+        }
+        try {
+            await this.notificationsService.recordSystemAlert({
+                title: 'New Client Onboarded',
+                message: `Client "${tenant.name}" (${tenant.slug}) has successfully onboarded on ${tenant.electionType} campaign.`,
+                type: system_alert_schema_1.AlertType.SUCCESS,
+                category: system_alert_schema_1.AlertCategory.TENANT,
+                actionUrl: '/clients',
+            });
+        }
+        catch (e) {
+            console.warn('Could not record system alert for tenant creation:', e);
         }
         return tenant;
     }
@@ -406,6 +518,62 @@ let TenantsService = class TenantsService {
             throw new common_1.NotFoundException('Tenant not found');
         return tenant;
     }
+    async getFullProfile(id) {
+        const tenant = await this.tenantModel.findById(id).lean();
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        const tenantObjId = new mongoose_2.Types.ObjectId(id);
+        const [admins, features, areaLevels, areas, subscription, plan, totalCitizens, totalVolunteers, totalComplaints, totalEvents, totalPolls,] = await Promise.all([
+            this.adminUserModel.find({ tenantId: tenantObjId }).select('-password -__v').sort({ createdAt: -1 }).lean(),
+            this.featureModel.find({ tenantId: tenantObjId }).lean(),
+            this.areaLevelModel.find({ tenantId: tenantObjId }).sort({ levelOrder: 1 }).lean(),
+            this.areaModel.find({ tenantId: tenantObjId, isActive: true }).populate('levelId', 'name levelOrder').sort({ name: 1 }).lean(),
+            this.subscriptionModel.findOne({ tenantId: tenantObjId }).lean(),
+            tenant.planId ? this.planModel.findById(tenant.planId).lean() : null,
+            this.userModel.countDocuments({ tenantId: tenantObjId }),
+            this.volunteerModel.countDocuments({ tenantId: tenantObjId }),
+            this.complaintModel.countDocuments({ tenantId: tenantObjId }),
+            this.eventModel.countDocuments({ tenantId: tenantObjId }),
+            this.pollModel.countDocuments({ tenantId: tenantObjId }),
+        ]);
+        const areaMap = new Map();
+        areas.forEach((a) => areaMap.set(a._id.toString(), { ...a, children: [] }));
+        const areaTree = [];
+        areas.forEach((a) => {
+            if (a.parentId) {
+                const parent = areaMap.get(a.parentId.toString());
+                if (parent)
+                    parent.children.push(areaMap.get(a._id.toString()));
+            }
+            else {
+                areaTree.push(areaMap.get(a._id.toString()));
+            }
+        });
+        const regFields = tenant.settings?.registrationFields && tenant.settings.registrationFields.length > 0
+            ? tenant.settings.registrationFields
+            : registration_form_types_1.DEFAULT_REGISTRATION_FIELDS;
+        return {
+            ...tenant,
+            _admins: admins,
+            _features: features,
+            _areaLevels: areaLevels,
+            _areas: areas,
+            _areaTree: areaTree,
+            _subscription: subscription,
+            _plan: plan,
+            _registrationFields: regFields,
+            _stats: {
+                totalCitizens,
+                totalVolunteers,
+                totalComplaints,
+                totalEvents,
+                totalPolls,
+                totalAreas: areas.length,
+                totalLevels: areaLevels.length,
+                totalStaff: admins.length,
+            },
+        };
+    }
     async update(id, dto) {
         const existing = await this.tenantModel.findById(id);
         if (!existing)
@@ -422,8 +590,9 @@ let TenantsService = class TenantsService {
         }
         const logo = dto.logoUrl || dto.logo;
         if (logo) {
-            updateSet['branding.logo'] = logo;
-            updateSet['branding.logoUrl'] = logo;
+            const finalLogo = saveBase64Image(logo, existing.slug, 'logo');
+            updateSet['branding.logo'] = finalLogo;
+            updateSet['branding.logoUrl'] = finalLogo;
         }
         if (dto.title) {
             updateSet['branding.title'] = dto.title;
@@ -444,7 +613,7 @@ let TenantsService = class TenantsService {
                 mergedBranding.logo = bLogo;
                 mergedBranding.logoUrl = bLogo;
             }
-            updateSet.branding = mergedBranding;
+            updateSet.branding = sanitizeBrandingImages(mergedBranding, existing.slug);
         }
         const tenant = await this.tenantModel.findByIdAndUpdate(id, { $set: updateSet }, { new: true });
         return tenant;
@@ -469,7 +638,8 @@ let TenantsService = class TenantsService {
             ...(existing.branding || {}),
             ...normalized,
         };
-        const updatePayload = { branding: mergedBranding };
+        const sanitizedBranding = sanitizeBrandingImages(mergedBranding, existing.slug);
+        const updatePayload = { branding: sanitizedBranding };
         if (title && !existing.title) {
             updatePayload.title = title;
         }
@@ -728,15 +898,28 @@ exports.TenantsService = TenantsService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(tenant_feature_schema_1.TenantFeature.name)),
     __param(2, (0, mongoose_1.InjectModel)(admin_user_schema_1.AdminUser.name)),
     __param(3, (0, mongoose_1.InjectModel)(area_schema_1.AreaLevel.name)),
-    __param(4, (0, mongoose_1.InjectModel)(subscription_schema_1.Subscription.name)),
-    __param(5, (0, mongoose_1.InjectModel)(plan_schema_1.Plan.name)),
+    __param(4, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
+    __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(6, (0, mongoose_1.InjectModel)(complaint_schema_1.Complaint.name)),
+    __param(7, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
+    __param(8, (0, mongoose_1.InjectModel)(event_schema_1.Event.name)),
+    __param(9, (0, mongoose_1.InjectModel)(poll_schema_1.Poll.name)),
+    __param(10, (0, mongoose_1.InjectModel)(subscription_schema_1.Subscription.name)),
+    __param(11, (0, mongoose_1.InjectModel)(plan_schema_1.Plan.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
         config_1.ConfigService,
-        audit_logs_service_1.AuditLogsService])
+        audit_logs_service_1.AuditLogsService,
+        notifications_service_1.NotificationsService])
 ], TenantsService);
 //# sourceMappingURL=tenants.service.js.map

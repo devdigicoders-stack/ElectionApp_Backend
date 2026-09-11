@@ -1,16 +1,25 @@
-import { Injectable, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, NotFoundException, BadRequestException, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
 import { Model, Types } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
 import * as jwt from 'jsonwebtoken';
+import { join } from 'path';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
 import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
-import { AreaLevel, AreaLevelDocument } from '../areas/area.schema';
+import { Area, AreaDocument, AreaLevel, AreaLevelDocument } from '../areas/area.schema';
+import { User, UserDocument } from '../users/user.schema';
+import { Complaint, ComplaintDocument } from '../complaints/complaint.schema';
+import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
+import { Event, EventDocument } from '../events/event.schema';
+import { Poll, PollDocument } from '../polls/poll.schema';
 import { Subscription, SubscriptionDocument, SubscriptionStatus, PaymentMethod } from '../subscriptions/subscription.schema';
 import { Plan, PlanDocument, BillingCycle } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { AlertType, AlertCategory } from '../notifications/system-alert.schema';
 import {
   CreateTenantDto,
   UpdateTenantDto,
@@ -20,19 +29,111 @@ import {
   OnboardFullTenantDto,
 } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
+import { DEFAULT_REGISTRATION_FIELDS } from '../registration-form/registration-form.types';
+
+function saveBase64Image(base64Str: string, tenantSlug: string, prefix: string): string {
+  if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
+    return base64Str;
+  }
+  try {
+    const matches = base64Str.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) return base64Str;
+
+    let ext = matches[1].toLowerCase();
+    if (ext === 'jpeg') ext = 'jpg';
+    else if (ext === 'svg+xml') ext = 'svg';
+    else if (ext === 'x-icon') ext = 'ico';
+
+    const base64Data = matches[2];
+    const buffer = Buffer.from(base64Data, 'base64');
+    const filename = `${Date.now()}-${prefix}-${Math.floor(Math.random() * 1000000)}.${ext}`;
+    const uploadDir = join(process.cwd(), 'uploads', tenantSlug, 'branding');
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true });
+    }
+    const filePath = join(uploadDir, filename);
+    writeFileSync(filePath, buffer);
+    return `/uploads/${tenantSlug}/branding/${filename}`;
+  } catch (err) {
+    console.error('Failed to save base64 image to disk:', err);
+    return base64Str;
+  }
+}
+
+function sanitizeBrandingImages(branding: Record<string, any>, slug: string): Record<string, any> {
+  const result = { ...branding };
+  if (result.logoUrl && typeof result.logoUrl === 'string' && result.logoUrl.startsWith('data:image/')) {
+    result.logoUrl = saveBase64Image(result.logoUrl, slug, 'logoUrl');
+  }
+  if (result.logo && typeof result.logo === 'string' && result.logo.startsWith('data:image/')) {
+    result.logo = saveBase64Image(result.logo, slug, 'logo');
+  }
+  if (result.faviconUrl && typeof result.faviconUrl === 'string' && result.faviconUrl.startsWith('data:image/')) {
+    result.faviconUrl = saveBase64Image(result.faviconUrl, slug, 'faviconUrl');
+  }
+  if (result.pwaIconUrl && typeof result.pwaIconUrl === 'string' && result.pwaIconUrl.startsWith('data:image/')) {
+    result.pwaIconUrl = saveBase64Image(result.pwaIconUrl, slug, 'pwaIconUrl');
+  }
+  if (result.loginBgUrl && typeof result.loginBgUrl === 'string' && result.loginBgUrl.startsWith('data:image/')) {
+    result.loginBgUrl = saveBase64Image(result.loginBgUrl, slug, 'loginBgUrl');
+  }
+  if (result.splashScreenUrl && typeof result.splashScreenUrl === 'string' && result.splashScreenUrl.startsWith('data:image/')) {
+    result.splashScreenUrl = saveBase64Image(result.splashScreenUrl, slug, 'splashScreenUrl');
+  }
+
+  if (Array.isArray(result.splashScreens)) {
+    result.splashScreens = result.splashScreens.map((screen: any, idx: number) => {
+      if (screen && screen.mediaUrl && typeof screen.mediaUrl === 'string' && screen.mediaUrl.startsWith('data:image/')) {
+        return {
+          ...screen,
+          mediaUrl: saveBase64Image(screen.mediaUrl, slug, `splash-${idx + 1}`),
+        };
+      }
+      return screen;
+    });
+  }
+
+  return result;
+}
 
 @Injectable()
-export class TenantsService {
+export class TenantsService implements OnModuleInit {
   constructor(
     @InjectModel(Tenant.name) private tenantModel: Model<TenantDocument>,
     @InjectModel(TenantFeature.name) private featureModel: Model<TenantFeatureDocument>,
     @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUserDocument>,
     @InjectModel(AreaLevel.name) private areaLevelModel: Model<AreaLevelDocument>,
+    @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Complaint.name) private complaintModel: Model<ComplaintDocument>,
+    @InjectModel(Volunteer.name) private volunteerModel: Model<VolunteerDocument>,
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Subscription.name) private subscriptionModel: Model<SubscriptionDocument>,
     @InjectModel(Plan.name) private planModel: Model<PlanDocument>,
     private configService: ConfigService,
     private auditLogsService: AuditLogsService,
+    private notificationsService: NotificationsService,
   ) {}
+
+  async onModuleInit() {
+    try {
+      const tenantsWithBase64 = await this.tenantModel.find({
+        $or: [
+          { 'branding.logoUrl': { $regex: '^data:image' } },
+          { 'branding.faviconUrl': { $regex: '^data:image' } },
+          { 'branding.pwaIconUrl': { $regex: '^data:image' } },
+          { 'branding.logo': { $regex: '^data:image' } },
+        ],
+      });
+      for (const t of tenantsWithBase64) {
+        const sanitized = sanitizeBrandingImages(t.branding || {}, t.slug);
+        await this.tenantModel.updateOne({ _id: t._id }, { $set: { branding: sanitized } });
+      }
+    } catch {
+      // ignore on startup if DB not ready
+    }
+  }
 
   async create(dto: CreateTenantDto) {
     const exists = await this.tenantModel.findOne({ slug: dto.slug.toLowerCase().trim() });
@@ -64,6 +165,8 @@ export class TenantsService {
     branding.primaryColor = branding.primaryColor || '#1a56db';
     branding.secondaryColor = branding.secondaryColor || '#f59e0b';
 
+    const sanitizedBranding = sanitizeBrandingImages(branding, dto.slug.toLowerCase().trim());
+
     const newTenant = new this.tenantModel({
       slug: dto.slug.toLowerCase().trim(),
       name: finalName,
@@ -73,7 +176,7 @@ export class TenantsService {
       email: dto.email || null,
       electionType: dto.electionType || 'other',
       customDomain: dto.customDomain || undefined,
-      branding,
+      branding: sanitizedBranding,
       settings: dto.settings || {
         registrationFields: [
           { key: 'name', label: 'Full Name', type: 'text', required: true },
@@ -144,6 +247,18 @@ export class TenantsService {
           );
         }
       }
+    }
+
+    try {
+      await this.notificationsService.recordSystemAlert({
+        title: 'New Client Onboarded',
+        message: `Client "${tenant.name}" (${tenant.slug}) has successfully onboarded on ${tenant.electionType} campaign.`,
+        type: AlertType.SUCCESS,
+        category: AlertCategory.TENANT,
+        actionUrl: '/clients',
+      });
+    } catch (e) {
+      console.warn('Could not record system alert for tenant creation:', e);
     }
 
     return tenant;
@@ -415,6 +530,78 @@ export class TenantsService {
     return tenant;
   }
 
+  async getFullProfile(id: string) {
+    const tenant = await this.tenantModel.findById(id).lean();
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const tenantObjId = new Types.ObjectId(id);
+
+    const [
+      admins,
+      features,
+      areaLevels,
+      areas,
+      subscription,
+      plan,
+      totalCitizens,
+      totalVolunteers,
+      totalComplaints,
+      totalEvents,
+      totalPolls,
+    ] = await Promise.all([
+      this.adminUserModel.find({ tenantId: tenantObjId }).select('-password -__v').sort({ createdAt: -1 }).lean(),
+      this.featureModel.find({ tenantId: tenantObjId }).lean(),
+      this.areaLevelModel.find({ tenantId: tenantObjId }).sort({ levelOrder: 1 }).lean(),
+      this.areaModel.find({ tenantId: tenantObjId, isActive: true }).populate('levelId', 'name levelOrder').sort({ name: 1 }).lean(),
+      this.subscriptionModel.findOne({ tenantId: tenantObjId }).lean(),
+      tenant.planId ? this.planModel.findById(tenant.planId).lean() : null,
+      this.userModel.countDocuments({ tenantId: tenantObjId }),
+      this.volunteerModel.countDocuments({ tenantId: tenantObjId }),
+      this.complaintModel.countDocuments({ tenantId: tenantObjId }),
+      this.eventModel.countDocuments({ tenantId: tenantObjId }),
+      this.pollModel.countDocuments({ tenantId: tenantObjId }),
+    ]);
+
+    const areaMap = new Map<string, any>();
+    areas.forEach((a) => areaMap.set(a._id.toString(), { ...a, children: [] }));
+    const areaTree: any[] = [];
+    areas.forEach((a) => {
+      if (a.parentId) {
+        const parent = areaMap.get(a.parentId.toString());
+        if (parent) parent.children.push(areaMap.get(a._id.toString()));
+      } else {
+        areaTree.push(areaMap.get(a._id.toString()));
+      }
+    });
+
+    const regFields =
+      tenant.settings?.registrationFields && tenant.settings.registrationFields.length > 0
+        ? tenant.settings.registrationFields
+        : DEFAULT_REGISTRATION_FIELDS;
+
+    return {
+      ...tenant,
+      _admins: admins,
+      _features: features,
+      _areaLevels: areaLevels,
+      _areas: areas,
+      _areaTree: areaTree,
+      _subscription: subscription,
+      _plan: plan,
+      _registrationFields: regFields,
+      _stats: {
+        totalCitizens,
+        totalVolunteers,
+        totalComplaints,
+        totalEvents,
+        totalPolls,
+        totalAreas: areas.length,
+        totalLevels: areaLevels.length,
+        totalStaff: admins.length,
+      },
+    };
+  }
+
   async update(id: string, dto: UpdateTenantDto) {
     const existing = await this.tenantModel.findById(id);
     if (!existing) throw new NotFoundException('Tenant not found');
@@ -433,8 +620,9 @@ export class TenantsService {
     // Sync logo/logoUrl if updated at root
     const logo = dto.logoUrl || dto.logo;
     if (logo) {
-      updateSet['branding.logo'] = logo;
-      updateSet['branding.logoUrl'] = logo;
+      const finalLogo = saveBase64Image(logo, existing.slug, 'logo');
+      updateSet['branding.logo'] = finalLogo;
+      updateSet['branding.logoUrl'] = finalLogo;
     }
     if (dto.title) {
       updateSet['branding.title'] = dto.title;
@@ -457,7 +645,7 @@ export class TenantsService {
         mergedBranding.logo = bLogo;
         mergedBranding.logoUrl = bLogo;
       }
-      updateSet.branding = mergedBranding;
+      updateSet.branding = sanitizeBrandingImages(mergedBranding, existing.slug);
     }
 
     const tenant = await this.tenantModel.findByIdAndUpdate(
@@ -491,7 +679,9 @@ export class TenantsService {
       ...normalized,
     };
 
-    const updatePayload: any = { branding: mergedBranding };
+    const sanitizedBranding = sanitizeBrandingImages(mergedBranding, existing.slug);
+
+    const updatePayload: any = { branding: sanitizedBranding };
     if (title && !existing.title) {
       updatePayload.title = title;
     }

@@ -33,6 +33,16 @@ let SubscriptionsService = class SubscriptionsService {
         const count = await this.subscriptionModel.countDocuments();
         return `INV-${year}-${String(count + 1).padStart(5, '0')}`;
     }
+    computeGst(grossAmount, taxRate = 18, isInterState = false) {
+        const rate = taxRate / 100;
+        const taxableAmount = Math.round((grossAmount / (1 + rate)) * 100) / 100;
+        const totalTax = Math.round((grossAmount - taxableAmount) * 100) / 100;
+        const cgst = isInterState ? 0 : Math.round((totalTax / 2) * 100) / 100;
+        const sgst = isInterState ? 0 : Math.round((totalTax / 2) * 100) / 100;
+        const igst = isInterState ? totalTax : 0;
+        const totalAmount = Math.round(grossAmount * 100) / 100;
+        return { taxableAmount, taxRate, cgst, sgst, igst, totalAmount, isInterState };
+    }
     async syncTenantFeatures(tenantId, planFeatures) {
         const allFeatureKeys = Object.values(types_1.FeatureKey);
         const enabledSet = new Set(planFeatures || []);
@@ -97,6 +107,7 @@ let SubscriptionsService = class SubscriptionsService {
         const invoiceNumber = await this.generateInvoiceNumber();
         const amountPaid = dto.amountPaid !== undefined ? dto.amountPaid : (dto.isTrial ? 0 : plan.price);
         const billingCycle = dto.billingCycle || plan.billingCycle;
+        const gst = this.computeGst(amountPaid, dto.taxRate ?? 18, dto.isInterState ?? false);
         await this.subscriptionModel.updateMany({
             tenantId: tenant._id,
             status: { $in: [subscription_schema_1.SubscriptionStatus.ACTIVE, subscription_schema_1.SubscriptionStatus.TRIALING] },
@@ -124,7 +135,13 @@ let SubscriptionsService = class SubscriptionsService {
             paymentMethod: dto.isTrial ? subscription_schema_1.PaymentMethod.FREE_TRIAL : (dto.paymentMethod || subscription_schema_1.PaymentMethod.BANK_TRANSFER),
             paymentReference: dto.paymentReference || '',
             invoiceNumber,
+            invoiceType: dto.invoiceType || 'tax_invoice',
             notes: dto.notes || '',
+            sacCode: '998313',
+            ...gst,
+            clientGstin: dto.clientGstin || '',
+            clientState: dto.clientState || '',
+            clientAddress: dto.clientAddress || '',
             timeline: [
                 {
                     action: 'created',

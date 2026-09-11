@@ -54,6 +54,32 @@ export class CreateSubscriptionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  // ── GST Fields (SRS Sec 46.2) ─────────────────────────────────────────────
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxRate?: number; // default 18 (%)
+
+  @IsOptional()
+  @IsBoolean()
+  isInterState?: boolean; // true = IGST, false = CGST+SGST
+
+  @IsOptional()
+  @IsString()
+  clientGstin?: string; // 15-digit GSTIN (optional)
+
+  @IsOptional()
+  @IsString()
+  clientState?: string; // e.g. 'Maharashtra', 'Delhi'
+
+  @IsOptional()
+  @IsString()
+  clientAddress?: string; // full billing address
+
+  @IsOptional()
+  @IsString()
+  invoiceType?: string; // 'tax_invoice' | 'proforma' | 'credit_note'
 }
 
 export class RenewSubscriptionDto {
@@ -77,6 +103,28 @@ export class RenewSubscriptionDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  // GST fields for renewal invoice
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  taxRate?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isInterState?: boolean;
+
+  @IsOptional()
+  @IsString()
+  clientGstin?: string;
+
+  @IsOptional()
+  @IsString()
+  clientState?: string;
+
+  @IsOptional()
+  @IsString()
+  clientAddress?: string;
 }
 
 export class UpgradePlanDto {

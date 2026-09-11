@@ -20,7 +20,7 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Banner.prototype, "tenantId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ default: null }),
     __metadata("design:type", String)
 ], Banner.prototype, "title", void 0);
 __decorate([

@@ -45,6 +45,24 @@ export class SubscriptionsService {
     return `INV-${year}-${String(count + 1).padStart(5, '0')}`;
   }
 
+  /**
+   * Compute GST breakdown from a gross amount (inclusive of GST).
+   * taxRate default = 18%.
+   * isInterState = true  → IGST only
+   * isInterState = false → CGST + SGST (each = taxRate/2)
+   */
+  private computeGst(grossAmount: number, taxRate = 18, isInterState = false) {
+    const rate = taxRate / 100;
+    // Gross = taxable × (1 + rate), so taxable = gross / (1 + rate)
+    const taxableAmount = Math.round((grossAmount / (1 + rate)) * 100) / 100;
+    const totalTax = Math.round((grossAmount - taxableAmount) * 100) / 100;
+    const cgst = isInterState ? 0 : Math.round((totalTax / 2) * 100) / 100;
+    const sgst = isInterState ? 0 : Math.round((totalTax / 2) * 100) / 100;
+    const igst = isInterState ? totalTax : 0;
+    const totalAmount = Math.round(grossAmount * 100) / 100;
+    return { taxableAmount, taxRate, cgst, sgst, igst, totalAmount, isInterState };
+  }
+
   private async syncTenantFeatures(tenantId: Types.ObjectId, planFeatures: string[]) {
     const allFeatureKeys = Object.values(FeatureKey);
     const enabledSet = new Set(planFeatures || []);
@@ -118,6 +136,13 @@ export class SubscriptionsService {
     const amountPaid = dto.amountPaid !== undefined ? dto.amountPaid : (dto.isTrial ? 0 : plan.price);
     const billingCycle = dto.billingCycle || plan.billingCycle;
 
+    // Compute GST breakdown
+    const gst = this.computeGst(
+      amountPaid,
+      dto.taxRate ?? 18,
+      dto.isInterState ?? false,
+    );
+
     // Expire any existing active subscriptions for this tenant
     await this.subscriptionModel.updateMany(
       {
@@ -150,7 +175,14 @@ export class SubscriptionsService {
       paymentMethod: dto.isTrial ? PaymentMethod.FREE_TRIAL : (dto.paymentMethod || PaymentMethod.BANK_TRANSFER),
       paymentReference: dto.paymentReference || '',
       invoiceNumber,
+      invoiceType: dto.invoiceType || 'tax_invoice',
       notes: dto.notes || '',
+      // GST fields
+      sacCode: '998313',
+      ...gst,
+      clientGstin: dto.clientGstin || '',
+      clientState: dto.clientState || '',
+      clientAddress: dto.clientAddress || '',
       timeline: [
         {
           action: 'created',

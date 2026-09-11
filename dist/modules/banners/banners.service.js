@@ -56,9 +56,6 @@ let BannersService = class BannersService {
         return doc;
     }
     async create(tenant, data, req) {
-        if (!data.title) {
-            throw new common_1.BadRequestException('Banner title is required');
-        }
         if (!data.imageUrl) {
             throw new common_1.BadRequestException('Banner image is required (upload image via form-data or provide imageUrl)');
         }

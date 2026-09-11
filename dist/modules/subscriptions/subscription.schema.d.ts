@@ -47,6 +47,18 @@ export declare class Subscription {
     cancelReason?: string;
     pausedAt?: Date;
     notes?: string;
+    sacCode: string;
+    invoiceType: string;
+    taxableAmount: number;
+    taxRate: number;
+    cgst: number;
+    sgst: number;
+    igst: number;
+    totalAmount: number;
+    isInterState: boolean;
+    clientGstin?: string;
+    clientState?: string;
+    clientAddress?: string;
     timeline: SubscriptionTimelineItem[];
 }
 export declare const SubscriptionSchema: import("mongoose").Schema<Subscription, import("mongoose").Model<Subscription, any, any, any, any, any, Subscription>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Subscription, Document<unknown, {}, Subscription, {
@@ -203,6 +215,114 @@ export declare const SubscriptionSchema: import("mongoose").Schema<Subscription,
         id: string;
     }>> | undefined;
     notes?: import("mongoose").SchemaDefinitionProperty<string | undefined, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    sacCode?: import("mongoose").SchemaDefinitionProperty<string, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    invoiceType?: import("mongoose").SchemaDefinitionProperty<string, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    taxableAmount?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    taxRate?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    cgst?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    sgst?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    igst?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    totalAmount?: import("mongoose").SchemaDefinitionProperty<number, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    isInterState?: import("mongoose").SchemaDefinitionProperty<boolean, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    clientGstin?: import("mongoose").SchemaDefinitionProperty<string | undefined, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    clientState?: import("mongoose").SchemaDefinitionProperty<string | undefined, Subscription, Document<unknown, {}, Subscription, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    clientAddress?: import("mongoose").SchemaDefinitionProperty<string | undefined, Subscription, Document<unknown, {}, Subscription, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Subscription & {
         _id: Types.ObjectId;

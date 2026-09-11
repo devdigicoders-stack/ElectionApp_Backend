@@ -14,7 +14,9 @@ const throttler_1 = require("@nestjs/throttler");
 const serve_static_1 = require("@nestjs/serve-static");
 const path_1 = require("path");
 const tenant_middleware_1 = require("./common/middleware/tenant.middleware");
+const maintenance_middleware_1 = require("./common/middleware/maintenance.middleware");
 const tenant_schema_1 = require("./modules/tenants/tenant.schema");
+const system_settings_schema_1 = require("./modules/system-settings/system-settings.schema");
 const guards_module_1 = require("./common/guards-module/guards.module");
 const auth_module_1 = require("./modules/auth/auth.module");
 const tenants_module_1 = require("./modules/tenants/tenants.module");
@@ -45,11 +47,15 @@ const registration_form_module_1 = require("./modules/registration-form/registra
 const citizen_dashboard_module_1 = require("./modules/citizen-dashboard/citizen-dashboard.module");
 const payments_module_1 = require("./modules/payments/payments.module");
 const exports_module_1 = require("./modules/exports/exports.module");
+const system_settings_module_1 = require("./modules/system-settings/system-settings.module");
 let AppModule = class AppModule {
     configure(consumer) {
         consumer
+            .apply(maintenance_middleware_1.MaintenanceMiddleware)
+            .forRoutes('*');
+        consumer
             .apply(tenant_middleware_1.TenantMiddleware)
-            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET }, { path: 'uploads/(.*)', method: common_1.RequestMethod.ALL }, { path: 'payments/webhook', method: common_1.RequestMethod.ALL })
+            .exclude({ path: 'super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'auth/super-admin/(.*)', method: common_1.RequestMethod.ALL }, { path: 'plans', method: common_1.RequestMethod.GET }, { path: 'plans/(.*)', method: common_1.RequestMethod.GET }, { path: 'uploads/(.*)', method: common_1.RequestMethod.ALL }, { path: 'master-areas', method: common_1.RequestMethod.ALL }, { path: 'master-areas/(.*)', method: common_1.RequestMethod.ALL }, { path: 'payments/webhook', method: common_1.RequestMethod.ALL })
             .forRoutes('*');
     }
 };
@@ -64,7 +70,10 @@ exports.AppModule = AppModule = __decorate([
                     uri: config.get('MONGODB_URI'),
                 }),
             }),
-            mongoose_1.MongooseModule.forFeature([{ name: tenant_schema_1.Tenant.name, schema: tenant_schema_1.TenantSchema }]),
+            mongoose_1.MongooseModule.forFeature([
+                { name: tenant_schema_1.Tenant.name, schema: tenant_schema_1.TenantSchema },
+                { name: system_settings_schema_1.SystemSettings.name, schema: system_settings_schema_1.SystemSettingsSchema },
+            ]),
             throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
             serve_static_1.ServeStaticModule.forRoot({
                 rootPath: (0, path_1.join)(process.cwd(), 'uploads'),
@@ -100,6 +109,7 @@ exports.AppModule = AppModule = __decorate([
             citizen_dashboard_module_1.CitizenDashboardModule,
             payments_module_1.PaymentsModule,
             exports_module_1.ExportsModule,
+            system_settings_module_1.SystemSettingsModule,
         ],
     })
 ], AppModule);
