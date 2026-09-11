@@ -275,10 +275,13 @@ export class MasterAreasService {
     if (data.parentId) payload.parentId = new Types.ObjectId(data.parentId);
 
     // Deduplication check: if an area with same levelType and name (or code) exists under same parent
+    const baseName = trimmedName.split('(')[0].trim();
     const query: Record<string, any> = {
       levelType: data.levelType,
       $or: [
         { name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { name: { $regex: new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { name: { $regex: new RegExp(`^${trimmedName.replace(/\s+/g, '\\s*')}$`, 'i') } },
       ],
     };
     if (payload.code) {
