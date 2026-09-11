@@ -34,13 +34,7 @@ export declare class GalleryController {
         page: number;
         limit: number;
     }>;
-    findOne(req: TenantRequest, id: string): Promise<import("mongoose").Document<unknown, {}, import("./gallery.schema").GalleryItemDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./gallery.schema").GalleryItem & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }>;
+    findOne(req: TenantRequest, id: string): Promise<any>;
     update(req: TenantRequest, id: string, files: {
         file?: Express.Multer.File[];
         image?: Express.Multer.File[];
@@ -52,11 +46,11 @@ export declare class GalleryController {
     } & {
         id: string;
     }>;
-    remove(req: TenantRequest, id: string): Promise<(import("mongoose").Document<unknown, {}, import("./gallery.schema").GalleryItemDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./gallery.schema").GalleryItem & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    remove(req: TenantRequest, id: string): Promise<import("mongoose").Document<unknown, {}, import("./gallery.schema").GalleryItemDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./gallery.schema").GalleryItem & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
-    }) | null>;
+    }>;
 }

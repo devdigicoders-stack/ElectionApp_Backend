@@ -155,6 +155,18 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Complaint.prototype, "rejectedBy", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: false }),
+    __metadata("design:type", Boolean)
+], Complaint.prototype, "isPublic", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Complaint.prototype, "publishedAt", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'AdminUser', default: null }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Complaint.prototype, "publishedBy", void 0);
+__decorate([
     (0, mongoose_1.Prop)({
         type: [
             {
@@ -178,6 +190,7 @@ exports.Complaint = Complaint = __decorate([
 ], Complaint);
 exports.ComplaintSchema = mongoose_1.SchemaFactory.createForClass(Complaint);
 exports.ComplaintSchema.index({ tenantId: 1, status: 1 });
+exports.ComplaintSchema.index({ tenantId: 1, isPublic: 1, status: 1 });
 exports.ComplaintSchema.index({ tenantId: 1, priority: 1 });
 exports.ComplaintSchema.index({ tenantId: 1, areaId: 1 });
 exports.ComplaintSchema.index({ tenantId: 1, category: 1 });

@@ -457,7 +457,16 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
     async getTemplate(tenant, id) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.BadRequestException('Invalid template ID');
-        const template = await this.templateModel.findOne({ _id: id, tenantId: tenant._id });
+        let template = await this.templateModel.findOne({
+            _id: new mongoose_2.Types.ObjectId(id),
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        });
+        if (!template) {
+            template = await this.templateModel.findOne({
+                _id: id,
+                $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+            });
+        }
         if (!template)
             throw new common_1.NotFoundException(`Poster template #${id} not found`);
         return template;
@@ -500,7 +509,10 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
     async removeTemplate(tenant, id) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.BadRequestException('Invalid template ID');
-        const template = await this.templateModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const template = await this.templateModel.findOneAndDelete({
+            _id: new mongoose_2.Types.ObjectId(id),
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        });
         if (!template)
             throw new common_1.NotFoundException(`Poster template #${id} not found`);
         return { message: `Template #${id} deleted successfully.` };
@@ -513,8 +525,8 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
             throw new common_1.BadRequestException('Invalid template ID');
         }
         const template = await this.templateModel.findOne({
-            _id: templateId,
-            tenantId: tenant._id,
+            _id: new mongoose_2.Types.ObjectId(templateId),
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
             isActive: true,
         });
         if (!template) {
@@ -719,7 +731,10 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
     async getPosterFilePath(tenant, id) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.BadRequestException('Invalid poster ID');
-        const record = await this.generatedModel.findOne({ _id: id, tenantId: tenant._id });
+        const record = await this.generatedModel.findOne({
+            _id: new mongoose_2.Types.ObjectId(id),
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        });
         if (!record)
             throw new common_1.NotFoundException(`Poster #${id} not found`);
         const cleanRel = record.outputUrl.replace(/^[\\\/]+/, '').replace(/\//g, path.sep);
@@ -772,7 +787,10 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
     async adminDeletePoster(tenant, id) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.BadRequestException('Invalid poster ID');
-        const poster = await this.generatedModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const poster = await this.generatedModel.findOneAndDelete({
+            _id: new mongoose_2.Types.ObjectId(id),
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        });
         if (!poster)
             throw new common_1.NotFoundException(`Poster #${id} not found`);
         const fullPath = path.join(process.cwd(), poster.outputUrl.replace(/^\//, ''));

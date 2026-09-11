@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Response } from 'express';
 import { Complaint, ComplaintDocument } from './complaint.schema';
-import { ComplaintCategory, ComplaintCategoryDocument, DEFAULT_COMPLAINT_CATEGORIES } from './complaint-category.schema';
+import { ComplaintCategory, ComplaintCategoryDocument } from './complaint-category.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { ComplaintStatus, ComplaintPriority } from '../../shared/types';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
@@ -18,6 +18,8 @@ import {
   RejectComplaintDto,
   CreateCategoryDto,
   UpdateCategoryDto,
+  TogglePublicComplaintDto,
+  QueryPublicComplaintsDto,
 } from './complaints.dto';
 
 @Injectable()
@@ -113,7 +115,7 @@ export class ComplaintsService {
     }
 
     const complaint = await this.complaintModel
-      .findOne({ _id: id, tenantId: tenant._id })
+      .findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id })
       .populate('userId', 'name mobile email voterId')
       .populate('areaId', 'name')
       .populate('assignedTo', 'name email role phone')
@@ -204,6 +206,10 @@ export class ComplaintsService {
       filter.priority = queryDto.priority;
     }
 
+    if (queryDto.isPublic !== undefined) {
+      filter.isPublic = queryDto.isPublic === true || String(queryDto.isPublic) === 'true';
+    }
+
     if (queryDto.areaId) {
       filter.areaId = new Types.ObjectId(queryDto.areaId);
     }
@@ -264,7 +270,7 @@ export class ComplaintsService {
       throw new BadRequestException(`Invalid assignedTo ID "${dto.assignedTo}". Must be a valid 24-character hexadecimal MongoDB ObjectId.`);
     }
 
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -298,7 +304,7 @@ export class ComplaintsService {
    */
   async updatePriority(tenant: TenantDocument, id: string, dto: UpdatePriorityDto, adminUser: any) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const oldPriority = complaint.priority;
@@ -324,7 +330,7 @@ export class ComplaintsService {
    */
   async addRemark(tenant: TenantDocument, id: string, dto: AddRemarkDto, adminUser: any) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -363,7 +369,7 @@ export class ComplaintsService {
    */
   async resolveComplaint(tenant: TenantDocument, id: string, dto: ResolveComplaintDto, adminUser: any) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -395,7 +401,7 @@ export class ComplaintsService {
    */
   async closeComplaint(tenant: TenantDocument, id: string, dto: CloseComplaintDto, adminUser: any) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -425,7 +431,7 @@ export class ComplaintsService {
    */
   async rejectComplaint(tenant: TenantDocument, id: string, dto: RejectComplaintDto, adminUser: any) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -453,7 +459,7 @@ export class ComplaintsService {
    */
   async updateStatus(tenant: TenantDocument, id: string, status: ComplaintStatus, note: string, updatedBy: string) {
     if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
-    const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!complaint) throw new NotFoundException('Complaint not found');
 
     const adminObjId = updatedBy ? new Types.ObjectId(updatedBy) : undefined;
@@ -477,6 +483,129 @@ export class ComplaintsService {
 
     await complaint.save();
     return this.findOne(tenant, id);
+  }
+
+  /**
+   * Toggle Public Status for Citizen PWA (SRS Community Showcase)
+   * Admin can publish/unpublish complaints to public PWA
+   */
+  async togglePublic(tenant: TenantDocument, id: string, dto: TogglePublicComplaintDto, adminUser: any) {
+    if (!Types.ObjectId.isValid(id)) throw new NotFoundException('Complaint not found');
+    const complaint = await this.complaintModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
+    if (!complaint) throw new NotFoundException('Complaint not found');
+
+    const adminObjId = adminUser?.sub || adminUser?.id ? new Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
+    complaint.isPublic = dto.isPublic;
+    if (dto.isPublic) {
+      complaint.publishedAt = new Date();
+      complaint.publishedBy = adminObjId;
+    } else {
+      complaint.publishedAt = undefined;
+      complaint.publishedBy = undefined;
+    }
+
+    complaint.timeline.push({
+      status: complaint.status,
+      action: dto.isPublic ? 'PUBLISHED_TO_PWA' : 'UNPUBLISHED_FROM_PWA',
+      note: dto.isPublic ? 'Complaint published to Citizen PWA community board' : 'Complaint removed from Citizen PWA community board',
+      updatedBy: adminObjId,
+      updatedByName: adminUser?.name || 'Admin',
+      updatedByRole: adminUser?.role || 'admin',
+      isInternal: true,
+      updatedAt: new Date(),
+    });
+
+    await complaint.save();
+    return this.findOne(tenant, id, adminUser);
+  }
+
+  /**
+   * List public complaints for Citizen PWA Community Board
+   * Privacy Protection: Strips citizen mobile, email, voterId, and internal remarks
+   */
+  async findPublic(tenant: TenantDocument, queryDto: QueryPublicComplaintsDto) {
+    const page = Math.max(Number(queryDto.page) || 1, 1);
+    const limit = Math.min(Math.max(Number(queryDto.limit) || 20, 1), 50);
+    const skip = (page - 1) * limit;
+
+    const filter: any = {
+      tenantId: tenant._id,
+      isPublic: true,
+    };
+
+    if (queryDto.areaId && Types.ObjectId.isValid(queryDto.areaId)) {
+      filter.areaId = new Types.ObjectId(queryDto.areaId);
+    }
+
+    if (queryDto.category) {
+      filter.category = queryDto.category;
+    }
+
+    if (queryDto.search) {
+      const searchRegex = { $regex: queryDto.search.trim(), $options: 'i' };
+      filter.$or = [
+        { complaintNumber: searchRegex },
+        { title: searchRegex },
+        { description: searchRegex },
+      ];
+    }
+
+    const [rawItems, total] = await Promise.all([
+      this.complaintModel
+        .find(filter)
+        .populate('userId', 'name')
+        .populate('areaId', 'name')
+        .sort({ publishedAt: -1, createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.complaintModel.countDocuments(filter),
+    ]);
+
+    // Privacy Sanitization: NEVER leak mobile number, voterId, email, or internal remarks
+    const items = rawItems.map((c: any) => {
+      const citizenName = c.userId?.name ? `${c.userId.name.slice(0, 1)}. (Citizen)` : 'Verified Citizen';
+      return {
+        _id: c._id,
+        complaintNumber: c.complaintNumber,
+        title: c.title,
+        description: c.description,
+        category: c.category,
+        status: c.status,
+        priority: c.priority,
+        area: c.areaId ? { name: c.areaId.name } : null,
+        attachments: c.attachments || c.mediaUrls || [],
+        resolutionDetails: c.resolutionDetails || null,
+        resolutionProof: c.resolutionProof || [],
+        resolvedAt: c.resolvedAt || null,
+        publishedAt: c.publishedAt || c.updatedAt,
+        publicRemarks: (c.publicRemarks || []).map((r: any) => ({
+          remark: r.remark,
+          addedByName: r.addedByName || 'Official Team',
+          createdAt: r.createdAt,
+        })),
+        timeline: (c.timeline || [])
+          .filter((t: any) => !t.isInternal)
+          .map((t: any) => ({
+            status: t.status,
+            action: t.action,
+            note: t.note,
+            proofUrls: t.proofUrls || [],
+            updatedAt: t.updatedAt,
+          })),
+        citizenInitial: citizenName,
+      };
+    });
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -675,31 +804,13 @@ export class ComplaintsService {
   // ══════════════════════════════════════════════════════════════
 
   /**
-   * Get all active complaint categories. Auto-seeds defaults if none exist.
+   * Get all active complaint categories.
    */
   async getCategories(tenant: TenantDocument) {
-    let categories = await this.categoryModel
+    return this.categoryModel
       .find({ tenantId: tenant._id, isActive: true })
       .sort({ order: 1, name: 1 })
       .lean();
-
-    if (categories.length === 0) {
-      // Seed default categories
-      const seedData = DEFAULT_COMPLAINT_CATEGORIES.map((cat, idx) => ({
-        tenantId: tenant._id,
-        name: cat.name,
-        description: cat.description,
-        order: idx + 1,
-        isActive: true,
-      }));
-      await this.categoryModel.insertMany(seedData);
-      categories = await this.categoryModel
-        .find({ tenantId: tenant._id, isActive: true })
-        .sort({ order: 1, name: 1 })
-        .lean();
-    }
-
-    return categories;
   }
 
   async createCategory(tenant: TenantDocument, dto: CreateCategoryDto) {
@@ -717,8 +828,12 @@ export class ComplaintsService {
   }
 
   async updateCategory(tenant: TenantDocument, catId: string, dto: UpdateCategoryDto) {
+    const filter = {
+      _id: Types.ObjectId.isValid(catId) ? new Types.ObjectId(catId) : catId,
+      tenantId: tenant._id,
+    };
     const updated = await this.categoryModel.findOneAndUpdate(
-      { _id: catId, tenantId: tenant._id },
+      filter,
       { $set: dto },
       { new: true },
     );
@@ -727,7 +842,11 @@ export class ComplaintsService {
   }
 
   async deleteCategory(tenant: TenantDocument, catId: string) {
-    const deleted = await this.categoryModel.findOneAndDelete({ _id: catId, tenantId: tenant._id });
+    const filter = {
+      _id: Types.ObjectId.isValid(catId) ? new Types.ObjectId(catId) : catId,
+      tenantId: tenant._id,
+    };
+    const deleted = await this.categoryModel.findOneAndDelete(filter);
     if (!deleted) throw new NotFoundException('Category not found');
     return { message: 'Category deleted successfully' };
   }

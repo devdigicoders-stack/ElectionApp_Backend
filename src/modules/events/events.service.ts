@@ -294,9 +294,23 @@ export class EventsService {
    * Get single event details with full status and user registration status
    */
   async findOne(tenant: TenantDocument, id: string, user?: any) {
-    const event = await this.eventModel
-      .findOne({ _id: id, tenantId: tenant._id })
-      .populate('areaId', 'name code');
+    let event = null;
+
+    if (Types.ObjectId.isValid(id)) {
+      event = await this.eventModel
+        .findOne({
+          _id: new Types.ObjectId(id),
+          $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        })
+        .populate('areaId', 'name code');
+    }
+
+    if (!event) {
+      const candidate = await this.eventModel.findById(id).populate('areaId', 'name code');
+      if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+        event = candidate;
+      }
+    }
 
     if (!event) {
       throw new NotFoundException('Event not found');

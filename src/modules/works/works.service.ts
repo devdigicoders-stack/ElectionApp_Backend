@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types, isValidObjectId } from 'mongoose';
 import { Work, WorkDocument } from './work.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { WorkStatus } from '../../shared/types';
@@ -8,6 +8,10 @@ import { WorkStatus } from '../../shared/types';
 @Injectable()
 export class WorksService {
   constructor(@InjectModel(Work.name) private workModel: Model<WorkDocument>) {}
+
+  private toObjectId(id: string) {
+    return isValidObjectId(id) ? new Types.ObjectId(id) : id;
+  }
 
   async create(tenant: TenantDocument, data: any) {
     return this.workModel.create({ tenantId: tenant._id, ...data });
@@ -28,19 +32,19 @@ export class WorksService {
   }
 
   async findOne(tenant: TenantDocument, id: string) {
-    const work = await this.workModel.findOne({ _id: id, tenantId: tenant._id }).populate('areaId', 'name');
+    const work = await this.workModel.findOne({ _id: this.toObjectId(id), tenantId: tenant._id }).populate('areaId', 'name');
     if (!work) throw new NotFoundException('Work not found');
     return work;
   }
 
   async update(tenant: TenantDocument, id: string, data: any) {
-    const work = await this.workModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+    const work = await this.workModel.findOneAndUpdate({ _id: this.toObjectId(id), tenantId: tenant._id }, { $set: data }, { new: true });
     if (!work) throw new NotFoundException('Work not found');
     return work;
   }
 
   async remove(tenant: TenantDocument, id: string) {
-    return this.workModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    return this.workModel.findOneAndDelete({ _id: this.toObjectId(id), tenantId: tenant._id });
   }
 
   async getStatsByStatus(tenant: TenantDocument) {

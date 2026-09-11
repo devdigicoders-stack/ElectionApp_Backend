@@ -87,7 +87,7 @@ let ComplaintsService = class ComplaintsService {
             throw new common_1.NotFoundException(`Complaint not found (invalid ID format: "${id}")`);
         }
         const complaint = await this.complaintModel
-            .findOne({ _id: id, tenantId: tenant._id })
+            .findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id })
             .populate('userId', 'name mobile email voterId')
             .populate('areaId', 'name')
             .populate('assignedTo', 'name email role phone')
@@ -157,6 +157,9 @@ let ComplaintsService = class ComplaintsService {
         if (queryDto.priority) {
             filter.priority = queryDto.priority;
         }
+        if (queryDto.isPublic !== undefined) {
+            filter.isPublic = queryDto.isPublic === true || String(queryDto.isPublic) === 'true';
+        }
         if (queryDto.areaId) {
             filter.areaId = new mongoose_2.Types.ObjectId(queryDto.areaId);
         }
@@ -209,7 +212,7 @@ let ComplaintsService = class ComplaintsService {
         if (!mongoose_2.Types.ObjectId.isValid(dto.assignedTo)) {
             throw new common_1.BadRequestException(`Invalid assignedTo ID "${dto.assignedTo}". Must be a valid 24-character hexadecimal MongoDB ObjectId.`);
         }
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -236,7 +239,7 @@ let ComplaintsService = class ComplaintsService {
     async updatePriority(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const oldPriority = complaint.priority;
@@ -256,7 +259,7 @@ let ComplaintsService = class ComplaintsService {
     async addRemark(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -289,7 +292,7 @@ let ComplaintsService = class ComplaintsService {
     async resolveComplaint(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -315,7 +318,7 @@ let ComplaintsService = class ComplaintsService {
     async closeComplaint(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -339,7 +342,7 @@ let ComplaintsService = class ComplaintsService {
     async rejectComplaint(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
@@ -361,7 +364,7 @@ let ComplaintsService = class ComplaintsService {
     async updateStatus(tenant, id, status, note, updatedBy) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
             throw new common_1.NotFoundException('Complaint not found');
-        const complaint = await this.complaintModel.findOne({ _id: id, tenantId: tenant._id });
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!complaint)
             throw new common_1.NotFoundException('Complaint not found');
         const adminObjId = updatedBy ? new mongoose_2.Types.ObjectId(updatedBy) : undefined;
@@ -383,6 +386,111 @@ let ComplaintsService = class ComplaintsService {
         });
         await complaint.save();
         return this.findOne(tenant, id);
+    }
+    async togglePublic(tenant, id, dto, adminUser) {
+        if (!mongoose_2.Types.ObjectId.isValid(id))
+            throw new common_1.NotFoundException('Complaint not found');
+        const complaint = await this.complaintModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
+        if (!complaint)
+            throw new common_1.NotFoundException('Complaint not found');
+        const adminObjId = adminUser?.sub || adminUser?.id ? new mongoose_2.Types.ObjectId(adminUser.sub || adminUser.id) : undefined;
+        complaint.isPublic = dto.isPublic;
+        if (dto.isPublic) {
+            complaint.publishedAt = new Date();
+            complaint.publishedBy = adminObjId;
+        }
+        else {
+            complaint.publishedAt = undefined;
+            complaint.publishedBy = undefined;
+        }
+        complaint.timeline.push({
+            status: complaint.status,
+            action: dto.isPublic ? 'PUBLISHED_TO_PWA' : 'UNPUBLISHED_FROM_PWA',
+            note: dto.isPublic ? 'Complaint published to Citizen PWA community board' : 'Complaint removed from Citizen PWA community board',
+            updatedBy: adminObjId,
+            updatedByName: adminUser?.name || 'Admin',
+            updatedByRole: adminUser?.role || 'admin',
+            isInternal: true,
+            updatedAt: new Date(),
+        });
+        await complaint.save();
+        return this.findOne(tenant, id, adminUser);
+    }
+    async findPublic(tenant, queryDto) {
+        const page = Math.max(Number(queryDto.page) || 1, 1);
+        const limit = Math.min(Math.max(Number(queryDto.limit) || 20, 1), 50);
+        const skip = (page - 1) * limit;
+        const filter = {
+            tenantId: tenant._id,
+            isPublic: true,
+        };
+        if (queryDto.areaId && mongoose_2.Types.ObjectId.isValid(queryDto.areaId)) {
+            filter.areaId = new mongoose_2.Types.ObjectId(queryDto.areaId);
+        }
+        if (queryDto.category) {
+            filter.category = queryDto.category;
+        }
+        if (queryDto.search) {
+            const searchRegex = { $regex: queryDto.search.trim(), $options: 'i' };
+            filter.$or = [
+                { complaintNumber: searchRegex },
+                { title: searchRegex },
+                { description: searchRegex },
+            ];
+        }
+        const [rawItems, total] = await Promise.all([
+            this.complaintModel
+                .find(filter)
+                .populate('userId', 'name')
+                .populate('areaId', 'name')
+                .sort({ publishedAt: -1, createdAt: -1 })
+                .skip(skip)
+                .limit(limit)
+                .lean(),
+            this.complaintModel.countDocuments(filter),
+        ]);
+        const items = rawItems.map((c) => {
+            const citizenName = c.userId?.name ? `${c.userId.name.slice(0, 1)}. (Citizen)` : 'Verified Citizen';
+            return {
+                _id: c._id,
+                complaintNumber: c.complaintNumber,
+                title: c.title,
+                description: c.description,
+                category: c.category,
+                status: c.status,
+                priority: c.priority,
+                area: c.areaId ? { name: c.areaId.name } : null,
+                attachments: c.attachments || c.mediaUrls || [],
+                resolutionDetails: c.resolutionDetails || null,
+                resolutionProof: c.resolutionProof || [],
+                resolvedAt: c.resolvedAt || null,
+                publishedAt: c.publishedAt || c.updatedAt,
+                publicRemarks: (c.publicRemarks || []).map((r) => ({
+                    remark: r.remark,
+                    addedByName: r.addedByName || 'Official Team',
+                    createdAt: r.createdAt,
+                })),
+                timeline: (c.timeline || [])
+                    .filter((t) => !t.isInternal)
+                    .map((t) => ({
+                    status: t.status,
+                    action: t.action,
+                    note: t.note,
+                    proofUrls: t.proofUrls || [],
+                    updatedAt: t.updatedAt,
+                })),
+                citizenInitial: citizenName,
+            };
+        });
+        return {
+            items,
+            pagination: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+            },
+        };
     }
     async getAnalytics(tenant) {
         const tenantObjId = new mongoose_2.Types.ObjectId(tenant._id.toString());
@@ -535,25 +643,10 @@ let ComplaintsService = class ComplaintsService {
         return stats.reduce((acc, s) => ({ ...acc, [s._id]: s.count }), { total: 0 });
     }
     async getCategories(tenant) {
-        let categories = await this.categoryModel
+        return this.categoryModel
             .find({ tenantId: tenant._id, isActive: true })
             .sort({ order: 1, name: 1 })
             .lean();
-        if (categories.length === 0) {
-            const seedData = complaint_category_schema_1.DEFAULT_COMPLAINT_CATEGORIES.map((cat, idx) => ({
-                tenantId: tenant._id,
-                name: cat.name,
-                description: cat.description,
-                order: idx + 1,
-                isActive: true,
-            }));
-            await this.categoryModel.insertMany(seedData);
-            categories = await this.categoryModel
-                .find({ tenantId: tenant._id, isActive: true })
-                .sort({ order: 1, name: 1 })
-                .lean();
-        }
-        return categories;
     }
     async createCategory(tenant, dto) {
         const existing = await this.categoryModel.findOne({ tenantId: tenant._id, name: dto.name.trim() });
@@ -569,13 +662,21 @@ let ComplaintsService = class ComplaintsService {
         });
     }
     async updateCategory(tenant, catId, dto) {
-        const updated = await this.categoryModel.findOneAndUpdate({ _id: catId, tenantId: tenant._id }, { $set: dto }, { new: true });
+        const filter = {
+            _id: mongoose_2.Types.ObjectId.isValid(catId) ? new mongoose_2.Types.ObjectId(catId) : catId,
+            tenantId: tenant._id,
+        };
+        const updated = await this.categoryModel.findOneAndUpdate(filter, { $set: dto }, { new: true });
         if (!updated)
             throw new common_1.NotFoundException('Category not found');
         return updated;
     }
     async deleteCategory(tenant, catId) {
-        const deleted = await this.categoryModel.findOneAndDelete({ _id: catId, tenantId: tenant._id });
+        const filter = {
+            _id: mongoose_2.Types.ObjectId.isValid(catId) ? new mongoose_2.Types.ObjectId(catId) : catId,
+            tenantId: tenant._id,
+        };
+        const deleted = await this.categoryModel.findOneAndDelete(filter);
         if (!deleted)
             throw new common_1.NotFoundException('Category not found');
         return { message: 'Category deleted successfully' };

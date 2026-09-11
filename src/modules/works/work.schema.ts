@@ -18,8 +18,14 @@ export class Work {
   @Prop({ required: true })
   category: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'Area', required: true })
+  @Prop({ type: Types.ObjectId, ref: 'Area', default: null })
   areaId: Types.ObjectId;
+
+  @Prop({ type: String, default: null })
+  budget?: string;
+
+  @Prop({ type: String, default: null })
+  location?: string;
 
   @Prop({ type: [String], default: [] })
   images: string[];

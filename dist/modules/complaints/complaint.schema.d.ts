@@ -47,6 +47,9 @@ export declare class Complaint {
     rejectionReason?: string;
     rejectedAt?: Date;
     rejectedBy?: Types.ObjectId;
+    isPublic: boolean;
+    publishedAt?: Date;
+    publishedBy?: Types.ObjectId;
     timeline: IComplaintTimelineEvent[];
 }
 export declare const ComplaintSchema: import("mongoose").Schema<Complaint, import("mongoose").Model<Complaint, any, any, any, any, any, Complaint>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Complaint, Document<unknown, {}, Complaint, {
@@ -293,6 +296,33 @@ export declare const ComplaintSchema: import("mongoose").Schema<Complaint, impor
         id: string;
     }>> | undefined;
     rejectedBy?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId | undefined, Complaint, Document<unknown, {}, Complaint, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Complaint & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    isPublic?: import("mongoose").SchemaDefinitionProperty<boolean, Complaint, Document<unknown, {}, Complaint, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Complaint & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    publishedAt?: import("mongoose").SchemaDefinitionProperty<Date | undefined, Complaint, Document<unknown, {}, Complaint, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Complaint & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    publishedBy?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId | undefined, Complaint, Document<unknown, {}, Complaint, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Complaint & {
         _id: Types.ObjectId;

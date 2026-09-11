@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { GalleryItem, GalleryItemDocument } from './gallery.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { GalleryType } from '../../shared/types';
@@ -51,18 +51,75 @@ export class GalleryService {
   }
 
   async findOne(tenant: TenantDocument, id: string) {
-    const item = await this.galleryModel.findOne({ _id: id, tenantId: tenant._id });
+    let item: any = null;
+    const tenantCondition = {
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    };
+
+    if (Types.ObjectId.isValid(id)) {
+      item = await this.galleryModel.findOne({
+        _id: new Types.ObjectId(id),
+        ...tenantCondition,
+      });
+    }
+
+    if (!item) {
+      item = await this.galleryModel.findOne({
+        _id: id,
+        ...tenantCondition,
+      });
+    }
+
+    if (!item && Types.ObjectId.isValid(id)) {
+      const candidate = await this.galleryModel.findById(id);
+      if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+        item = candidate;
+      }
+    }
+
     if (!item) throw new NotFoundException('Gallery item not found');
     return item;
   }
 
   async update(tenant: TenantDocument, id: string, data: any) {
-    const item = await this.galleryModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+    const tenantCondition = {
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    };
+    const idFilter = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+
+    let item = await this.galleryModel.findOneAndUpdate(
+      { _id: idFilter, ...tenantCondition },
+      { $set: data },
+      { new: true },
+    );
+
+    if (!item && Types.ObjectId.isValid(id)) {
+      const candidate = await this.galleryModel.findById(id);
+      if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+        item = await this.galleryModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+      }
+    }
+
     if (!item) throw new NotFoundException('Gallery item not found');
     return item;
   }
 
   async remove(tenant: TenantDocument, id: string) {
-    return this.galleryModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const tenantCondition = {
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    };
+    const idFilter = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+
+    let item = await this.galleryModel.findOneAndDelete({ _id: idFilter, ...tenantCondition });
+
+    if (!item && Types.ObjectId.isValid(id)) {
+      const candidate = await this.galleryModel.findById(id);
+      if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+        item = await this.galleryModel.findByIdAndDelete(id);
+      }
+    }
+
+    if (!item) throw new NotFoundException('Gallery item not found');
+    return item;
   }
 }
