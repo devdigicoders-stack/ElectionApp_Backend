@@ -8,7 +8,10 @@ import { PollsService } from '../polls/polls.service';
 import { VolunteersService } from '../volunteers/volunteers.service';
 import { VolunteerTasksService } from '../volunteers/volunteer-tasks.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { Model } from 'mongoose';
+import { TenantDocument } from '../tenants/tenant.schema';
 export declare class ExportsController {
+    private readonly tenantModel;
     private readonly usersService;
     private readonly membershipService;
     private readonly complaintsService;
@@ -17,7 +20,7 @@ export declare class ExportsController {
     private readonly volunteersService;
     private readonly volunteerTasksService;
     private readonly auditLogsService;
-    constructor(usersService: UsersService, membershipService: MembershipService, complaintsService: ComplaintsService, eventsService: EventsService, pollsService: PollsService, volunteersService: VolunteersService, volunteerTasksService: VolunteerTasksService, auditLogsService: AuditLogsService);
+    constructor(tenantModel: Model<TenantDocument>, usersService: UsersService, membershipService: MembershipService, complaintsService: ComplaintsService, eventsService: EventsService, pollsService: PollsService, volunteersService: VolunteersService, volunteerTasksService: VolunteerTasksService, auditLogsService: AuditLogsService);
     getCatalog(): {
         success: boolean;
         message: string;
@@ -38,6 +41,14 @@ export declare class ExportsController {
             directEndpoint: string;
             requiredQueryParam: string;
             supportedFilters: string[];
+        } | {
+            key: string;
+            title: string;
+            description: string;
+            endpoint: string;
+            supportedFilters: string[];
+            directEndpoint?: undefined;
+            requiredQueryParam?: undefined;
         })[];
     };
     getExportHistory(req: TenantRequest, limit?: number): Promise<{
@@ -52,4 +63,5 @@ export declare class ExportsController {
     exportDomain(req: TenantRequest & {
         user?: any;
     }, res: Response, domain: string, query: any, ipAddress?: string, userAgent?: string): Promise<Response<any, Record<string, any>>>;
+    private exportTenantsList;
 }

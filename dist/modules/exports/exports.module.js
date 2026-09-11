@@ -16,12 +16,15 @@ const events_module_1 = require("../events/events.module");
 const polls_module_1 = require("../polls/polls.module");
 const volunteers_module_1 = require("../volunteers/volunteers.module");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
+const mongoose_1 = require("@nestjs/mongoose");
+const tenant_schema_1 = require("../tenants/tenant.schema");
 let ExportsModule = class ExportsModule {
 };
 exports.ExportsModule = ExportsModule;
 exports.ExportsModule = ExportsModule = __decorate([
     (0, common_1.Module)({
         imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: tenant_schema_1.Tenant.name, schema: tenant_schema_1.TenantSchema }]),
             users_module_1.UsersModule,
             membership_module_1.MembershipModule,
             complaints_module_1.ComplaintsModule,
