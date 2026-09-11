@@ -94,6 +94,7 @@ export declare class UsersService {
             address?: string;
             notes?: string;
             lastActiveAt?: Date;
+            fcmTokens: string[];
             createdAt?: Date;
             updatedAt?: Date;
             _id: Types.ObjectId;
@@ -135,6 +136,7 @@ export declare class UsersService {
             address?: string;
             notes?: string;
             lastActiveAt?: Date;
+            fcmTokens: string[];
             createdAt?: Date;
             updatedAt?: Date;
             _id: Types.ObjectId;

@@ -8,6 +8,7 @@ export declare class Notification {
     body: string;
     imageUrl?: string;
     linkUrl?: string;
+    channel?: string;
     target: NotificationTarget;
     targetAreaId?: Types.ObjectId;
     targetUserIds: Types.ObjectId[];
@@ -60,6 +61,15 @@ export declare const NotificationSchema: import("mongoose").Schema<Notification,
         id: string;
     }>> | undefined;
     linkUrl?: import("mongoose").SchemaDefinitionProperty<string | undefined, Notification, Document<unknown, {}, Notification, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Notification & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    channel?: import("mongoose").SchemaDefinitionProperty<string | undefined, Notification, Document<unknown, {}, Notification, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Notification & {
         _id: Types.ObjectId;

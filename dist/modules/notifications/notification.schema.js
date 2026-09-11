@@ -37,6 +37,10 @@ __decorate([
     __metadata("design:type", String)
 ], Notification.prototype, "linkUrl", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ default: 'push' }),
+    __metadata("design:type", String)
+], Notification.prototype, "channel", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ required: true, enum: Object.values(types_1.NotificationTarget) }),
     __metadata("design:type", String)
 ], Notification.prototype, "target", void 0);

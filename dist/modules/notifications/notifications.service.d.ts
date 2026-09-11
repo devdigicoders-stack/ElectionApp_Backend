@@ -31,6 +31,7 @@ export declare class NotificationsService {
     send(tenant: TenantDocument, id: string): Promise<{
         message: string;
         recipientCount: number;
+        pushTokensDispatched: number;
     }>;
     findAll(tenant: TenantDocument, page?: number, limit?: number): Promise<{
         data: (import("mongoose").Document<unknown, {}, NotificationDocument, {}, import("mongoose").DefaultSchemaOptions> & Notification & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
@@ -59,13 +60,11 @@ export declare class NotificationsService {
         id: string;
     }) | null>;
     getUnreadCount(userId: string): Promise<number>;
-    remove(tenant: TenantDocument, id: string): Promise<(import("mongoose").Document<unknown, {}, NotificationDocument, {}, import("mongoose").DefaultSchemaOptions> & Notification & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }) | null>;
+    remove(tenant: TenantDocument, id: string): Promise<{
+        success: boolean;
+        message: string;
+        deletedId: string;
+    }>;
     getSystemInbox(query: {
         page?: number;
         limit?: number;

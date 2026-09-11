@@ -36,6 +36,7 @@ export declare class CitizensController {
             address?: string;
             notes?: string;
             lastActiveAt?: Date;
+            fcmTokens: string[];
             createdAt?: Date;
             updatedAt?: Date;
             _id: import("mongoose").Types.ObjectId;
@@ -124,6 +125,7 @@ export declare class CitizensController {
             address?: string;
             notes?: string;
             lastActiveAt?: Date;
+            fcmTokens: string[];
             createdAt?: Date;
             updatedAt?: Date;
             _id: import("mongoose").Types.ObjectId;

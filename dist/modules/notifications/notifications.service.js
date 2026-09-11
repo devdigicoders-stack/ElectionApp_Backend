@@ -42,14 +42,25 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         this.logger = new common_1.Logger(NotificationsService_1.name);
     }
     async create(tenant, data) {
-        return this.notificationModel.create({ tenantId: tenant._id, ...data });
+        const payload = {
+            tenantId: tenant._id,
+            ...data,
+            body: data.body || data.message || '',
+            target: data.target || data.targetAudience || types_1.NotificationTarget.ALL,
+        };
+        return this.notificationModel.create(payload);
     }
     async send(tenant, id) {
-        const notification = await this.notificationModel.findOne({ _id: id, tenantId: tenant._id });
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant._id;
+        const notification = await this.notificationModel.findOne({
+            _id: objectId,
+            $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }],
+        });
         if (!notification)
             throw new common_1.NotFoundException('Notification not found');
         let userIds = [];
-        const query = { tenantId: tenant._id, isActive: true };
+        const query = { tenantId: tenantObjectId, isActive: true };
         if (notification.target === types_1.NotificationTarget.ALL) {
             const users = await this.userModel.find(query).select('_id');
             userIds = users.map((u) => u._id);
@@ -62,26 +73,75 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
             userIds = notification.targetUserIds || [];
         }
         else if (notification.target === types_1.NotificationTarget.MEMBERS) {
-            const members = await this.membershipModel.find({ tenantId: tenant._id, status: types_1.MembershipStatus.APPROVED }).select('userId');
+            const members = await this.membershipModel.find({ tenantId: tenantObjectId, status: types_1.MembershipStatus.APPROVED }).select('userId');
             userIds = members.map((m) => m.userId);
         }
         else if (notification.target === types_1.NotificationTarget.VOLUNTEERS) {
-            const volunteers = await this.volunteerModel.find({ tenantId: tenant._id, status: types_1.VolunteerStatus.ACTIVE }).select('userId');
+            const volunteers = await this.volunteerModel.find({ tenantId: tenantObjectId, status: types_1.VolunteerStatus.ACTIVE }).select('userId');
             userIds = volunteers.map((v) => v.userId);
         }
         if (userIds.length > 0) {
             const readDocs = userIds.map((userId) => ({ notificationId: notification._id, userId, isRead: false }));
             await this.readModel.insertMany(readDocs, { ordered: false }).catch(() => { });
         }
+        const isPushChannel = !notification.channel || notification.channel === 'push' || notification.channel === 'both';
+        let tokensPushed = 0;
+        if (isPushChannel && this.firebaseService.isReady()) {
+            try {
+                const [usersWithTokens, adminsWithTokens] = await Promise.all([
+                    userIds.length > 0 ? this.userModel.find({ _id: { $in: userIds } }).select('fcmTokens') : [],
+                    this.adminUserModel.find({ tenantId: tenant._id }).select('fcmTokens'),
+                ]);
+                const fcmTokens = [];
+                for (const u of [...usersWithTokens, ...adminsWithTokens]) {
+                    if (Array.isArray(u.fcmTokens)) {
+                        for (const tok of u.fcmTokens) {
+                            if (tok && typeof tok === 'string' && tok.length > 10 && !fcmTokens.includes(tok.trim())) {
+                                fcmTokens.push(tok.trim());
+                            }
+                        }
+                    }
+                }
+                if (fcmTokens.length > 0) {
+                    tokensPushed = fcmTokens.length;
+                    this.firebaseService
+                        .sendMulticastPush(fcmTokens, {
+                        title: notification.title,
+                        body: notification.body,
+                        imageUrl: notification.imageUrl || undefined,
+                        data: {
+                            notificationId: notification._id.toString(),
+                            tenantId: tenant._id.toString(),
+                            click_action: notification.linkUrl || '/notifications',
+                        },
+                    })
+                        .then((res) => {
+                        this.logger.log(`FCM Multicast push dispatched to ${res.successCount}/${fcmTokens.length} devices.`);
+                    })
+                        .catch((err) => {
+                        this.logger.error(`FCM Multicast error: ${err.message}`);
+                    });
+                }
+            }
+            catch (fcmErr) {
+                this.logger.warn(`Could not query FCM tokens: ${fcmErr.message}`);
+            }
+        }
         notification.isSent = true;
         notification.sentAt = new Date();
         await notification.save();
-        return { message: 'Notification sent', recipientCount: userIds.length };
+        return {
+            message: 'Notification sent',
+            recipientCount: userIds.length,
+            pushTokensDispatched: tokensPushed,
+        };
     }
     async findAll(tenant, page = 1, limit = 20) {
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant._id;
+        const query = { $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }] };
         const [data, total] = await Promise.all([
-            this.notificationModel.find({ tenantId: tenant._id }).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
-            this.notificationModel.countDocuments({ tenantId: tenant._id }),
+            this.notificationModel.find(query).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(limit),
+            this.notificationModel.countDocuments(query),
         ]);
         return { data, total, page, limit };
     }
@@ -101,7 +161,17 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         return this.readModel.countDocuments({ userId, isRead: false });
     }
     async remove(tenant, id) {
-        return this.notificationModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant._id;
+        let deleted = await this.notificationModel.findOneAndDelete({
+            _id: objectId,
+            $or: [{ tenantId: tenantObjectId }, { tenantId: tenant._id.toString() }],
+        });
+        if (!deleted) {
+            deleted = await this.notificationModel.findOneAndDelete({ _id: objectId });
+        }
+        await this.readModel.deleteMany({ notificationId: objectId }).catch(() => { });
+        return { success: true, message: 'Notification deleted successfully', deletedId: id };
     }
     async getSystemInbox(query) {
         const page = Math.max(query.page || 1, 1);
@@ -308,7 +378,12 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         if (!token || token.trim().length < 10) {
             return { success: false, message: 'Invalid FCM token' };
         }
-        await this.adminUserModel.findByIdAndUpdate(userId, { $addToSet: { fcmTokens: token.trim() } }, { new: true });
+        const cleanToken = token.trim();
+        const objectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
+        await Promise.all([
+            this.userModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+            this.adminUserModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+        ]);
         return { success: true, message: 'FCM push token registered successfully' };
     }
     async testFcm(targetToken) {

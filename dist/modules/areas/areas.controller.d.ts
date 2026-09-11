@@ -72,4 +72,15 @@ export declare class AreasController {
         id: string;
     })[]>;
     getAncestors(req: TenantRequest, id: string): Promise<any[]>;
+    updateArea(req: TenantRequest, id: string, body: any): Promise<import("mongoose").Document<unknown, {}, import("./area.schema").AreaDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./area.schema").Area & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    deleteArea(req: TenantRequest, id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

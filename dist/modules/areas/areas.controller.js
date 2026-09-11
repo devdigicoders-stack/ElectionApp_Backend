@@ -49,6 +49,12 @@ let AreasController = class AreasController {
     getAncestors(req, id) {
         return this.areasService.getAncestors(req.tenant, id);
     }
+    updateArea(req, id, body) {
+        return this.areasService.updateArea(req.tenant, id, body);
+    }
+    deleteArea(req, id) {
+        return this.areasService.deleteArea(req.tenant, id);
+    }
 };
 exports.AreasController = AreasController;
 __decorate([
@@ -130,6 +136,27 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], AreasController.prototype, "getAncestors", null);
+__decorate([
+    (0, common_1.Patch)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.SUPER_ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, Object]),
+    __metadata("design:returntype", void 0)
+], AreasController.prototype, "updateArea", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.SUPER_ADMIN),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], AreasController.prototype, "deleteArea", null);
 exports.AreasController = AreasController = __decorate([
     (0, common_1.Controller)('areas'),
     __metadata("design:paramtypes", [areas_service_1.AreasService])
