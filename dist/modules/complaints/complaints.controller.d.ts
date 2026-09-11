@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { ComplaintsService } from './complaints.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { ComplaintStatus } from '../../shared/types';
-import { CreateComplaintDto, QueryComplaintsDto, AssignComplaintDto, UpdatePriorityDto, AddRemarkDto, ResolveComplaintDto, CloseComplaintDto, RejectComplaintDto, CreateCategoryDto, UpdateCategoryDto } from './complaints.dto';
+import { CreateComplaintDto, QueryComplaintsDto, AssignComplaintDto, UpdatePriorityDto, AddRemarkDto, ResolveComplaintDto, CloseComplaintDto, RejectComplaintDto, CreateCategoryDto, UpdateCategoryDto, TogglePublicComplaintDto, QueryPublicComplaintsDto } from './complaints.dto';
 export declare class ComplaintsController {
     private readonly complaintsService;
     constructor(complaintsService: ComplaintsService);
@@ -44,6 +44,34 @@ export declare class ComplaintsController {
         resolved: number;
         closed: number;
         rejected: number;
+    }>;
+    findPublic(req: TenantRequest, query: QueryPublicComplaintsDto): Promise<{
+        items: {
+            _id: any;
+            complaintNumber: any;
+            title: any;
+            description: any;
+            category: any;
+            status: any;
+            priority: any;
+            area: {
+                name: any;
+            } | null;
+            attachments: any;
+            resolutionDetails: any;
+            resolutionProof: any;
+            resolvedAt: any;
+            publishedAt: any;
+            publicRemarks: any;
+            timeline: any;
+            citizenInitial: string;
+        }[];
+        pagination: {
+            page: number;
+            limit: number;
+            total: number;
+            totalPages: number;
+        };
     }>;
     getAnalytics(req: TenantRequest): Promise<{
         summary: {
@@ -117,6 +145,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -182,6 +213,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -229,6 +263,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -276,6 +313,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -323,6 +363,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -370,6 +413,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -417,6 +463,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -464,6 +513,9 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;
@@ -514,6 +566,59 @@ export declare class ComplaintsController {
         rejectionReason?: string;
         rejectedAt?: Date;
         rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
+        _id: import("mongoose").Types.ObjectId;
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
+        __v: number;
+    }>;
+    togglePublic(req: TenantRequest & {
+        user: any;
+    }, id: string, dto: TogglePublicComplaintDto): Promise<(import("./complaint.schema").Complaint & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: import("mongoose").Types.ObjectId;
+    }> & {
+        __v: number;
+    }) | {
+        internalRemarks: never[];
+        timeline: import("./complaint.schema").IComplaintTimelineEvent[];
+        tenantId: import("mongoose").Types.ObjectId;
+        complaintNumber: string;
+        userId: import("mongoose").Types.ObjectId;
+        areaId: import("mongoose").Types.ObjectId;
+        category: string;
+        title: string;
+        description: string;
+        attachments: string[];
+        mediaUrls: string[];
+        videoUrl?: string;
+        status: ComplaintStatus;
+        priority: import("../../shared/types").ComplaintPriority;
+        assignedTo?: import("mongoose").Types.ObjectId;
+        assignedBy?: import("mongoose").Types.ObjectId;
+        assignedAt?: Date;
+        publicRemarks: import("./complaint.schema").IComplaintRemark[];
+        resolutionDetails?: string;
+        resolutionProof: string[];
+        resolvedAt?: Date;
+        resolvedBy?: import("mongoose").Types.ObjectId;
+        closedAt?: Date;
+        closedBy?: import("mongoose").Types.ObjectId;
+        closingNote?: string;
+        rejectionReason?: string;
+        rejectedAt?: Date;
+        rejectedBy?: import("mongoose").Types.ObjectId;
+        isPublic: boolean;
+        publishedAt?: Date;
+        publishedBy?: import("mongoose").Types.ObjectId;
         _id: import("mongoose").Types.ObjectId;
         $locals: Record<string, unknown>;
         $op: "save" | "validate" | "remove" | null;

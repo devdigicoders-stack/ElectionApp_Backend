@@ -21,6 +21,9 @@ let WorksService = class WorksService {
     constructor(workModel) {
         this.workModel = workModel;
     }
+    toObjectId(id) {
+        return (0, mongoose_2.isValidObjectId)(id) ? new mongoose_2.Types.ObjectId(id) : id;
+    }
     async create(tenant, data) {
         return this.workModel.create({ tenantId: tenant._id, ...data });
     }
@@ -40,19 +43,19 @@ let WorksService = class WorksService {
         return { data, total, page, limit };
     }
     async findOne(tenant, id) {
-        const work = await this.workModel.findOne({ _id: id, tenantId: tenant._id }).populate('areaId', 'name');
+        const work = await this.workModel.findOne({ _id: this.toObjectId(id), tenantId: tenant._id }).populate('areaId', 'name');
         if (!work)
             throw new common_1.NotFoundException('Work not found');
         return work;
     }
     async update(tenant, id, data) {
-        const work = await this.workModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+        const work = await this.workModel.findOneAndUpdate({ _id: this.toObjectId(id), tenantId: tenant._id }, { $set: data }, { new: true });
         if (!work)
             throw new common_1.NotFoundException('Work not found');
         return work;
     }
     async remove(tenant, id) {
-        return this.workModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        return this.workModel.findOneAndDelete({ _id: this.toObjectId(id), tenantId: tenant._id });
     }
     async getStatsByStatus(tenant) {
         return this.workModel.aggregate([

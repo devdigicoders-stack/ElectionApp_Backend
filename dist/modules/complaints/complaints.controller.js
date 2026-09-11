@@ -43,6 +43,9 @@ let ComplaintsController = class ComplaintsController {
     getMyStats(req) {
         return this.complaintsService.getCitizenDashboardCounters(req.tenant, req.user.sub);
     }
+    findPublic(req, query) {
+        return this.complaintsService.findPublic(req.tenant, query);
+    }
     getAnalytics(req) {
         return this.complaintsService.getAnalytics(req.tenant);
     }
@@ -81,6 +84,9 @@ let ComplaintsController = class ComplaintsController {
     }
     updateStatus(req, id, body) {
         return this.complaintsService.updateStatus(req.tenant, id, body.status, body.note ?? '', req.user.sub);
+    }
+    togglePublic(req, id, dto) {
+        return this.complaintsService.togglePublic(req.tenant, id, dto, req.user);
     }
 };
 exports.ComplaintsController = ComplaintsController;
@@ -130,6 +136,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "getMyStats", null);
+__decorate([
+    (0, common_1.Get)('public'),
+    (0, common_1.SetMetadata)(jwt_auth_guard_1.IS_PUBLIC, true),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, complaints_dto_1.QueryPublicComplaintsDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "findPublic", null);
 __decorate([
     (0, common_1.Get)('analytics'),
     __param(0, (0, common_1.Req)()),
@@ -244,6 +259,17 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, Object]),
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "updateStatus", null);
+__decorate([
+    (0, common_1.Patch)(':id/public'),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.COMPLAINT_MANAGER, types_1.UserRole.AREA_COORDINATOR),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String, complaints_dto_1.TogglePublicComplaintDto]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "togglePublic", null);
 exports.ComplaintsController = ComplaintsController = __decorate([
     (0, common_1.Controller)('complaints'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, feature_guard_1.FeatureGuard),

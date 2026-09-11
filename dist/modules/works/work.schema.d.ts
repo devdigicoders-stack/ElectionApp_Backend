@@ -7,6 +7,8 @@ export declare class Work {
     description?: string;
     category: string;
     areaId: Types.ObjectId;
+    budget?: string;
+    location?: string;
     images: string[];
     beforeAfter: {
         before?: string[];
@@ -61,6 +63,24 @@ export declare const WorkSchema: import("mongoose").Schema<Work, import("mongoos
         id: string;
     }>> | undefined;
     areaId?: import("mongoose").SchemaDefinitionProperty<Types.ObjectId, Work, Document<unknown, {}, Work, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Work & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    budget?: import("mongoose").SchemaDefinitionProperty<string | undefined, Work, Document<unknown, {}, Work, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Work & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    location?: import("mongoose").SchemaDefinitionProperty<string | undefined, Work, Document<unknown, {}, Work, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Work & {
         _id: Types.ObjectId;
