@@ -653,6 +653,65 @@ let TenantsService = class TenantsService {
             .lean();
         return admins;
     }
+    async resetAdminPassword(tenantId, adminUserId, newPassword) {
+        if (!newPassword || newPassword.trim().length < 6) {
+            throw new common_1.BadRequestException('New password must be at least 6 characters long.');
+        }
+        const { Types } = await Promise.resolve().then(() => __importStar(require('mongoose')));
+        let tenantObjectId;
+        let userObjectId;
+        try {
+            tenantObjectId = new Types.ObjectId(tenantId);
+            userObjectId = new Types.ObjectId(adminUserId);
+        }
+        catch {
+            throw new common_1.BadRequestException('Invalid tenant or admin user ID format.');
+        }
+        const tenant = await this.tenantModel.findById(tenantObjectId);
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        const admin = await this.adminUserModel.findOne({
+            _id: userObjectId,
+            $or: [{ tenantId: tenantObjectId }, { tenantId: tenantId }],
+        });
+        if (!admin)
+            throw new common_1.NotFoundException('Admin user not found for this tenant');
+        admin.passwordHash = await bcrypt.hash(newPassword.trim(), 10);
+        await admin.save();
+        return {
+            message: `Password for ${admin.name} (${admin.email}) has been reset successfully.`,
+            admin: {
+                id: admin._id,
+                name: admin.name,
+                email: admin.email,
+                role: admin.role,
+            },
+        };
+    }
+    async deleteAdminUser(tenantId, adminUserId) {
+        const { Types } = await Promise.resolve().then(() => __importStar(require('mongoose')));
+        let tenantObjectId;
+        let userObjectId;
+        try {
+            tenantObjectId = new Types.ObjectId(tenantId);
+            userObjectId = new Types.ObjectId(adminUserId);
+        }
+        catch {
+            throw new common_1.BadRequestException('Invalid tenant or admin user ID format.');
+        }
+        const tenant = await this.tenantModel.findById(tenantObjectId);
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        const admin = await this.adminUserModel.findOneAndDelete({
+            _id: userObjectId,
+            $or: [{ tenantId: tenantObjectId }, { tenantId: tenantId }],
+        });
+        if (!admin)
+            throw new common_1.NotFoundException('Admin user not found for this tenant');
+        return {
+            message: `Admin user ${admin.email} deleted successfully.`,
+        };
+    }
 };
 exports.TenantsService = TenantsService;
 exports.TenantsService = TenantsService = __decorate([

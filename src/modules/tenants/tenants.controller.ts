@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Req, UseGuards } from '@nestjs/common';
 import { TenantsService } from './tenants.service';
 import {
   CreateTenantDto,
@@ -105,6 +105,24 @@ export class TenantsController {
     @Body() body: { name: string; email: string; password: string; role: UserRole },
   ): Promise<any> {
     return this.tenantsService.createAdminUser(tenantId, body);
+  }
+
+  @Patch(':id/admin-users/:adminUserId/reset-password')
+  resetAdminPassword(
+    @Param('id') tenantId: string,
+    @Param('adminUserId') adminUserId: string,
+    @Body() body: { newPassword?: string; password?: string },
+  ) {
+    const password = body.newPassword || body.password;
+    return this.tenantsService.resetAdminPassword(tenantId, adminUserId, password);
+  }
+
+  @Delete(':id/admin-users/:adminUserId')
+  deleteAdminUser(
+    @Param('id') tenantId: string,
+    @Param('adminUserId') adminUserId: string,
+  ) {
+    return this.tenantsService.deleteAdminUser(tenantId, adminUserId);
   }
 
   @Patch(':id/suspend')

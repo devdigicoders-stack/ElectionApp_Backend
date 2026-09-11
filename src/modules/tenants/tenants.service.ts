@@ -741,4 +741,77 @@ export class TenantsService {
 
     return admins;
   }
+
+  /**
+   * Reset password for a specific tenant admin user
+   * PATCH /super-admin/tenants/:id/admin-users/:adminUserId/reset-password
+   */
+  async resetAdminPassword(tenantId: string, adminUserId: string, newPassword?: string) {
+    if (!newPassword || newPassword.trim().length < 6) {
+      throw new BadRequestException('New password must be at least 6 characters long.');
+    }
+
+    const { Types } = await import('mongoose');
+    let tenantObjectId: Types.ObjectId;
+    let userObjectId: Types.ObjectId;
+
+    try {
+      tenantObjectId = new Types.ObjectId(tenantId);
+      userObjectId = new Types.ObjectId(adminUserId);
+    } catch {
+      throw new BadRequestException('Invalid tenant or admin user ID format.');
+    }
+
+    const tenant = await this.tenantModel.findById(tenantObjectId);
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const admin = await this.adminUserModel.findOne({
+      _id: userObjectId,
+      $or: [{ tenantId: tenantObjectId }, { tenantId: tenantId as any }],
+    });
+    if (!admin) throw new NotFoundException('Admin user not found for this tenant');
+
+    admin.passwordHash = await bcrypt.hash(newPassword.trim(), 10);
+    await admin.save();
+
+    return {
+      message: `Password for ${admin.name} (${admin.email}) has been reset successfully.`,
+      admin: {
+        id: admin._id,
+        name: admin.name,
+        email: admin.email,
+        role: admin.role,
+      },
+    };
+  }
+
+  /**
+   * Delete a tenant admin user
+   * DELETE /super-admin/tenants/:id/admin-users/:adminUserId
+   */
+  async deleteAdminUser(tenantId: string, adminUserId: string) {
+    const { Types } = await import('mongoose');
+    let tenantObjectId: Types.ObjectId;
+    let userObjectId: Types.ObjectId;
+
+    try {
+      tenantObjectId = new Types.ObjectId(tenantId);
+      userObjectId = new Types.ObjectId(adminUserId);
+    } catch {
+      throw new BadRequestException('Invalid tenant or admin user ID format.');
+    }
+
+    const tenant = await this.tenantModel.findById(tenantObjectId);
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const admin = await this.adminUserModel.findOneAndDelete({
+      _id: userObjectId,
+      $or: [{ tenantId: tenantObjectId }, { tenantId: tenantId as any }],
+    });
+    if (!admin) throw new NotFoundException('Admin user not found for this tenant');
+
+    return {
+      message: `Admin user ${admin.email} deleted successfully.`,
+    };
+  }
 }

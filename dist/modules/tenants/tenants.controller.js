@@ -59,6 +59,13 @@ let TenantsController = class TenantsController {
     createAdminUser(tenantId, body) {
         return this.tenantsService.createAdminUser(tenantId, body);
     }
+    resetAdminPassword(tenantId, adminUserId, body) {
+        const password = body.newPassword || body.password;
+        return this.tenantsService.resetAdminPassword(tenantId, adminUserId, password);
+    }
+    deleteAdminUser(tenantId, adminUserId) {
+        return this.tenantsService.deleteAdminUser(tenantId, adminUserId);
+    }
     suspend(id) {
         return this.tenantsService.suspend(id);
     }
@@ -169,6 +176,23 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], TenantsController.prototype, "createAdminUser", null);
+__decorate([
+    (0, common_1.Patch)(':id/admin-users/:adminUserId/reset-password'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('adminUserId')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "resetAdminPassword", null);
+__decorate([
+    (0, common_1.Delete)(':id/admin-users/:adminUserId'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Param)('adminUserId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "deleteAdminUser", null);
 __decorate([
     (0, common_1.Patch)(':id/suspend'),
     __param(0, (0, common_1.Param)('id')),

@@ -276,6 +276,21 @@ export declare class TenantsController {
         password: string;
         role: UserRole;
     }): Promise<any>;
+    resetAdminPassword(tenantId: string, adminUserId: string, body: {
+        newPassword?: string;
+        password?: string;
+    }): Promise<{
+        message: string;
+        admin: {
+            id: import("mongoose").Types.ObjectId;
+            name: string;
+            email: string;
+            role: string;
+        };
+    }>;
+    deleteAdminUser(tenantId: string, adminUserId: string): Promise<{
+        message: string;
+    }>;
     suspend(id: string): Promise<(import("mongoose").Document<unknown, {}, import("./tenant.schema").TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./tenant.schema").Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {

@@ -352,4 +352,16 @@ export declare class TenantsService {
     }> & {
         __v: number;
     })[]>;
+    resetAdminPassword(tenantId: string, adminUserId: string, newPassword?: string): Promise<{
+        message: string;
+        admin: {
+            id: Types.ObjectId;
+            name: string;
+            email: string;
+            role: string;
+        };
+    }>;
+    deleteAdminUser(tenantId: string, adminUserId: string): Promise<{
+        message: string;
+    }>;
 }
