@@ -468,8 +468,9 @@ export class TenantsService {
     return tenant;
   }
 
-  async updateBranding(id: string, branding: Record<string, any>) {
-    const existing = await this.tenantModel.findById(id);
+  async updateBranding(id: any, branding: Record<string, any>) {
+    const queryId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id.toString()) : id;
+    const existing = await this.tenantModel.findById(queryId);
     if (!existing) throw new NotFoundException('Tenant not found');
 
     const title = branding.title || branding.platformName;
@@ -496,7 +497,7 @@ export class TenantsService {
     }
 
     return this.tenantModel.findByIdAndUpdate(
-      id,
+      queryId,
       { $set: updatePayload },
       { new: true },
     );

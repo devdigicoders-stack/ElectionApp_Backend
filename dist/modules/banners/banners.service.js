@@ -21,6 +21,13 @@ let BannersService = class BannersService {
     constructor(bannerModel) {
         this.bannerModel = bannerModel;
     }
+    getBannerFilter(tenant, id) {
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        return {
+            _id: objectId,
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+        };
+    }
     formatBanner(banner, req, tenant) {
         if (!banner)
             return null;
@@ -70,25 +77,31 @@ let BannersService = class BannersService {
         return banners.map((b) => this.formatBanner(b, req, tenant));
     }
     async findOne(tenant, id, req) {
-        const banner = await this.bannerModel.findOne({ _id: id, tenantId: tenant._id });
+        const banner = await this.bannerModel.findOne(this.getBannerFilter(tenant, id));
         if (!banner)
             throw new common_1.NotFoundException('Banner not found');
         return this.formatBanner(banner, req, tenant);
     }
     async update(tenant, id, data, req) {
-        const banner = await this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+        const banner = await this.bannerModel.findOneAndUpdate(this.getBannerFilter(tenant, id), { $set: data }, { new: true });
         if (!banner)
             throw new common_1.NotFoundException('Banner not found');
         return this.formatBanner(banner, req, tenant);
     }
     async remove(tenant, id) {
-        const banner = await this.bannerModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const banner = await this.bannerModel.findOneAndDelete(this.getBannerFilter(tenant, id));
         if (!banner)
             throw new common_1.NotFoundException('Banner not found');
         return { success: true, message: 'Banner deleted successfully' };
     }
     async reorder(tenant, orders) {
-        await Promise.all((orders || []).map(({ id, sortOrder }) => this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { sortOrder })));
+        await Promise.all((orders || []).map(({ id, sortOrder }) => {
+            const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+            return this.bannerModel.findOneAndUpdate({
+                _id: objectId,
+                $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+            }, { sortOrder });
+        }));
         return { message: 'Reordered successfully' };
     }
 };

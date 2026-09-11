@@ -128,7 +128,8 @@ let UsageService = class UsageService {
         return `${mb} MB`;
     }
     async getTenantUsage(tenantId) {
-        const tenant = await this.tenantModel.findById(tenantId).populate('planId');
+        const queryId = mongoose_2.Types.ObjectId.isValid(tenantId) ? new mongoose_2.Types.ObjectId(tenantId) : tenantId;
+        const tenant = await this.tenantModel.findById(queryId).populate('planId');
         if (!tenant)
             throw new common_1.NotFoundException('Tenant not found');
         const subscription = await this.subscriptionModel

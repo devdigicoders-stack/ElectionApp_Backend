@@ -1,5 +1,5 @@
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { TenantDocument } from './tenant.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { DomainQueryDto } from './custom-domain.dto';
@@ -8,12 +8,13 @@ export declare class CustomDomainsService {
     private configService;
     private auditLogsService;
     constructor(tenantModel: Model<TenantDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
+    private toId;
     private normalizeDomain;
     private validateDomain;
     configureDomain(tenantId: string, rawDomain: string, user?: any, ipAddress?: string, userAgent?: string): Promise<{
         message: string;
         tenant: {
-            id: import("mongoose").Types.ObjectId;
+            id: Types.ObjectId;
             name: string;
             slug: string;
         };
@@ -44,7 +45,7 @@ export declare class CustomDomainsService {
     }>;
     getDomainStatus(tenantId: string): Promise<{
         tenant: {
-            id: import("mongoose").Types.ObjectId;
+            id: Types.ObjectId;
             name: string;
             slug: string;
         };
@@ -52,7 +53,7 @@ export declare class CustomDomainsService {
         isActive: boolean;
         isVerified: boolean;
         verifiedAt: Date | null;
-        verificationStatus: "pending" | "failed" | "unconfigured" | "verified";
+        verificationStatus: "pending" | "verified" | "unconfigured" | "failed";
         verificationToken: string | null;
         targetCname: string;
         dnsRecords: {
@@ -119,7 +120,7 @@ export declare class CustomDomainsService {
         success: boolean;
         message: string;
         tenant: {
-            id: import("mongoose").Types.ObjectId;
+            id: Types.ObjectId;
             name: string;
             slug: string;
         };

@@ -25,7 +25,13 @@ let AboutLeaderService = class AboutLeaderService {
         return this.aboutModel.findOne({ tenantId: tenant._id });
     }
     async upsert(tenant, data) {
-        return this.aboutModel.findOneAndUpdate({ tenantId: tenant._id }, { $set: { tenantId: tenant._id, ...data } }, { new: true, upsert: true });
+        const cleanData = { ...(data || {}) };
+        delete cleanData._id;
+        delete cleanData.__v;
+        delete cleanData.createdAt;
+        delete cleanData.updatedAt;
+        delete cleanData.tenantId;
+        return this.aboutModel.findOneAndUpdate({ $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }] }, { $set: { tenantId: tenant._id, ...cleanData } }, { new: true, upsert: true });
     }
 };
 exports.AboutLeaderService = AboutLeaderService;

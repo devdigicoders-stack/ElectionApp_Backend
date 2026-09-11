@@ -13,6 +13,7 @@ const tenants_service_1 = require("./tenants.service");
 const tenants_controller_1 = require("./tenants.controller");
 const super_admin_domains_controller_1 = require("./super-admin-domains.controller");
 const tenant_domain_controller_1 = require("./tenant-domain.controller");
+const tenant_branding_controller_1 = require("./tenant-branding.controller");
 const custom_domains_service_1 = require("./custom-domains.service");
 const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
@@ -41,6 +42,7 @@ exports.TenantsModule = TenantsModule = __decorate([
             tenants_controller_1.TenantsController,
             super_admin_domains_controller_1.SuperAdminDomainsController,
             tenant_domain_controller_1.TenantDomainController,
+            tenant_branding_controller_1.TenantBrandingController,
         ],
         providers: [tenants_service_1.TenantsService, custom_domains_service_1.CustomDomainsService],
         exports: [tenants_service_1.TenantsService, custom_domains_service_1.CustomDomainsService, mongoose_1.MongooseModule],

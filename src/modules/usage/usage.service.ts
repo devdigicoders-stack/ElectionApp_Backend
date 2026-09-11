@@ -112,7 +112,8 @@ export class UsageService {
    * Get complete usage report for a single tenant (SRS Sec 48)
    */
   async getTenantUsage(tenantId: string) {
-    const tenant = await this.tenantModel.findById(tenantId).populate('planId');
+    const queryId = Types.ObjectId.isValid(tenantId) ? new Types.ObjectId(tenantId) : tenantId;
+    const tenant = await this.tenantModel.findById(queryId).populate('planId');
     if (!tenant) throw new NotFoundException('Tenant not found');
 
     const subscription = await this.subscriptionModel

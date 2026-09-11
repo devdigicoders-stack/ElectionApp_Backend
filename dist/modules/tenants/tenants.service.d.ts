@@ -285,7 +285,7 @@ export declare class TenantsService {
     } & {
         id: string;
     }) | null>;
-    updateBranding(id: string, branding: Record<string, any>): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    updateBranding(id: any, branding: Record<string, any>): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {
         __v: number;
