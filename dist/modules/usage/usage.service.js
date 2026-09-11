@@ -68,28 +68,180 @@ let UsageService = class UsageService {
         this.posterModel = posterModel;
         this.notificationModel = notificationModel;
     }
-    getStorageUsageMB(slug) {
-        const uploadDir = path.join(process.cwd(), 'uploads', slug);
-        if (!fs.existsSync(uploadDir))
-            return 0;
-        let totalBytes = 0;
-        const calculateBytes = (dir) => {
+    getUploadRoot() {
+        const candidates = [];
+        if (process.env.UPLOAD_DIR) {
+            candidates.push(path.isAbsolute(process.env.UPLOAD_DIR)
+                ? process.env.UPLOAD_DIR
+                : path.join(process.cwd(), process.env.UPLOAD_DIR));
+        }
+        candidates.push(path.join(process.cwd(), 'uploads'), path.join(process.cwd(), 'apps', 'api', 'uploads'), path.resolve(__dirname, '..', '..', '..', 'uploads'), path.resolve(__dirname, '..', '..', 'uploads'), path.resolve(__dirname, 'uploads'));
+        for (const dir of candidates) {
             try {
-                const entries = fs.readdirSync(dir, { withFileTypes: true });
-                for (const entry of entries) {
-                    const fullPath = path.join(dir, entry.name);
-                    if (entry.isDirectory()) {
-                        calculateBytes(fullPath);
-                    }
-                    else if (entry.isFile()) {
-                        totalBytes += fs.statSync(fullPath).size;
-                    }
-                }
+                if (fs.existsSync(dir))
+                    return dir;
             }
             catch {
             }
-        };
-        calculateBytes(uploadDir);
+        }
+        return null;
+    }
+    estimateSizeFromUrl(url) {
+        if (!url || typeof url !== 'string')
+            return 0;
+        const clean = url.split('?')[0].toLowerCase();
+        if (clean.endsWith('.mp4') || clean.endsWith('.mov') || clean.endsWith('.webm') || clean.endsWith('.mkv')) {
+            return 10 * 1024 * 1024;
+        }
+        if (clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.gif')) {
+            return 1.5 * 1024 * 1024;
+        }
+        if (clean.endsWith('.webp'))
+            return 400 * 1024;
+        if (clean.endsWith('.svg') || clean.endsWith('.ico'))
+            return 100 * 1024;
+        if (clean.endsWith('.pdf'))
+            return 2 * 1024 * 1024;
+        return 500 * 1024;
+    }
+    async calculateTenantStorageMB(tenant) {
+        if (!tenant)
+            return 0;
+        const uploadRoot = this.getUploadRoot();
+        const countedFiles = new Set();
+        let totalBytes = 0;
+        if (uploadRoot && tenant.slug) {
+            const slugDir = path.join(uploadRoot, tenant.slug);
+            if (fs.existsSync(slugDir)) {
+                const scanDir = (dir) => {
+                    try {
+                        const entries = fs.readdirSync(dir, { withFileTypes: true });
+                        for (const entry of entries) {
+                            const fullPath = path.join(dir, entry.name);
+                            if (entry.isDirectory()) {
+                                scanDir(fullPath);
+                            }
+                            else if (entry.isFile()) {
+                                const norm = path.normalize(fullPath).toLowerCase();
+                                if (!countedFiles.has(norm)) {
+                                    countedFiles.add(norm);
+                                    totalBytes += fs.statSync(fullPath).size;
+                                }
+                            }
+                        }
+                    }
+                    catch {
+                    }
+                };
+                scanDir(slugDir);
+            }
+        }
+        const urls = [];
+        if (tenant.branding) {
+            if (tenant.branding.logoUrl)
+                urls.push(tenant.branding.logoUrl);
+            if (tenant.branding.logo && tenant.branding.logo !== tenant.branding.logoUrl)
+                urls.push(tenant.branding.logo);
+            if (tenant.branding.leaderPhotoUrl)
+                urls.push(tenant.branding.leaderPhotoUrl);
+            if (tenant.branding.faviconUrl)
+                urls.push(tenant.branding.faviconUrl);
+            if (tenant.branding.pwaIconUrl)
+                urls.push(tenant.branding.pwaIconUrl);
+            if (tenant.branding.loginBgUrl)
+                urls.push(tenant.branding.loginBgUrl);
+            if (Array.isArray(tenant.branding.splashScreens)) {
+                for (const s of tenant.branding.splashScreens) {
+                    if (s?.mediaUrl)
+                        urls.push(s.mediaUrl);
+                }
+            }
+        }
+        try {
+            const db = this.tenantModel.db;
+            if (db) {
+                const banners = await db.collection('banners').find({ tenantId: tenant._id }).toArray();
+                for (const b of banners) {
+                    if (b.imageUrl)
+                        urls.push(b.imageUrl);
+                    if (b.mobileImageUrl)
+                        urls.push(b.mobileImageUrl);
+                }
+                const galleries = await db.collection('galleries').find({ tenantId: tenant._id }).toArray();
+                for (const g of galleries) {
+                    if (g.url)
+                        urls.push(g.url);
+                    if (g.thumbnailUrl)
+                        urls.push(g.thumbnailUrl);
+                }
+                const posters = await db.collection('generatedposters').find({ tenantId: tenant._id }).toArray();
+                for (const p of posters) {
+                    if (p.outputUrl)
+                        urls.push(p.outputUrl);
+                    if (p.thumbnailUrl)
+                        urls.push(p.thumbnailUrl);
+                }
+                const complaints = await db.collection('complaints').find({
+                    tenantId: tenant._id,
+                    attachments: { $exists: true, $ne: [] },
+                }).toArray();
+                for (const c of complaints) {
+                    if (Array.isArray(c.attachments)) {
+                        for (const att of c.attachments) {
+                            if (typeof att === 'string')
+                                urls.push(att);
+                            else if (att?.url)
+                                urls.push(att.url);
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+        }
+        for (const u of urls) {
+            if (!u || typeof u !== 'string')
+                continue;
+            let matchedDisk = false;
+            if (uploadRoot && (u.startsWith('/uploads/') || u.includes('/uploads/'))) {
+                const rel = u.replace(/.*\/uploads\//, '');
+                const diskPath = path.join(uploadRoot, rel);
+                const norm = path.normalize(diskPath).toLowerCase();
+                if (fs.existsSync(diskPath)) {
+                    matchedDisk = true;
+                    if (!countedFiles.has(norm)) {
+                        countedFiles.add(norm);
+                        try {
+                            totalBytes += fs.statSync(diskPath).size;
+                        }
+                        catch {
+                            totalBytes += this.estimateSizeFromUrl(u);
+                        }
+                    }
+                }
+            }
+            if (!matchedDisk) {
+                const normUrl = u.trim().toLowerCase();
+                if (!countedFiles.has(normUrl)) {
+                    countedFiles.add(normUrl);
+                    totalBytes += this.estimateSizeFromUrl(u);
+                }
+            }
+        }
+        try {
+            const citizenCount = await this.userModel.countDocuments({ tenantId: tenant._id });
+            const staffCount = await this.adminUserModel.countDocuments({ tenantId: tenant._id });
+            let complaintCount = 0;
+            if (this.tenantModel.db) {
+                complaintCount = await this.tenantModel.db.collection('complaints').countDocuments({ tenantId: tenant._id });
+            }
+            const baseFootprintBytes = 512 * 1024;
+            const docBytes = (citizenCount * 8192) + (complaintCount * 25600) + (staffCount * 16384);
+            totalBytes += (baseFootprintBytes + docBytes);
+        }
+        catch {
+            totalBytes += 512 * 1024;
+        }
         return Math.round((totalBytes / (1024 * 1024)) * 100) / 100;
     }
     calculateMetric(used, limit = -1) {
@@ -125,7 +277,9 @@ let UsageService = class UsageService {
         if (mb >= 1024) {
             return `${(mb / 1024).toFixed(2)} GB`;
         }
-        return `${mb} MB`;
+        if (mb <= 0)
+            return '0 MB';
+        return `${mb.toFixed(2)} MB`;
     }
     async getTenantUsage(tenantId) {
         const queryId = mongoose_2.Types.ObjectId.isValid(tenantId) ? new mongoose_2.Types.ObjectId(tenantId) : tenantId;
@@ -143,7 +297,7 @@ let UsageService = class UsageService {
             tenantId: tenant._id,
             isSuperAdmin: { $ne: true },
         });
-        const storageUsedMB = this.getStorageUsageMB(tenant.slug);
+        const storageUsedMB = await this.calculateTenantStorageMB(tenant);
         const startOfMonth = new Date();
         startOfMonth.setDate(1);
         startOfMonth.setHours(0, 0, 0, 0);

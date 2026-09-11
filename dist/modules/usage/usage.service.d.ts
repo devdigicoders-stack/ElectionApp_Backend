@@ -26,7 +26,9 @@ export declare class UsageService {
     private posterModel;
     private notificationModel;
     constructor(tenantModel: Model<TenantDocument>, planModel: Model<PlanDocument>, subscriptionModel: Model<SubscriptionDocument>, userModel: Model<UserDocument>, adminUserModel: Model<AdminUserDocument>, posterModel: Model<GeneratedPosterDocument>, notificationModel: Model<NotificationDocument>);
-    private getStorageUsageMB;
+    private getUploadRoot;
+    private estimateSizeFromUrl;
+    private calculateTenantStorageMB;
     private calculateMetric;
     private formatMB;
     getTenantUsage(tenantId: string): Promise<{
