@@ -99,4 +99,25 @@ export class AreasController {
   getAncestors(@Req() req: TenantRequest, @Param('id') id: string) {
     return this.areasService.getAncestors(req.tenant, id);
   }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.LEADER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  updateArea(
+    @Req() req: TenantRequest,
+    @Param('id') id: string,
+    @Body() body: any,
+  ) {
+    return this.areasService.updateArea(req.tenant, id, body);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.LEADER, UserRole.ADMIN, UserRole.SUPER_ADMIN)
+  deleteArea(
+    @Req() req: TenantRequest,
+    @Param('id') id: string,
+  ) {
+    return this.areasService.deleteArea(req.tenant, id);
+  }
 }
