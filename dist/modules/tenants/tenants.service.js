@@ -58,10 +58,16 @@ const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const admin_user_schema_1 = require("../admin-users/admin-user.schema");
 const area_schema_1 = require("../areas/area.schema");
+const user_schema_1 = require("../users/user.schema");
+const complaint_schema_1 = require("../complaints/complaint.schema");
+const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const event_schema_1 = require("../events/event.schema");
+const poll_schema_1 = require("../polls/poll.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const types_1 = require("../../shared/types");
+const registration_form_types_1 = require("../registration-form/registration-form.types");
 function saveBase64Image(base64Str, tenantSlug, prefix) {
     if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
         return base64Str;
@@ -79,63 +85,65 @@ function saveBase64Image(base64Str, tenantSlug, prefix) {
             ext = 'ico';
         const base64Data = matches[2];
         const buffer = Buffer.from(base64Data, 'base64');
-        const slug = tenantSlug || 'general';
-        const dir = (0, path_1.join)(process.cwd(), 'uploads', slug, 'branding');
-        if (!(0, fs_1.existsSync)(dir)) {
-            (0, fs_1.mkdirSync)(dir, { recursive: true });
+        const filename = `${Date.now()}-${prefix}-${Math.floor(Math.random() * 1000000)}.${ext}`;
+        const uploadDir = (0, path_1.join)(process.cwd(), 'uploads', tenantSlug, 'branding');
+        if (!(0, fs_1.existsSync)(uploadDir)) {
+            (0, fs_1.mkdirSync)(uploadDir, { recursive: true });
         }
-        const filename = `${Date.now()}-${prefix}-${Math.round(Math.random() * 1e6)}.${ext}`;
-        const filePath = (0, path_1.join)(dir, filename);
+        const filePath = (0, path_1.join)(uploadDir, filename);
         (0, fs_1.writeFileSync)(filePath, buffer);
-        return `/uploads/${slug}/branding/${filename}`;
+        return `/uploads/${tenantSlug}/branding/${filename}`;
     }
     catch (err) {
-        console.error('Error saving base64 image:', err);
+        console.error('Failed to save base64 image to disk:', err);
         return base64Str;
     }
 }
-function sanitizeBrandingImages(branding, tenantSlug) {
-    if (!branding || typeof branding !== 'object')
-        return branding;
+function sanitizeBrandingImages(branding, slug) {
     const result = { ...branding };
-    const imageFields = [
-        'logo',
-        'logoUrl',
-        'faviconUrl',
-        'pwaIconUrl',
-        'leaderPhotoUrl',
-        'loginBgUrl',
-        'splashScreenUrl',
-    ];
-    for (const field of imageFields) {
-        if (result[field] && typeof result[field] === 'string' && result[field].startsWith('data:image/')) {
-            result[field] = saveBase64Image(result[field], tenantSlug, field);
-        }
+    if (result.logoUrl && typeof result.logoUrl === 'string' && result.logoUrl.startsWith('data:image/')) {
+        result.logoUrl = saveBase64Image(result.logoUrl, slug, 'logoUrl');
+    }
+    if (result.logo && typeof result.logo === 'string' && result.logo.startsWith('data:image/')) {
+        result.logo = saveBase64Image(result.logo, slug, 'logo');
+    }
+    if (result.faviconUrl && typeof result.faviconUrl === 'string' && result.faviconUrl.startsWith('data:image/')) {
+        result.faviconUrl = saveBase64Image(result.faviconUrl, slug, 'faviconUrl');
+    }
+    if (result.pwaIconUrl && typeof result.pwaIconUrl === 'string' && result.pwaIconUrl.startsWith('data:image/')) {
+        result.pwaIconUrl = saveBase64Image(result.pwaIconUrl, slug, 'pwaIconUrl');
+    }
+    if (result.loginBgUrl && typeof result.loginBgUrl === 'string' && result.loginBgUrl.startsWith('data:image/')) {
+        result.loginBgUrl = saveBase64Image(result.loginBgUrl, slug, 'loginBgUrl');
+    }
+    if (result.splashScreenUrl && typeof result.splashScreenUrl === 'string' && result.splashScreenUrl.startsWith('data:image/')) {
+        result.splashScreenUrl = saveBase64Image(result.splashScreenUrl, slug, 'splashScreenUrl');
     }
     if (Array.isArray(result.splashScreens)) {
-        result.splashScreens = result.splashScreens.map((slide, idx) => {
-            if (slide && slide.mediaUrl && typeof slide.mediaUrl === 'string' && slide.mediaUrl.startsWith('data:image/')) {
+        result.splashScreens = result.splashScreens.map((screen, idx) => {
+            if (screen && screen.mediaUrl && typeof screen.mediaUrl === 'string' && screen.mediaUrl.startsWith('data:image/')) {
                 return {
-                    ...slide,
-                    mediaUrl: saveBase64Image(slide.mediaUrl, tenantSlug, `splash-${idx}`),
+                    ...screen,
+                    mediaUrl: saveBase64Image(screen.mediaUrl, slug, `splash-${idx + 1}`),
                 };
             }
-            return slide;
+            return screen;
         });
-    }
-    const finalLogo = result.logoUrl || result.logo;
-    if (finalLogo) {
-        result.logo = finalLogo;
-        result.logoUrl = finalLogo;
     }
     return result;
 }
 let TenantsService = class TenantsService {
-    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, subscriptionModel, planModel, configService, auditLogsService) {
+    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, areaModel, userModel, complaintModel, volunteerModel, eventModel, pollModel, subscriptionModel, planModel, configService, auditLogsService) {
         this.tenantModel = tenantModel;
         this.featureModel = featureModel;
         this.adminUserModel = adminUserModel;
         this.areaLevelModel = areaLevelModel;
+        this.areaModel = areaModel;
+        this.userModel = userModel;
+        this.complaintModel = complaintModel;
+        this.volunteerModel = volunteerModel;
+        this.eventModel = eventModel;
+        this.pollModel = pollModel;
         this.subscriptionModel = subscriptionModel;
         this.planModel = planModel;
         this.configService = configService;
@@ -495,6 +503,62 @@ let TenantsService = class TenantsService {
             throw new common_1.NotFoundException('Tenant not found');
         return tenant;
     }
+    async getFullProfile(id) {
+        const tenant = await this.tenantModel.findById(id).lean();
+        if (!tenant)
+            throw new common_1.NotFoundException('Tenant not found');
+        const tenantObjId = new mongoose_2.Types.ObjectId(id);
+        const [admins, features, areaLevels, areas, subscription, plan, totalCitizens, totalVolunteers, totalComplaints, totalEvents, totalPolls,] = await Promise.all([
+            this.adminUserModel.find({ tenantId: tenantObjId }).select('-password -__v').sort({ createdAt: -1 }).lean(),
+            this.featureModel.find({ tenantId: tenantObjId }).lean(),
+            this.areaLevelModel.find({ tenantId: tenantObjId }).sort({ levelOrder: 1 }).lean(),
+            this.areaModel.find({ tenantId: tenantObjId, isActive: true }).populate('levelId', 'name levelOrder').sort({ name: 1 }).lean(),
+            this.subscriptionModel.findOne({ tenantId: tenantObjId }).lean(),
+            tenant.planId ? this.planModel.findById(tenant.planId).lean() : null,
+            this.userModel.countDocuments({ tenantId: tenantObjId }),
+            this.volunteerModel.countDocuments({ tenantId: tenantObjId }),
+            this.complaintModel.countDocuments({ tenantId: tenantObjId }),
+            this.eventModel.countDocuments({ tenantId: tenantObjId }),
+            this.pollModel.countDocuments({ tenantId: tenantObjId }),
+        ]);
+        const areaMap = new Map();
+        areas.forEach((a) => areaMap.set(a._id.toString(), { ...a, children: [] }));
+        const areaTree = [];
+        areas.forEach((a) => {
+            if (a.parentId) {
+                const parent = areaMap.get(a.parentId.toString());
+                if (parent)
+                    parent.children.push(areaMap.get(a._id.toString()));
+            }
+            else {
+                areaTree.push(areaMap.get(a._id.toString()));
+            }
+        });
+        const regFields = tenant.settings?.registrationFields && tenant.settings.registrationFields.length > 0
+            ? tenant.settings.registrationFields
+            : registration_form_types_1.DEFAULT_REGISTRATION_FIELDS;
+        return {
+            ...tenant,
+            _admins: admins,
+            _features: features,
+            _areaLevels: areaLevels,
+            _areas: areas,
+            _areaTree: areaTree,
+            _subscription: subscription,
+            _plan: plan,
+            _registrationFields: regFields,
+            _stats: {
+                totalCitizens,
+                totalVolunteers,
+                totalComplaints,
+                totalEvents,
+                totalPolls,
+                totalAreas: areas.length,
+                totalLevels: areaLevels.length,
+                totalStaff: admins.length,
+            },
+        };
+    }
     async update(id, dto) {
         const existing = await this.tenantModel.findById(id);
         if (!existing)
@@ -818,9 +882,21 @@ exports.TenantsService = TenantsService = __decorate([
     __param(1, (0, mongoose_1.InjectModel)(tenant_feature_schema_1.TenantFeature.name)),
     __param(2, (0, mongoose_1.InjectModel)(admin_user_schema_1.AdminUser.name)),
     __param(3, (0, mongoose_1.InjectModel)(area_schema_1.AreaLevel.name)),
-    __param(4, (0, mongoose_1.InjectModel)(subscription_schema_1.Subscription.name)),
-    __param(5, (0, mongoose_1.InjectModel)(plan_schema_1.Plan.name)),
+    __param(4, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
+    __param(5, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(6, (0, mongoose_1.InjectModel)(complaint_schema_1.Complaint.name)),
+    __param(7, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
+    __param(8, (0, mongoose_1.InjectModel)(event_schema_1.Event.name)),
+    __param(9, (0, mongoose_1.InjectModel)(poll_schema_1.Poll.name)),
+    __param(10, (0, mongoose_1.InjectModel)(subscription_schema_1.Subscription.name)),
+    __param(11, (0, mongoose_1.InjectModel)(plan_schema_1.Plan.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,

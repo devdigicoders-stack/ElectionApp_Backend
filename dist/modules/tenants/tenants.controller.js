@@ -16,7 +16,6 @@ exports.TenantsController = void 0;
 const common_1 = require("@nestjs/common");
 const tenants_service_1 = require("./tenants.service");
 const tenant_dto_1 = require("./tenant.dto");
-const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const roles_guard_1 = require("../../common/guards/roles.guard");
 const types_1 = require("../../shared/types");
 let TenantsController = class TenantsController {
@@ -37,6 +36,9 @@ let TenantsController = class TenantsController {
     }
     publish(id, req) {
         return this.tenantsService.publishTenant(id, req.user, req.ip, req.headers['user-agent']);
+    }
+    getFullProfile(id) {
+        return this.tenantsService.getFullProfile(id);
     }
     findOne(id) {
         return this.tenantsService.findOne(id);
@@ -122,6 +124,13 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", void 0)
 ], TenantsController.prototype, "publish", null);
+__decorate([
+    (0, common_1.Get)(':id/full-profile'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TenantsController.prototype, "getFullProfile", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Param)('id')),
@@ -236,7 +245,6 @@ __decorate([
 ], TenantsController.prototype, "getImpersonationHistory", null);
 exports.TenantsController = TenantsController = __decorate([
     (0, common_1.Controller)('super-admin/tenants'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),
     __metadata("design:paramtypes", [tenants_service_1.TenantsService])
 ], TenantsController);
 //# sourceMappingURL=tenants.controller.js.map

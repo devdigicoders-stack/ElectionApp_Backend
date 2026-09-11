@@ -18,6 +18,11 @@ const tenant_schema_1 = require("./tenant.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
 const admin_user_schema_1 = require("../admin-users/admin-user.schema");
 const area_schema_1 = require("../areas/area.schema");
+const user_schema_1 = require("../users/user.schema");
+const complaint_schema_1 = require("../complaints/complaint.schema");
+const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const event_schema_1 = require("../events/event.schema");
+const poll_schema_1 = require("../polls/poll.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
@@ -32,6 +37,12 @@ exports.TenantsModule = TenantsModule = __decorate([
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
                 { name: admin_user_schema_1.AdminUser.name, schema: admin_user_schema_1.AdminUserSchema },
                 { name: area_schema_1.AreaLevel.name, schema: area_schema_1.AreaLevelSchema },
+                { name: area_schema_1.Area.name, schema: area_schema_1.AreaSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
+                { name: complaint_schema_1.Complaint.name, schema: complaint_schema_1.ComplaintSchema },
+                { name: volunteer_schema_1.Volunteer.name, schema: volunteer_schema_1.VolunteerSchema },
+                { name: event_schema_1.Event.name, schema: event_schema_1.EventSchema },
+                { name: poll_schema_1.Poll.name, schema: poll_schema_1.PollSchema },
                 { name: subscription_schema_1.Subscription.name, schema: subscription_schema_1.SubscriptionSchema },
                 { name: plan_schema_1.Plan.name, schema: plan_schema_1.PlanSchema },
             ]),

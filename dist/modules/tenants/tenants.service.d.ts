@@ -4,9 +4,14 @@ import { Model, Types } from 'mongoose';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
 import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
-import { AreaLevelDocument } from '../areas/area.schema';
-import { SubscriptionDocument } from '../subscriptions/subscription.schema';
-import { PlanDocument } from '../plans/plan.schema';
+import { Area, AreaDocument, AreaLevel, AreaLevelDocument } from '../areas/area.schema';
+import { UserDocument } from '../users/user.schema';
+import { ComplaintDocument } from '../complaints/complaint.schema';
+import { VolunteerDocument } from '../volunteers/volunteer.schema';
+import { EventDocument } from '../events/event.schema';
+import { PollDocument } from '../polls/poll.schema';
+import { Subscription, SubscriptionDocument } from '../subscriptions/subscription.schema';
+import { Plan, PlanDocument } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateTenantDto, UpdateTenantDto, ImpersonateTenantDto, ExitImpersonationDto, OnboardFullTenantDto } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
@@ -15,11 +20,17 @@ export declare class TenantsService implements OnModuleInit {
     private featureModel;
     private adminUserModel;
     private areaLevelModel;
+    private areaModel;
+    private userModel;
+    private complaintModel;
+    private volunteerModel;
+    private eventModel;
+    private pollModel;
     private subscriptionModel;
     private planModel;
     private configService;
     private auditLogsService;
-    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
+    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, areaModel: Model<AreaDocument>, userModel: Model<UserDocument>, complaintModel: Model<ComplaintDocument>, volunteerModel: Model<VolunteerDocument>, eventModel: Model<EventDocument>, pollModel: Model<PollDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
     onModuleInit(): Promise<void>;
     create(dto: CreateTenantDto): Promise<TenantDocument>;
     onboardFull(dto: OnboardFullTenantDto, user?: any, ip?: string, userAgent?: string): Promise<{
@@ -279,6 +290,126 @@ export declare class TenantsService implements OnModuleInit {
         __v: number;
     } & {
         id: string;
+    }>;
+    getFullProfile(id: string): Promise<{
+        _admins: (AdminUser & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _features: (TenantFeature & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areaLevels: (AreaLevel & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areas: (Area & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areaTree: any[];
+        _subscription: (Subscription & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        }) | null;
+        _plan: (Plan & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        }) | null;
+        _registrationFields: any[];
+        _stats: {
+            totalCitizens: number;
+            totalVolunteers: number;
+            totalComplaints: number;
+            totalEvents: number;
+            totalPolls: number;
+            totalAreas: number;
+            totalLevels: number;
+            totalStaff: number;
+        };
+        slug: string;
+        name: string;
+        title?: string;
+        customDomain?: string;
+        isCustomDomainVerified?: boolean;
+        customDomainVerifiedAt?: Date;
+        customDomainVerification?: {
+            domain?: string | null;
+            status?: "unconfigured" | "pending" | "verified" | "failed";
+            verificationToken?: string | null;
+            targetCname?: string | null;
+            dnsRecords?: Array<{
+                type: "TXT" | "CNAME" | "A";
+                name: string;
+                value: string;
+                purpose: string;
+                ttl?: string;
+            }>;
+            lastCheckedAt?: Date | null;
+            failureReason?: string | null;
+        };
+        contactPerson?: string | null;
+        mobileNumber?: string | null;
+        email?: string | null;
+        electionType?: string;
+        isPublished: boolean;
+        status: TenantStatus;
+        branding: {
+            platformName?: string;
+            title?: string;
+            logoUrl?: string;
+            logo?: string;
+            faviconUrl?: string;
+            pwaIconUrl?: string;
+            leaderPhotoUrl?: string;
+            loginBgUrl?: string;
+            splashScreenUrl?: string;
+            splashScreens?: Array<{
+                title?: string;
+                subtitle?: string;
+                mediaType?: "image" | "video";
+                mediaUrl: string;
+                order?: number;
+            }>;
+            primaryColor?: string;
+            secondaryColor?: string;
+            accentColor?: string;
+            leaderName?: string;
+            tagline?: string;
+            footerText?: string;
+            privacyPolicyUrl?: string;
+            termsUrl?: string;
+            privacyPolicyContent?: string;
+            termsContent?: string;
+            socialLinks?: Record<string, string>;
+        };
+        settings: {
+            registrationFields?: any[];
+            areaLevels?: string[];
+            timezone?: string;
+        };
+        planId?: Types.ObjectId;
+        trialEndsAt?: Date;
+        subscriptionStartsAt?: Date;
+        subscriptionEndsAt?: Date;
+        _id: Types.ObjectId;
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
+        __v: number;
     }>;
     update(id: string, dto: UpdateTenantDto): Promise<(import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;

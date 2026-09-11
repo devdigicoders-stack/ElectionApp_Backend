@@ -256,6 +256,126 @@ export declare class TenantsController {
             isPublished: boolean;
         };
     }>;
+    getFullProfile(id: string): Promise<{
+        _admins: (import("../admin-users/admin-user.schema").AdminUser & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _features: (import("../features/tenant-feature.schema").TenantFeature & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areaLevels: (import("../areas/area.schema").AreaLevel & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areas: (import("../areas/area.schema").Area & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        _areaTree: any[];
+        _subscription: (import("../subscriptions/subscription.schema").Subscription & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        }) | null;
+        _plan: (import("../plans/plan.schema").Plan & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        }) | null;
+        _registrationFields: any[];
+        _stats: {
+            totalCitizens: number;
+            totalVolunteers: number;
+            totalComplaints: number;
+            totalEvents: number;
+            totalPolls: number;
+            totalAreas: number;
+            totalLevels: number;
+            totalStaff: number;
+        };
+        slug: string;
+        name: string;
+        title?: string;
+        customDomain?: string;
+        isCustomDomainVerified?: boolean;
+        customDomainVerifiedAt?: Date;
+        customDomainVerification?: {
+            domain?: string | null;
+            status?: "unconfigured" | "pending" | "verified" | "failed";
+            verificationToken?: string | null;
+            targetCname?: string | null;
+            dnsRecords?: Array<{
+                type: "TXT" | "CNAME" | "A";
+                name: string;
+                value: string;
+                purpose: string;
+                ttl?: string;
+            }>;
+            lastCheckedAt?: Date | null;
+            failureReason?: string | null;
+        };
+        contactPerson?: string | null;
+        mobileNumber?: string | null;
+        email?: string | null;
+        electionType?: string;
+        isPublished: boolean;
+        status: import("../../shared/types").TenantStatus;
+        branding: {
+            platformName?: string;
+            title?: string;
+            logoUrl?: string;
+            logo?: string;
+            faviconUrl?: string;
+            pwaIconUrl?: string;
+            leaderPhotoUrl?: string;
+            loginBgUrl?: string;
+            splashScreenUrl?: string;
+            splashScreens?: Array<{
+                title?: string;
+                subtitle?: string;
+                mediaType?: "image" | "video";
+                mediaUrl: string;
+                order?: number;
+            }>;
+            primaryColor?: string;
+            secondaryColor?: string;
+            accentColor?: string;
+            leaderName?: string;
+            tagline?: string;
+            footerText?: string;
+            privacyPolicyUrl?: string;
+            termsUrl?: string;
+            privacyPolicyContent?: string;
+            termsContent?: string;
+            socialLinks?: Record<string, string>;
+        };
+        settings: {
+            registrationFields?: any[];
+            areaLevels?: string[];
+            timezone?: string;
+        };
+        planId?: import("mongoose").Types.ObjectId;
+        trialEndsAt?: Date;
+        subscriptionStartsAt?: Date;
+        subscriptionEndsAt?: Date;
+        _id: import("mongoose").Types.ObjectId;
+        $locals: Record<string, unknown>;
+        $op: "save" | "validate" | "remove" | null;
+        $where: Record<string, unknown>;
+        baseModelName?: string;
+        collection: import("mongoose").Collection;
+        db: import("mongoose").Connection;
+        errors?: import("mongoose").Error.ValidationError;
+        isNew: boolean;
+        schema: import("mongoose").Schema;
+        __v: number;
+    }>;
     findOne(id: string): Promise<import("mongoose").Document<unknown, {}, import("./tenant.schema").TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./tenant.schema").Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {

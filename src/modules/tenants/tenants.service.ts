@@ -9,7 +9,12 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { Tenant, TenantDocument } from './tenant.schema';
 import { TenantFeature, TenantFeatureDocument } from '../features/tenant-feature.schema';
 import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
-import { AreaLevel, AreaLevelDocument } from '../areas/area.schema';
+import { Area, AreaDocument, AreaLevel, AreaLevelDocument } from '../areas/area.schema';
+import { User, UserDocument } from '../users/user.schema';
+import { Complaint, ComplaintDocument } from '../complaints/complaint.schema';
+import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
+import { Event, EventDocument } from '../events/event.schema';
+import { Poll, PollDocument } from '../polls/poll.schema';
 import { Subscription, SubscriptionDocument, SubscriptionStatus, PaymentMethod } from '../subscriptions/subscription.schema';
 import { Plan, PlanDocument, BillingCycle } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
@@ -22,6 +27,7 @@ import {
   OnboardFullTenantDto,
 } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
+import { DEFAULT_REGISTRATION_FIELDS } from '../registration-form/registration-form.types';
 
 function saveBase64Image(base64Str: string, tenantSlug: string, prefix: string): string {
   if (!base64Str || typeof base64Str !== 'string' || !base64Str.startsWith('data:image/')) {
@@ -38,60 +44,51 @@ function saveBase64Image(base64Str: string, tenantSlug: string, prefix: string):
 
     const base64Data = matches[2];
     const buffer = Buffer.from(base64Data, 'base64');
-
-    const slug = tenantSlug || 'general';
-    const dir = join(process.cwd(), 'uploads', slug, 'branding');
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
+    const filename = `${Date.now()}-${prefix}-${Math.floor(Math.random() * 1000000)}.${ext}`;
+    const uploadDir = join(process.cwd(), 'uploads', tenantSlug, 'branding');
+    if (!existsSync(uploadDir)) {
+      mkdirSync(uploadDir, { recursive: true });
     }
-
-    const filename = `${Date.now()}-${prefix}-${Math.round(Math.random() * 1e6)}.${ext}`;
-    const filePath = join(dir, filename);
+    const filePath = join(uploadDir, filename);
     writeFileSync(filePath, buffer);
-
-    return `/uploads/${slug}/branding/${filename}`;
+    return `/uploads/${tenantSlug}/branding/${filename}`;
   } catch (err) {
-    console.error('Error saving base64 image:', err);
+    console.error('Failed to save base64 image to disk:', err);
     return base64Str;
   }
 }
 
-function sanitizeBrandingImages(branding: Record<string, any>, tenantSlug: string): Record<string, any> {
-  if (!branding || typeof branding !== 'object') return branding;
+function sanitizeBrandingImages(branding: Record<string, any>, slug: string): Record<string, any> {
   const result = { ...branding };
-
-  const imageFields = [
-    'logo',
-    'logoUrl',
-    'faviconUrl',
-    'pwaIconUrl',
-    'leaderPhotoUrl',
-    'loginBgUrl',
-    'splashScreenUrl',
-  ];
-
-  for (const field of imageFields) {
-    if (result[field] && typeof result[field] === 'string' && result[field].startsWith('data:image/')) {
-      result[field] = saveBase64Image(result[field], tenantSlug, field);
-    }
+  if (result.logoUrl && typeof result.logoUrl === 'string' && result.logoUrl.startsWith('data:image/')) {
+    result.logoUrl = saveBase64Image(result.logoUrl, slug, 'logoUrl');
+  }
+  if (result.logo && typeof result.logo === 'string' && result.logo.startsWith('data:image/')) {
+    result.logo = saveBase64Image(result.logo, slug, 'logo');
+  }
+  if (result.faviconUrl && typeof result.faviconUrl === 'string' && result.faviconUrl.startsWith('data:image/')) {
+    result.faviconUrl = saveBase64Image(result.faviconUrl, slug, 'faviconUrl');
+  }
+  if (result.pwaIconUrl && typeof result.pwaIconUrl === 'string' && result.pwaIconUrl.startsWith('data:image/')) {
+    result.pwaIconUrl = saveBase64Image(result.pwaIconUrl, slug, 'pwaIconUrl');
+  }
+  if (result.loginBgUrl && typeof result.loginBgUrl === 'string' && result.loginBgUrl.startsWith('data:image/')) {
+    result.loginBgUrl = saveBase64Image(result.loginBgUrl, slug, 'loginBgUrl');
+  }
+  if (result.splashScreenUrl && typeof result.splashScreenUrl === 'string' && result.splashScreenUrl.startsWith('data:image/')) {
+    result.splashScreenUrl = saveBase64Image(result.splashScreenUrl, slug, 'splashScreenUrl');
   }
 
   if (Array.isArray(result.splashScreens)) {
-    result.splashScreens = result.splashScreens.map((slide, idx) => {
-      if (slide && slide.mediaUrl && typeof slide.mediaUrl === 'string' && slide.mediaUrl.startsWith('data:image/')) {
+    result.splashScreens = result.splashScreens.map((screen: any, idx: number) => {
+      if (screen && screen.mediaUrl && typeof screen.mediaUrl === 'string' && screen.mediaUrl.startsWith('data:image/')) {
         return {
-          ...slide,
-          mediaUrl: saveBase64Image(slide.mediaUrl, tenantSlug, `splash-${idx}`),
+          ...screen,
+          mediaUrl: saveBase64Image(screen.mediaUrl, slug, `splash-${idx + 1}`),
         };
       }
-      return slide;
+      return screen;
     });
-  }
-
-  const finalLogo = result.logoUrl || result.logo;
-  if (finalLogo) {
-    result.logo = finalLogo;
-    result.logoUrl = finalLogo;
   }
 
   return result;
@@ -104,6 +101,12 @@ export class TenantsService implements OnModuleInit {
     @InjectModel(TenantFeature.name) private featureModel: Model<TenantFeatureDocument>,
     @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUserDocument>,
     @InjectModel(AreaLevel.name) private areaLevelModel: Model<AreaLevelDocument>,
+    @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Complaint.name) private complaintModel: Model<ComplaintDocument>,
+    @InjectModel(Volunteer.name) private volunteerModel: Model<VolunteerDocument>,
+    @InjectModel(Event.name) private eventModel: Model<EventDocument>,
+    @InjectModel(Poll.name) private pollModel: Model<PollDocument>,
     @InjectModel(Subscription.name) private subscriptionModel: Model<SubscriptionDocument>,
     @InjectModel(Plan.name) private planModel: Model<PlanDocument>,
     private configService: ConfigService,
@@ -510,6 +513,78 @@ export class TenantsService implements OnModuleInit {
     const tenant = await this.tenantModel.findById(id);
     if (!tenant) throw new NotFoundException('Tenant not found');
     return tenant;
+  }
+
+  async getFullProfile(id: string) {
+    const tenant = await this.tenantModel.findById(id).lean();
+    if (!tenant) throw new NotFoundException('Tenant not found');
+
+    const tenantObjId = new Types.ObjectId(id);
+
+    const [
+      admins,
+      features,
+      areaLevels,
+      areas,
+      subscription,
+      plan,
+      totalCitizens,
+      totalVolunteers,
+      totalComplaints,
+      totalEvents,
+      totalPolls,
+    ] = await Promise.all([
+      this.adminUserModel.find({ tenantId: tenantObjId }).select('-password -__v').sort({ createdAt: -1 }).lean(),
+      this.featureModel.find({ tenantId: tenantObjId }).lean(),
+      this.areaLevelModel.find({ tenantId: tenantObjId }).sort({ levelOrder: 1 }).lean(),
+      this.areaModel.find({ tenantId: tenantObjId, isActive: true }).populate('levelId', 'name levelOrder').sort({ name: 1 }).lean(),
+      this.subscriptionModel.findOne({ tenantId: tenantObjId }).lean(),
+      tenant.planId ? this.planModel.findById(tenant.planId).lean() : null,
+      this.userModel.countDocuments({ tenantId: tenantObjId }),
+      this.volunteerModel.countDocuments({ tenantId: tenantObjId }),
+      this.complaintModel.countDocuments({ tenantId: tenantObjId }),
+      this.eventModel.countDocuments({ tenantId: tenantObjId }),
+      this.pollModel.countDocuments({ tenantId: tenantObjId }),
+    ]);
+
+    const areaMap = new Map<string, any>();
+    areas.forEach((a) => areaMap.set(a._id.toString(), { ...a, children: [] }));
+    const areaTree: any[] = [];
+    areas.forEach((a) => {
+      if (a.parentId) {
+        const parent = areaMap.get(a.parentId.toString());
+        if (parent) parent.children.push(areaMap.get(a._id.toString()));
+      } else {
+        areaTree.push(areaMap.get(a._id.toString()));
+      }
+    });
+
+    const regFields =
+      tenant.settings?.registrationFields && tenant.settings.registrationFields.length > 0
+        ? tenant.settings.registrationFields
+        : DEFAULT_REGISTRATION_FIELDS;
+
+    return {
+      ...tenant,
+      _admins: admins,
+      _features: features,
+      _areaLevels: areaLevels,
+      _areas: areas,
+      _areaTree: areaTree,
+      _subscription: subscription,
+      _plan: plan,
+      _registrationFields: regFields,
+      _stats: {
+        totalCitizens,
+        totalVolunteers,
+        totalComplaints,
+        totalEvents,
+        totalPolls,
+        totalAreas: areas.length,
+        totalLevels: areaLevels.length,
+        totalStaff: admins.length,
+      },
+    };
   }
 
   async update(id: string, dto: UpdateTenantDto) {
