@@ -24,10 +24,24 @@ export declare class PublicConfigService {
             leaderPhotoUrl?: string;
             loginBgUrl?: string;
             splashScreenUrl?: string;
+            splashScreens?: Array<{
+                title?: string;
+                subtitle?: string;
+                mediaType?: "image" | "video";
+                mediaUrl: string;
+                order?: number;
+            }>;
             primaryColor?: string;
             secondaryColor?: string;
+            accentColor?: string;
             leaderName?: string;
             tagline?: string;
+            footerText?: string;
+            privacyPolicyUrl?: string;
+            termsUrl?: string;
+            privacyPolicyContent?: string;
+            termsContent?: string;
+            socialLinks?: Record<string, string>;
         };
         registrationFields: any[];
         enabledFeatures: {

@@ -21,27 +21,75 @@ let BannersService = class BannersService {
     constructor(bannerModel) {
         this.bannerModel = bannerModel;
     }
-    async create(tenant, data) {
-        return this.bannerModel.create({ tenantId: tenant._id, ...data });
+    formatBanner(banner, req, tenant) {
+        if (!banner)
+            return null;
+        const doc = banner.toObject ? banner.toObject() : { ...banner };
+        let host = req?.get ? req.get('host') : (req?.headers ? req.headers['host'] : null);
+        if (!host && tenant) {
+            host = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+        }
+        const protocol = req?.protocol || 'http';
+        if (doc.imageUrl) {
+            if (doc.imageUrl.startsWith('/')) {
+                doc.fullImageUrl = host ? `${protocol}://${host}${doc.imageUrl}` : doc.imageUrl;
+            }
+            else {
+                doc.fullImageUrl = doc.imageUrl;
+            }
+        }
+        if (doc.mobileImageUrl) {
+            if (doc.mobileImageUrl.startsWith('/')) {
+                doc.fullMobileImageUrl = host ? `${protocol}://${host}${doc.mobileImageUrl}` : doc.mobileImageUrl;
+            }
+            else {
+                doc.fullMobileImageUrl = doc.mobileImageUrl;
+            }
+        }
+        return doc;
     }
-    async findActive(tenant) {
-        return this.bannerModel.find({ tenantId: tenant._id, isActive: true }).sort({ sortOrder: 1 });
+    async create(tenant, data, req) {
+        if (!data.title) {
+            throw new common_1.BadRequestException('Banner title is required');
+        }
+        if (!data.imageUrl) {
+            throw new common_1.BadRequestException('Banner image is required (upload image via form-data or provide imageUrl)');
+        }
+        const banner = await this.bannerModel.create({
+            tenantId: tenant._id,
+            ...data,
+        });
+        return this.formatBanner(banner, req, tenant);
     }
-    async findAll(tenant) {
-        return this.bannerModel.find({ tenantId: tenant._id }).sort({ sortOrder: 1 });
+    async findActive(tenant, req) {
+        const banners = await this.bannerModel.find({ tenantId: tenant._id, isActive: true }).sort({ sortOrder: 1 });
+        return banners.map((b) => this.formatBanner(b, req, tenant));
     }
-    async update(tenant, id, data) {
+    async findAll(tenant, req) {
+        const banners = await this.bannerModel.find({ tenantId: tenant._id }).sort({ sortOrder: 1 });
+        return banners.map((b) => this.formatBanner(b, req, tenant));
+    }
+    async findOne(tenant, id, req) {
+        const banner = await this.bannerModel.findOne({ _id: id, tenantId: tenant._id });
+        if (!banner)
+            throw new common_1.NotFoundException('Banner not found');
+        return this.formatBanner(banner, req, tenant);
+    }
+    async update(tenant, id, data, req) {
         const banner = await this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
         if (!banner)
             throw new common_1.NotFoundException('Banner not found');
-        return banner;
+        return this.formatBanner(banner, req, tenant);
     }
     async remove(tenant, id) {
-        return this.bannerModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const banner = await this.bannerModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        if (!banner)
+            throw new common_1.NotFoundException('Banner not found');
+        return { success: true, message: 'Banner deleted successfully' };
     }
     async reorder(tenant, orders) {
-        await Promise.all(orders.map(({ id, sortOrder }) => this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { sortOrder })));
-        return { message: 'Reordered' };
+        await Promise.all((orders || []).map(({ id, sortOrder }) => this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { sortOrder })));
+        return { message: 'Reordered successfully' };
     }
 };
 exports.BannersService = BannersService;

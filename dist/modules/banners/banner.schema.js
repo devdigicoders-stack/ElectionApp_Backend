@@ -30,7 +30,15 @@ __decorate([
 __decorate([
     (0, mongoose_1.Prop)({ default: null }),
     __metadata("design:type", String)
+], Banner.prototype, "mobileImageUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
 ], Banner.prototype, "linkUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'homepage' }),
+    __metadata("design:type", String)
+], Banner.prototype, "category", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: 0 }),
     __metadata("design:type", Number)
@@ -39,9 +47,18 @@ __decorate([
     (0, mongoose_1.Prop)({ default: true }),
     __metadata("design:type", Boolean)
 ], Banner.prototype, "isActive", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Banner.prototype, "startDate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", Date)
+], Banner.prototype, "endDate", void 0);
 exports.Banner = Banner = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Banner);
 exports.BannerSchema = mongoose_1.SchemaFactory.createForClass(Banner);
 exports.BannerSchema.index({ tenantId: 1, isActive: 1, sortOrder: 1 });
+exports.BannerSchema.index({ tenantId: 1, category: 1, isActive: 1 });
 //# sourceMappingURL=banner.schema.js.map

@@ -6,7 +6,16 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
-import { createCanvas, loadImage } from 'canvas';
+let createCanvas: any;
+let loadImage: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const canvasPkg = require('canvas');
+  createCanvas = canvasPkg.createCanvas;
+  loadImage = canvasPkg.loadImage;
+} catch {
+  // Native canvas binary blocked by Windows Application Control
+}
 import * as path from 'path';
 import * as fs from 'fs';
 import { PosterTemplate, PosterTemplateDocument } from './poster-template.schema';

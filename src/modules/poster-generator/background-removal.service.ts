@@ -1,5 +1,14 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
-import { createCanvas, loadImage } from 'canvas';
+let createCanvas: any;
+let loadImage: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const canvasPkg = require('canvas');
+  createCanvas = canvasPkg.createCanvas;
+  loadImage = canvasPkg.loadImage;
+} catch {
+  // Native canvas binary blocked by Windows Application Control
+}
 import * as path from 'path';
 import * as fs from 'fs';
 

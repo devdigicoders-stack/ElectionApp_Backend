@@ -52,7 +52,15 @@ const mongoose_2 = require("mongoose");
 const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const QRCode = __importStar(require("qrcode"));
-const canvas_1 = require("canvas");
+let createCanvas;
+let loadImage;
+try {
+    const canvasPkg = require('canvas');
+    createCanvas = canvasPkg.createCanvas;
+    loadImage = canvasPkg.loadImage;
+}
+catch {
+}
 const membership_schema_1 = require("./membership.schema");
 const membership_plan_schema_1 = require("./membership-plan.schema");
 const user_schema_1 = require("../users/user.schema");
@@ -267,7 +275,7 @@ let MembershipService = class MembershipService {
         const designation = membership.designation || 'Active Member';
         const width = 1000;
         const height = 600;
-        const canvas = (0, canvas_1.createCanvas)(width, height);
+        const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
         this.drawRoundedRect(ctx, 0, 0, width, height, 28);
         ctx.clip();
@@ -300,7 +308,7 @@ let MembershipService = class MembershipService {
             try {
                 const logoPath = path.join(process.cwd(), tenant.branding.logoUrl.replace(/^\//, ''));
                 if (fs.existsSync(logoPath)) {
-                    const logoImg = await (0, canvas_1.loadImage)(logoPath);
+                    const logoImg = await loadImage(logoPath);
                     ctx.save();
                     this.drawRoundedRect(ctx, 50, 26, 64, 64, 12);
                     ctx.clip();
@@ -372,7 +380,7 @@ let MembershipService = class MembershipService {
                     ? photoSource
                     : path.join(process.cwd(), photoSource.replace(/^\//, ''));
                 if (fs.existsSync(fullPhotoPath)) {
-                    const mPhoto = await (0, canvas_1.loadImage)(fullPhotoPath);
+                    const mPhoto = await loadImage(fullPhotoPath);
                     ctx.drawImage(mPhoto, photoX, photoY, photoW, photoH);
                     photoRendered = true;
                 }
@@ -493,7 +501,7 @@ let MembershipService = class MembershipService {
                 light: '#ffffff',
             },
         });
-        const qrImg = await (0, canvas_1.loadImage)(qrBuffer);
+        const qrImg = await loadImage(qrBuffer);
         ctx.drawImage(qrImg, qrBoxX + 22, qrBoxY + 16, 175, 175);
         ctx.fillStyle = '#0f172a';
         ctx.font = 'bold 13px sans-serif';

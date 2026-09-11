@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsEnum, IsObject, IsBoolean, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsEnum, IsObject, IsBoolean, IsDateString, IsArray } from 'class-validator';
 import { TenantStatus, UserRole } from '../../shared/types';
 
 export class CreateTenantDto {
@@ -158,6 +158,16 @@ export class UpdateBrandingDto {
   splashScreenUrl?: string;
 
   @IsOptional()
+  @IsArray()
+  splashScreens?: Array<{
+    title?: string;
+    subtitle?: string;
+    mediaType?: 'image' | 'video';
+    mediaUrl: string;
+    order?: number;
+  }>;
+
+  @IsOptional()
   @IsString()
   primaryColor?: string;
 
@@ -167,11 +177,35 @@ export class UpdateBrandingDto {
 
   @IsOptional()
   @IsString()
+  accentColor?: string;
+
+  @IsOptional()
+  @IsString()
   leaderName?: string;
 
   @IsOptional()
   @IsString()
   tagline?: string;
+
+  @IsOptional()
+  @IsString()
+  footerText?: string;
+
+  @IsOptional()
+  @IsString()
+  privacyPolicyUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  termsUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  privacyPolicyContent?: string;
+
+  @IsOptional()
+  @IsString()
+  termsContent?: string;
 
   @IsOptional()
   @IsObject()

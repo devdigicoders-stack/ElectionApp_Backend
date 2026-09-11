@@ -69,9 +69,22 @@ export declare class TenantsService {
                         pwaIconUrl: string | null;
                         loginBgUrl: string | null;
                         splashScreenUrl: string | null;
+                        splashScreens: {
+                            title?: string;
+                            subtitle?: string;
+                            mediaType?: "image" | "video";
+                            mediaUrl: string;
+                            order?: number;
+                        }[];
                         primaryColor: string | null;
                         secondaryColor: string | null;
+                        accentColor: string | null;
                         tagline: string | null;
+                        footerText: string | null;
+                        privacyPolicyUrl: string | null;
+                        termsUrl: string | null;
+                        privacyPolicyContent: string | null;
+                        termsContent: string | null;
                     };
                 };
                 step3_domain: {
@@ -169,9 +182,22 @@ export declare class TenantsService {
                     pwaIconUrl: string | null;
                     loginBgUrl: string | null;
                     splashScreenUrl: string | null;
+                    splashScreens: {
+                        title?: string;
+                        subtitle?: string;
+                        mediaType?: "image" | "video";
+                        mediaUrl: string;
+                        order?: number;
+                    }[];
                     primaryColor: string | null;
                     secondaryColor: string | null;
+                    accentColor: string | null;
                     tagline: string | null;
+                    footerText: string | null;
+                    privacyPolicyUrl: string | null;
+                    termsUrl: string | null;
+                    privacyPolicyContent: string | null;
+                    termsContent: string | null;
                 };
             };
             step3_domain: {

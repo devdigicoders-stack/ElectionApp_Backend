@@ -43,9 +43,9 @@ __decorate([
                 cb(null, `${unique}${(0, path_1.extname)(file.originalname)}`);
             },
         }),
-        limits: { fileSize: 10 * 1024 * 1024 },
+        limits: { fileSize: 50 * 1024 * 1024 },
         fileFilter: (_req, file, cb) => {
-            const allowed = /jpeg|jpg|png|gif|webp|mp4|pdf/;
+            const allowed = /jpeg|jpg|png|gif|webp|mp4|webm|mov|m4v|mkv|pdf|svg|ico/i;
             cb(null, allowed.test((0, path_1.extname)(file.originalname).toLowerCase()));
         },
     })),

@@ -56,4 +56,17 @@ export class SuperAdminDashboardController {
       search,
     });
   }
+
+  /**
+   * Dynamic System Alerts and Quick Warning Feed (SRS Sec 45.1)
+   * GET /super-admin/dashboard/alerts?severity=critical&category=subscription
+   */
+  @Get('alerts')
+  @Roles(UserRole.SUPER_ADMIN)
+  getSystemAlerts(
+    @Query('severity') severity?: string,
+    @Query('category') category?: string,
+  ) {
+    return this.dashboardService.getSuperAdminAlerts({ severity, category });
+  }
 }

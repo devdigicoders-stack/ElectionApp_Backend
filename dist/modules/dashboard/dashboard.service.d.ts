@@ -104,6 +104,27 @@ export declare class DashboardService {
             estimatedMB: number;
             formatted: string;
         };
+        alerts: {
+            total: number;
+            criticalCount: number;
+            warningCount: number;
+            infoCount: number;
+            items: {
+                id: string;
+                category: "subscription" | "storage" | "domain" | "tenant" | "system";
+                severity: "critical" | "warning" | "info";
+                title: string;
+                message: string;
+                timestamp: string;
+                tenantId?: string;
+                tenantName?: string;
+                tenantSlug?: string;
+                actionType: "RENEW" | "EXTEND_TRIAL" | "UPGRADE_PLAN" | "VERIFY_DOMAIN" | "VIEW_CLIENT" | "MANAGE_STORAGE" | "VIEW_COMPLAINTS";
+                actionLabel: string;
+                actionUrl: string;
+                metadata?: Record<string, any>;
+            }[];
+        };
         recentTenants: (import("mongoose").Document<unknown, {}, TenantDocument, {}, import("mongoose").DefaultSchemaOptions> & Tenant & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
             _id: import("mongoose").Types.ObjectId;
         }> & {
@@ -112,6 +133,33 @@ export declare class DashboardService {
             id: string;
         })[];
         recentInvoices: any[];
+    }>;
+    getSuperAdminAlerts(options?: {
+        severity?: string;
+        category?: string;
+        platformStoragePercent?: number;
+        platformStorageFormatted?: string;
+        platformAllocatedFormatted?: string;
+    }): Promise<{
+        total: number;
+        criticalCount: number;
+        warningCount: number;
+        infoCount: number;
+        items: {
+            id: string;
+            category: "subscription" | "storage" | "domain" | "tenant" | "system";
+            severity: "critical" | "warning" | "info";
+            title: string;
+            message: string;
+            timestamp: string;
+            tenantId?: string;
+            tenantName?: string;
+            tenantSlug?: string;
+            actionType: "RENEW" | "EXTEND_TRIAL" | "UPGRADE_PLAN" | "VERIFY_DOMAIN" | "VIEW_CLIENT" | "MANAGE_STORAGE" | "VIEW_COMPLAINTS";
+            actionLabel: string;
+            actionUrl: string;
+            metadata?: Record<string, any>;
+        }[];
     }>;
     getSuperAdminGrowth(days?: number): Promise<{
         periodDays: number;

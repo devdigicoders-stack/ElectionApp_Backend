@@ -37,6 +37,9 @@ let SuperAdminDashboardController = class SuperAdminDashboardController {
             search,
         });
     }
+    getSystemAlerts(severity, category) {
+        return this.dashboardService.getSuperAdminAlerts({ severity, category });
+    }
 };
 exports.SuperAdminDashboardController = SuperAdminDashboardController;
 __decorate([
@@ -65,6 +68,15 @@ __decorate([
     __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", void 0)
 ], SuperAdminDashboardController.prototype, "getTenantsOverview", null);
+__decorate([
+    (0, common_1.Get)('alerts'),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN),
+    __param(0, (0, common_1.Query)('severity')),
+    __param(1, (0, common_1.Query)('category')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", void 0)
+], SuperAdminDashboardController.prototype, "getSystemAlerts", null);
 exports.SuperAdminDashboardController = SuperAdminDashboardController = __decorate([
     (0, common_1.Controller)('super-admin/dashboard'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, roles_guard_1.RolesGuard),

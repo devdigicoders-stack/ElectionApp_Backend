@@ -50,7 +50,15 @@ exports.PosterGeneratorService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const canvas_1 = require("canvas");
+let createCanvas;
+let loadImage;
+try {
+    const canvasPkg = require('canvas');
+    createCanvas = canvasPkg.createCanvas;
+    loadImage = canvasPkg.loadImage;
+}
+catch {
+}
 const path = __importStar(require("path"));
 const fs = __importStar(require("fs"));
 const poster_template_schema_1 = require("./poster-template.schema");
@@ -86,7 +94,7 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
         if (fs.existsSync(filePath)) {
             return `/uploads/${tenantSlug}/poster-templates/${filename}`;
         }
-        const canvas = (0, canvas_1.createCanvas)(width, height);
+        const canvas = createCanvas(width, height);
         const ctx = canvas.getContext('2d');
         const bgGrad = ctx.createLinearGradient(0, 0, width, height);
         bgGrad.addColorStop(0, theme.dark);
@@ -555,7 +563,7 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
             : path.join(process.cwd(), cleanTmpl);
         let baseImage;
         if (fs.existsSync(templateImagePath)) {
-            baseImage = await (0, canvas_1.loadImage)(templateImagePath);
+            baseImage = await loadImage(templateImagePath);
         }
         else {
             const fallbackUrl = await this.createBaseTemplateImage(tenant.slug, `base_${template._id}.png`, template.width || 1080, template.height || 1080, {
@@ -568,11 +576,11 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
             template.templateImageUrl = fallbackUrl;
             await template.save();
             const fbPath = path.join(process.cwd(), fallbackUrl.replace(/^\//, ''));
-            baseImage = await (0, canvas_1.loadImage)(fbPath);
+            baseImage = await loadImage(fbPath);
         }
         const canvasWidth = template.width || baseImage.width;
         const canvasHeight = template.height || baseImage.height;
-        const canvas = (0, canvas_1.createCanvas)(canvasWidth, canvasHeight);
+        const canvas = createCanvas(canvasWidth, canvasHeight);
         const ctx = canvas.getContext('2d');
         ctx.drawImage(baseImage, 0, 0, canvasWidth, canvasHeight);
         for (const field of template.fields) {
@@ -589,7 +597,7 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
                     ? finalPhotoPath
                     : (finalPhotoPath ? path.join(process.cwd(), cleanPhoto) : null);
                 if (photoSrc && fs.existsSync(photoSrc)) {
-                    const photo = await (0, canvas_1.loadImage)(photoSrc);
+                    const photo = await loadImage(photoSrc);
                     const maskShape = field.style?.maskShape || 'circle';
                     ctx.save();
                     if (maskShape === 'circle') {

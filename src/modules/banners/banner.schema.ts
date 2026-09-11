@@ -15,14 +15,28 @@ export class Banner {
   imageUrl: string;
 
   @Prop({ default: null })
+  mobileImageUrl?: string;
+
+  @Prop({ default: null })
   linkUrl?: string;
+
+  @Prop({ default: 'homepage' })
+  category?: string; // 'homepage' | 'campaign' | 'popup'
 
   @Prop({ default: 0 })
   sortOrder: number;
 
   @Prop({ default: true })
   isActive: boolean;
+
+  @Prop({ default: null })
+  startDate?: Date;
+
+  @Prop({ default: null })
+  endDate?: Date;
 }
 
 export const BannerSchema = SchemaFactory.createForClass(Banner);
 BannerSchema.index({ tenantId: 1, isActive: 1, sortOrder: 1 });
+BannerSchema.index({ tenantId: 1, category: 1, isActive: 1 });
+

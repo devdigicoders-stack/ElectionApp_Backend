@@ -1,29 +1,32 @@
 import { BannersService } from './banners.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
+export declare const bannerUploadOptions: {
+    storage: import("multer").StorageEngine;
+    limits: {
+        fileSize: number;
+    };
+    fileFilter: (_req: any, file: any, cb: any) => void;
+};
+export declare function parseBannerBody(body: any, files: {
+    image?: Express.Multer.File[];
+    file?: Express.Multer.File[];
+    banner?: Express.Multer.File[];
+    bannerImage?: Express.Multer.File[];
+    mobileImage?: Express.Multer.File[];
+} | undefined, tenantSlug: string): any;
 export declare class BannersController {
     private bannersService;
     constructor(bannersService: BannersService);
-    create(req: TenantRequest, body: any): Promise<import("mongoose").Document<unknown, {}, import("./banner.schema").BannerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./banner.schema").Banner & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }>;
-    findActive(req: TenantRequest): Promise<(import("mongoose").Document<unknown, {}, import("./banner.schema").BannerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./banner.schema").Banner & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    })[]>;
-    findAll(req: TenantRequest): Promise<(import("mongoose").Document<unknown, {}, import("./banner.schema").BannerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./banner.schema").Banner & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    })[]>;
+    create(req: TenantRequest, body: any, files?: {
+        image?: Express.Multer.File[];
+        file?: Express.Multer.File[];
+        banner?: Express.Multer.File[];
+        bannerImage?: Express.Multer.File[];
+        mobileImage?: Express.Multer.File[];
+    }): Promise<any>;
+    findActive(req: TenantRequest): Promise<any[]>;
+    findAll(req: TenantRequest): Promise<any[]>;
+    findOne(req: TenantRequest, id: string): Promise<any>;
     reorder(req: TenantRequest, body: {
         orders: {
             id: string;
@@ -32,18 +35,15 @@ export declare class BannersController {
     }): Promise<{
         message: string;
     }>;
-    update(req: TenantRequest, id: string, body: any): Promise<import("mongoose").Document<unknown, {}, import("./banner.schema").BannerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./banner.schema").Banner & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
+    update(req: TenantRequest, id: string, body: any, files?: {
+        image?: Express.Multer.File[];
+        file?: Express.Multer.File[];
+        banner?: Express.Multer.File[];
+        bannerImage?: Express.Multer.File[];
+        mobileImage?: Express.Multer.File[];
+    }): Promise<any>;
+    remove(req: TenantRequest, id: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
-    remove(req: TenantRequest, id: string): Promise<(import("mongoose").Document<unknown, {}, import("./banner.schema").BannerDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./banner.schema").Banner & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }) | null>;
 }

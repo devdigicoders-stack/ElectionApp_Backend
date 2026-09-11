@@ -11,7 +11,16 @@ import { Response } from 'express';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as QRCode from 'qrcode';
-import { createCanvas, loadImage } from 'canvas';
+let createCanvas: any;
+let loadImage: any;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const canvasPkg = require('canvas');
+  createCanvas = canvasPkg.createCanvas;
+  loadImage = canvasPkg.loadImage;
+} catch {
+  // Native canvas binary blocked by Windows Application Control
+}
 import { Membership, MembershipDocument } from './membership.schema';
 import { MembershipPlan, MembershipPlanDocument } from './membership-plan.schema';
 import { TenantDocument } from '../tenants/tenant.schema';

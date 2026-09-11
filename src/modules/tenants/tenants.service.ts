@@ -236,7 +236,7 @@ export class TenantsService {
     const b = tenant.branding || {};
     const logo = b.logoUrl || b.logo || null;
     const resolvedTitle = b.title || b.platformName || tenant.title || tenant.name || null;
-    const hasBranding = Boolean(b.leaderName && (logo || b.primaryColor));
+    const hasBranding = Boolean((b.leaderName || tenant.name) && (logo || b.primaryColor));
     const hasDomain = Boolean(tenant.customDomain || tenant.slug);
     const hasPlan = Boolean(tenant.planId || subscription);
     const enabledModules = enabledFeatures;
@@ -299,9 +299,16 @@ export class TenantsService {
             pwaIconUrl: b.pwaIconUrl || null,
             loginBgUrl: b.loginBgUrl || null,
             splashScreenUrl: b.splashScreenUrl || null,
+            splashScreens: b.splashScreens || [],
             primaryColor: b.primaryColor || null,
             secondaryColor: b.secondaryColor || null,
+            accentColor: b.accentColor || null,
             tagline: b.tagline || null,
+            footerText: b.footerText || null,
+            privacyPolicyUrl: b.privacyPolicyUrl || null,
+            termsUrl: b.termsUrl || null,
+            privacyPolicyContent: b.privacyPolicyContent || null,
+            termsContent: b.termsContent || null,
           },
         },
         step3_domain: {

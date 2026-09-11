@@ -23,9 +23,9 @@ export class UploadsController {
           cb(null, `${unique}${extname(file.originalname)}`);
         },
       }),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+      limits: { fileSize: 50 * 1024 * 1024 }, // 50MB (supporting video splash screens & onboarding clips)
       fileFilter: (_req, file, cb) => {
-        const allowed = /jpeg|jpg|png|gif|webp|mp4|pdf/;
+        const allowed = /jpeg|jpg|png|gif|webp|mp4|webm|mov|m4v|mkv|pdf|svg|ico/i;
         cb(null, allowed.test(extname(file.originalname).toLowerCase()));
       },
     }),

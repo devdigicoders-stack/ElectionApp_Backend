@@ -340,8 +340,283 @@ export class DashboardService {
         estimatedMB: totalUsedMB,
         formatted: formatSize(totalUsedMB),
       },
+      alerts: await this.getSuperAdminAlerts({
+        platformStoragePercent: percentUsed,
+        platformStorageFormatted: formatSize(totalUsedMB),
+        platformAllocatedFormatted: totalAllocatedMB > 0 ? formatSize(totalAllocatedMB) : (hasUnlimitedStorage ? 'Unlimited' : '50.00 GB'),
+      }),
       recentTenants,
       recentInvoices: recentInvoicesAgg,
+    };
+  }
+
+  /**
+   * Dynamic System Alert & Quick Warning Engine (SRS Section 45.1)
+   * Scans expiring subscriptions, quota thresholds, unverified custom domains, and platform health.
+   */
+  async getSuperAdminAlerts(options?: {
+    severity?: string;
+    category?: string;
+    platformStoragePercent?: number;
+    platformStorageFormatted?: string;
+    platformAllocatedFormatted?: string;
+  }) {
+    const alerts: Array<{
+      id: string;
+      category: 'subscription' | 'storage' | 'domain' | 'tenant' | 'system';
+      severity: 'critical' | 'warning' | 'info';
+      title: string;
+      message: string;
+      timestamp: string;
+      tenantId?: string;
+      tenantName?: string;
+      tenantSlug?: string;
+      actionType: 'RENEW' | 'EXTEND_TRIAL' | 'UPGRADE_PLAN' | 'VERIFY_DOMAIN' | 'VIEW_CLIENT' | 'MANAGE_STORAGE' | 'VIEW_COMPLAINTS';
+      actionLabel: string;
+      actionUrl: string;
+      metadata?: Record<string, any>;
+    }> = [];
+
+    const now = new Date();
+
+    // 1. Subscription & Trial Expiry Alerts (Critical <= 7d, Warning <= 15d, Expired < 0d)
+    const subscriptions = await this.subscriptionModel
+      .find({
+        status: { $in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING, SubscriptionStatus.EXPIRED] },
+      })
+      .populate('tenantId')
+      .populate('planId')
+      .lean();
+
+    for (const sub of subscriptions) {
+      const tenant = sub.tenantId as any;
+      if (!tenant) continue;
+
+      const tenantName = tenant.name || 'Unnamed Client';
+      const tenantSlug = tenant.slug || '';
+      const tenantId = tenant._id ? tenant._id.toString() : '';
+
+      if (sub.endDate) {
+        const endDate = new Date(sub.endDate);
+        const diffMs = endDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+        const isTrial = sub.status === SubscriptionStatus.TRIALING;
+        const formattedDate = endDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+        if (diffDays < 0 && Math.abs(diffDays) <= 30) {
+          // Expired within the last 30 days
+          alerts.push({
+            id: `sub-exp-${sub._id}`,
+            category: 'subscription',
+            severity: 'critical',
+            title: `${isTrial ? 'Trial' : 'Plan'} Expired (${Math.abs(diffDays)}d ago)`,
+            message: `${isTrial ? 'Free trial' : 'Subscription'} for "${tenantName}" expired on ${formattedDate}. Tenant services require renewal.`,
+            timestamp: now.toISOString(),
+            tenantId,
+            tenantName,
+            tenantSlug,
+            actionType: 'RENEW',
+            actionLabel: isTrial ? 'Convert to Paid' : 'Renew Subscription',
+            actionUrl: `/clients`,
+            metadata: { diffDays, isTrial, endDate: sub.endDate },
+          });
+        } else if (diffDays >= 0 && diffDays <= 7) {
+          // Critical: expires within 7 days
+          alerts.push({
+            id: `sub-exp-crit-${sub._id}`,
+            category: 'subscription',
+            severity: 'critical',
+            title: `${isTrial ? 'Trial' : 'Plan'} Expiring in ${diffDays} Day${diffDays === 1 ? '' : 's'}`,
+            message: `${isTrial ? 'Trial' : 'Subscription'} for "${tenantName}" will expire on ${formattedDate}. Renew before lockout.`,
+            timestamp: now.toISOString(),
+            tenantId,
+            tenantName,
+            tenantSlug,
+            actionType: isTrial ? 'EXTEND_TRIAL' : 'RENEW',
+            actionLabel: isTrial ? 'Extend / Upgrade' : 'Renew Plan',
+            actionUrl: `/clients`,
+            metadata: { diffDays, isTrial, endDate: sub.endDate },
+          });
+        } else if (diffDays > 7 && diffDays <= 15) {
+          // Warning: expires in 8-15 days
+          alerts.push({
+            id: `sub-exp-warn-${sub._id}`,
+            category: 'subscription',
+            severity: 'warning',
+            title: `Renewal Approaching (${diffDays} Days Left)`,
+            message: `Tenant "${tenantName}" (${tenantSlug}) subscription ends on ${formattedDate}.`,
+            timestamp: now.toISOString(),
+            tenantId,
+            tenantName,
+            tenantSlug,
+            actionType: 'RENEW',
+            actionLabel: 'Send Renewal Notice',
+            actionUrl: `/clients`,
+            metadata: { diffDays, isTrial, endDate: sub.endDate },
+          });
+        }
+      }
+
+      // 2. Citizen Quota Check per Tenant
+      const plan = sub.planId as any;
+      const maxCitizens = plan?.limits?.maxCitizens;
+      if (typeof maxCitizens === 'number' && maxCitizens > 0 && tenant._id) {
+        const citizenCount = await this.userModel.countDocuments({ tenantId: tenant._id });
+        const usagePct = Math.round((citizenCount / maxCitizens) * 100);
+
+        if (citizenCount >= maxCitizens) {
+          alerts.push({
+            id: `quota-full-${tenant._id}`,
+            category: 'storage',
+            severity: 'critical',
+            title: `Citizen Quota 100% Full (${citizenCount}/${maxCitizens})`,
+            message: `Tenant "${tenantName}" has consumed all citizen registration slots. New citizen registrations will be blocked.`,
+            timestamp: now.toISOString(),
+            tenantId,
+            tenantName,
+            tenantSlug,
+            actionType: 'UPGRADE_PLAN',
+            actionLabel: 'Upgrade Plan Limit',
+            actionUrl: `/plans`,
+            metadata: { citizenCount, maxCitizens, usagePct },
+          });
+        } else if (usagePct >= 85) {
+          alerts.push({
+            id: `quota-high-${tenant._id}`,
+            category: 'storage',
+            severity: 'warning',
+            title: `High Citizen Capacity (${usagePct}%)`,
+            message: `Tenant "${tenantName}" has reached ${citizenCount} of ${maxCitizens} allowed citizens (${usagePct}%).`,
+            timestamp: now.toISOString(),
+            tenantId,
+            tenantName,
+            tenantSlug,
+            actionType: 'UPGRADE_PLAN',
+            actionLabel: 'Increase Quota',
+            actionUrl: `/plans`,
+            metadata: { citizenCount, maxCitizens, usagePct },
+          });
+        }
+      }
+    }
+
+    // 3. Platform Storage Capacity Warning (if >= 75% or >= 90%)
+    if (typeof options?.platformStoragePercent === 'number') {
+      if (options.platformStoragePercent >= 90) {
+        alerts.push({
+          id: 'platform-storage-critical',
+          category: 'storage',
+          severity: 'critical',
+          title: `Critical Platform Storage (${options.platformStoragePercent}%)`,
+          message: `Total platform disk storage is at ${options.platformStoragePercent}% (${options.platformStorageFormatted} of ${options.platformAllocatedFormatted}). Consider increasing disk volume.`,
+          timestamp: now.toISOString(),
+          actionType: 'MANAGE_STORAGE',
+          actionLabel: 'Review Storage Pool',
+          actionUrl: `/usage`,
+        });
+      } else if (options.platformStoragePercent >= 75) {
+        alerts.push({
+          id: 'platform-storage-warning',
+          category: 'storage',
+          severity: 'warning',
+          title: `Platform Storage Usage High (${options.platformStoragePercent}%)`,
+          message: `Platform storage reached ${options.platformStoragePercent}% capacity (${options.platformStorageFormatted} of ${options.platformAllocatedFormatted}).`,
+          timestamp: now.toISOString(),
+          actionType: 'MANAGE_STORAGE',
+          actionLabel: 'View Storage Breakdown',
+          actionUrl: `/usage`,
+        });
+      }
+    }
+
+    // 4. Custom Domain & DNS Verification Alerts
+    const unverifiedDomainTenants = await this.tenantModel
+      .find({
+        customDomain: { $exists: true, $ne: '' },
+        isCustomDomainVerified: { $ne: true },
+      })
+      .select('_id name slug customDomain isCustomDomainVerified createdAt')
+      .lean();
+
+    for (const t of unverifiedDomainTenants) {
+      alerts.push({
+        id: `domain-unverified-${t._id}`,
+        category: 'domain',
+        severity: 'warning',
+        title: `Custom Domain Pending DNS Verification`,
+        message: `Domain "${t.customDomain}" configured for "${t.name}" is pending DNS CNAME/A verification.`,
+        timestamp: now.toISOString(),
+        tenantId: t._id.toString(),
+        tenantName: t.name,
+        tenantSlug: t.slug,
+        actionType: 'VERIFY_DOMAIN',
+        actionLabel: 'Check DNS',
+        actionUrl: `/domains`,
+        metadata: { domain: t.customDomain },
+      });
+    }
+
+    // 5. Suspended Tenants Alert
+    const suspendedTenants = await this.tenantModel
+      .find({ status: TenantStatus.SUSPENDED })
+      .select('_id name slug status updatedAt')
+      .lean();
+
+    for (const st of suspendedTenants) {
+      alerts.push({
+        id: `tenant-suspended-${st._id}`,
+        category: 'tenant',
+        severity: 'warning',
+        title: `Tenant Access Suspended`,
+        message: `Tenant "${st.name}" (${st.slug}) is currently suspended. Portal login and citizen actions are locked.`,
+        timestamp: now.toISOString(),
+        tenantId: st._id.toString(),
+        tenantName: st.name,
+        tenantSlug: st.slug,
+        actionType: 'VIEW_CLIENT',
+        actionLabel: 'Review Tenant',
+        actionUrl: `/clients`,
+      });
+    }
+
+    // 6. High Unresolved Complaints Backlog Alert (> 20 pending complaints)
+    const pendingComplaintsCount = await this.complaintModel.countDocuments({
+      status: { $in: ['submitted', 'under_review', 'assigned'] },
+    } as any);
+
+    if (pendingComplaintsCount > 20) {
+      alerts.push({
+        id: 'complaints-backlog-high',
+        category: 'system',
+        severity: 'info',
+        title: `Citizen Complaints Backlog (${pendingComplaintsCount} Pending)`,
+        message: `There are ${pendingComplaintsCount} unresolved complaints across all tenants awaiting manager action.`,
+        timestamp: now.toISOString(),
+        actionType: 'VIEW_COMPLAINTS',
+        actionLabel: 'Review Complaints',
+        actionUrl: `/usage`,
+      });
+    }
+
+    // Sort by severity (critical first, then warning, then info)
+    const severityWeight: Record<string, number> = { critical: 3, warning: 2, info: 1 };
+    alerts.sort((a, b) => (severityWeight[b.severity] || 0) - (severityWeight[a.severity] || 0));
+
+    // Filter if requested
+    let filtered = alerts;
+    if (options?.severity) {
+      filtered = filtered.filter(a => a.severity === options.severity);
+    }
+    if (options?.category) {
+      filtered = filtered.filter(a => a.category === options.category);
+    }
+
+    return {
+      total: filtered.length,
+      criticalCount: alerts.filter(a => a.severity === 'critical').length,
+      warningCount: alerts.filter(a => a.severity === 'warning').length,
+      infoCount: alerts.filter(a => a.severity === 'info').length,
+      items: filtered,
     };
   }
 
