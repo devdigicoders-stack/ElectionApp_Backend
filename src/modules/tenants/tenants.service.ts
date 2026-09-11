@@ -18,6 +18,8 @@ import { Poll, PollDocument } from '../polls/poll.schema';
 import { Subscription, SubscriptionDocument, SubscriptionStatus, PaymentMethod } from '../subscriptions/subscription.schema';
 import { Plan, PlanDocument, BillingCycle } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { NotificationsService } from '../notifications/notifications.service';
+import { AlertType, AlertCategory } from '../notifications/system-alert.schema';
 import {
   CreateTenantDto,
   UpdateTenantDto,
@@ -111,6 +113,7 @@ export class TenantsService implements OnModuleInit {
     @InjectModel(Plan.name) private planModel: Model<PlanDocument>,
     private configService: ConfigService,
     private auditLogsService: AuditLogsService,
+    private notificationsService: NotificationsService,
   ) {}
 
   async onModuleInit() {
@@ -244,6 +247,18 @@ export class TenantsService implements OnModuleInit {
           );
         }
       }
+    }
+
+    try {
+      await this.notificationsService.recordSystemAlert({
+        title: 'New Client Onboarded',
+        message: `Client "${tenant.name}" (${tenant.slug}) has successfully onboarded on ${tenant.electionType} campaign.`,
+        type: AlertType.SUCCESS,
+        category: AlertCategory.TENANT,
+        actionUrl: '/clients',
+      });
+    } catch (e) {
+      console.warn('Could not record system alert for tenant creation:', e);
     }
 
     return tenant;

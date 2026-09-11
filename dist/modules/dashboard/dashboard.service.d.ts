@@ -56,6 +56,7 @@ export declare class DashboardService {
             active: number;
             trial: number;
             suspended: number;
+            expired: number;
         };
         subscriptions: {
             total: number;

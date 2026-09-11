@@ -35,6 +35,9 @@ export class AdminUser {
 
   @Prop({ default: false })
   isSuperAdmin: boolean;
+
+  @Prop({ type: [String], default: [] })
+  fcmTokens: string[];
 }
 
 export const AdminUserSchema = SchemaFactory.createForClass(AdminUser);

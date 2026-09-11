@@ -10,7 +10,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BillingCycle } from './plan.schema';
+import { BillingCycle, SupportLevel, TargetSegment } from './plan.schema';
 import { TenantStatus } from '../../shared/types';
 
 export class PlanLimitsDto {
@@ -33,6 +33,28 @@ export class PlanLimitsDto {
   @IsOptional()
   @IsNumber()
   maxStorageMB?: number = -1;
+}
+
+export class PlanOverageRatesDto {
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  citizenPer1kRate?: number = 0;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  storagePerGbRate?: number = 0;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  smsRate?: number = 0;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  whatsappRate?: number = 0;
 }
 
 export class CreatePlanDto {
@@ -66,6 +88,14 @@ export class CreatePlanDto {
   trialDays?: number = 14;
 
   @IsOptional()
+  @IsEnum(SupportLevel)
+  supportLevel?: SupportLevel = SupportLevel.EMAIL_24H;
+
+  @IsOptional()
+  @IsEnum(TargetSegment)
+  targetSegment?: TargetSegment = TargetSegment.VIDHAN_SABHA;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   features?: string[] = [];
@@ -74,6 +104,11 @@ export class CreatePlanDto {
   @ValidateNested()
   @Type(() => PlanLimitsDto)
   limits?: PlanLimitsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PlanOverageRatesDto)
+  overageRates?: PlanOverageRatesDto;
 
   @IsOptional()
   @IsBoolean()
@@ -116,6 +151,14 @@ export class UpdatePlanDto {
   trialDays?: number;
 
   @IsOptional()
+  @IsEnum(SupportLevel)
+  supportLevel?: SupportLevel;
+
+  @IsOptional()
+  @IsEnum(TargetSegment)
+  targetSegment?: TargetSegment;
+
+  @IsOptional()
   @IsArray()
   @IsString({ each: true })
   features?: string[];
@@ -124,6 +167,11 @@ export class UpdatePlanDto {
   @ValidateNested()
   @Type(() => PlanLimitsDto)
   limits?: PlanLimitsDto;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => PlanOverageRatesDto)
+  overageRates?: PlanOverageRatesDto;
 
   @IsOptional()
   @IsBoolean()
@@ -146,7 +194,7 @@ export class AssignPlanDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  durationMonths?: number; // e.g., 12 months for 1 year
+  durationMonths?: number;
 
   @IsOptional()
   @IsBoolean()

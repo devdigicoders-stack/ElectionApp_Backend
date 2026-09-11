@@ -6,7 +6,9 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import { TenantMiddleware } from './common/middleware/tenant.middleware';
+import { MaintenanceMiddleware } from './common/middleware/maintenance.middleware';
 import { Tenant, TenantSchema } from './modules/tenants/tenant.schema';
+import { SystemSettings, SystemSettingsSchema } from './modules/system-settings/system-settings.schema';
 import { GuardsModule } from './common/guards-module/guards.module';
 
 import { AuthModule } from './modules/auth/auth.module';
@@ -38,6 +40,7 @@ import { RegistrationFormModule } from './modules/registration-form/registration
 import { CitizenDashboardModule } from './modules/citizen-dashboard/citizen-dashboard.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ExportsModule } from './modules/exports/exports.module';
+import { SystemSettingsModule } from './modules/system-settings/system-settings.module';
 
 @Module({
   imports: [
@@ -50,7 +53,10 @@ import { ExportsModule } from './modules/exports/exports.module';
       }),
     }),
 
-    MongooseModule.forFeature([{ name: Tenant.name, schema: TenantSchema }]),
+    MongooseModule.forFeature([
+      { name: Tenant.name, schema: TenantSchema },
+      { name: SystemSettings.name, schema: SystemSettingsSchema },
+    ]),
 
     ThrottlerModule.forRoot([{ ttl: 60000, limit: 60 }]),
 
@@ -91,10 +97,18 @@ import { ExportsModule } from './modules/exports/exports.module';
     CitizenDashboardModule,
     PaymentsModule,
     ExportsModule,
+    SystemSettingsModule,
   ],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
+    // 1. Maintenance Mode — runs first on ALL routes
+    //    (internally bypasses /super-admin/* and /auth/super-admin/*)
+    consumer
+      .apply(MaintenanceMiddleware)
+      .forRoutes('*');
+
+    // 2. Tenant resolution — skips super-admin and other non-tenant paths
     consumer
       .apply(TenantMiddleware)
       .exclude(

@@ -8,8 +8,12 @@ import { PollsModule } from '../polls/polls.module';
 import { VolunteersModule } from '../volunteers/volunteers.module';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
 
+import { MongooseModule } from '@nestjs/mongoose';
+import { Tenant, TenantSchema } from '../tenants/tenant.schema';
+
 @Module({
   imports: [
+    MongooseModule.forFeature([{ name: Tenant.name, schema: TenantSchema }]),
     UsersModule,
     MembershipModule,
     ComplaintsModule,

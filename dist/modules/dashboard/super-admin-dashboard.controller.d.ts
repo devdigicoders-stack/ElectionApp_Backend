@@ -8,6 +8,7 @@ export declare class SuperAdminDashboardController {
             active: number;
             trial: number;
             suspended: number;
+            expired: number;
         };
         subscriptions: {
             total: number;

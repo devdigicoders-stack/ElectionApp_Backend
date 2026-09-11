@@ -11,6 +11,12 @@ export declare class CreateSubscriptionDto {
     paymentMethod?: PaymentMethod;
     paymentReference?: string;
     notes?: string;
+    taxRate?: number;
+    isInterState?: boolean;
+    clientGstin?: string;
+    clientState?: string;
+    clientAddress?: string;
+    invoiceType?: string;
 }
 export declare class RenewSubscriptionDto {
     durationMonths: number;
@@ -18,6 +24,11 @@ export declare class RenewSubscriptionDto {
     paymentMethod?: PaymentMethod;
     paymentReference?: string;
     notes?: string;
+    taxRate?: number;
+    isInterState?: boolean;
+    clientGstin?: string;
+    clientState?: string;
+    clientAddress?: string;
 }
 export declare class UpgradePlanDto {
     newPlanId: string;

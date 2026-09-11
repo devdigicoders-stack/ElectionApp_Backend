@@ -17,6 +17,7 @@ import { Poll, PollSchema } from '../polls/poll.schema';
 import { Subscription, SubscriptionSchema } from '../subscriptions/subscription.schema';
 import { Plan, PlanSchema } from '../plans/plan.schema';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { AuditLogsModule } from '../audit-logs/audit-logs.module';
       { name: Plan.name, schema: PlanSchema },
     ]),
     AuditLogsModule,
+    NotificationsModule,
   ],
   controllers: [
     TenantsController,

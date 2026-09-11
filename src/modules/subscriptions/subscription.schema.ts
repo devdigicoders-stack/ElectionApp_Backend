@@ -116,6 +116,55 @@ export class Subscription {
   @Prop({ default: '' })
   notes?: string;
 
+  // ── GST / Tax Invoice Fields (SRS Sec 46.2) ──────────────────────────────
+  /** SAC Code for IT Software Subscription Services */
+  @Prop({ default: '998313' })
+  sacCode: string;
+
+  /** Invoice type: tax_invoice, proforma, credit_note */
+  @Prop({ default: 'tax_invoice' })
+  invoiceType: string;
+
+  /** Base taxable amount before GST (amountPaid ÷ (1 + taxRate/100)) */
+  @Prop({ default: 0 })
+  taxableAmount: number;
+
+  /** GST rate in percent — default 18% */
+  @Prop({ default: 18 })
+  taxRate: number;
+
+  /** CGST = taxableAmount × (taxRate/2) — for intra-state supply */
+  @Prop({ default: 0 })
+  cgst: number;
+
+  /** SGST = taxableAmount × (taxRate/2) — for intra-state supply */
+  @Prop({ default: 0 })
+  sgst: number;
+
+  /** IGST = taxableAmount × taxRate — for inter-state supply */
+  @Prop({ default: 0 })
+  igst: number;
+
+  /** Total invoice amount including GST */
+  @Prop({ default: 0 })
+  totalAmount: number;
+
+  /** Is supply inter-state (IGST) or intra-state (CGST+SGST) */
+  @Prop({ default: false })
+  isInterState: boolean;
+
+  /** Client's GSTIN (optional — if registered) */
+  @Prop({ default: '' })
+  clientGstin?: string;
+
+  /** Client's billing state (e.g. Maharashtra, Delhi) */
+  @Prop({ default: '' })
+  clientState?: string;
+
+  /** Client's billing address (for invoice) */
+  @Prop({ default: '' })
+  clientAddress?: string;
+
   @Prop({ type: [SubscriptionTimelineItem], default: [] })
   timeline: SubscriptionTimelineItem[];
 }

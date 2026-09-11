@@ -13,6 +13,7 @@ import { PollDocument } from '../polls/poll.schema';
 import { Subscription, SubscriptionDocument } from '../subscriptions/subscription.schema';
 import { Plan, PlanDocument } from '../plans/plan.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateTenantDto, UpdateTenantDto, ImpersonateTenantDto, ExitImpersonationDto, OnboardFullTenantDto } from './tenant.dto';
 import { FeatureKey, UserRole, TenantStatus } from '../../shared/types';
 export declare class TenantsService implements OnModuleInit {
@@ -30,7 +31,8 @@ export declare class TenantsService implements OnModuleInit {
     private planModel;
     private configService;
     private auditLogsService;
-    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, areaModel: Model<AreaDocument>, userModel: Model<UserDocument>, complaintModel: Model<ComplaintDocument>, volunteerModel: Model<VolunteerDocument>, eventModel: Model<EventDocument>, pollModel: Model<PollDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService);
+    private notificationsService;
+    constructor(tenantModel: Model<TenantDocument>, featureModel: Model<TenantFeatureDocument>, adminUserModel: Model<AdminUserDocument>, areaLevelModel: Model<AreaLevelDocument>, areaModel: Model<AreaDocument>, userModel: Model<UserDocument>, complaintModel: Model<ComplaintDocument>, volunteerModel: Model<VolunteerDocument>, eventModel: Model<EventDocument>, pollModel: Model<PollDocument>, subscriptionModel: Model<SubscriptionDocument>, planModel: Model<PlanDocument>, configService: ConfigService, auditLogsService: AuditLogsService, notificationsService: NotificationsService);
     onModuleInit(): Promise<void>;
     create(dto: CreateTenantDto): Promise<TenantDocument>;
     onboardFull(dto: OnboardFullTenantDto, user?: any, ip?: string, userAgent?: string): Promise<{

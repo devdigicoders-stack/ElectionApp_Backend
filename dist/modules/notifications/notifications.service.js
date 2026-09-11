@@ -11,6 +11,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var __param = (this && this.__param) || function (paramIndex, decorator) {
     return function (target, key) { decorator(target, key, paramIndex); }
 };
+var NotificationsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NotificationsService = void 0;
 const common_1 = require("@nestjs/common");
@@ -20,14 +21,25 @@ const notification_schema_1 = require("./notification.schema");
 const user_schema_1 = require("../users/user.schema");
 const membership_schema_1 = require("../membership/membership.schema");
 const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const tenant_schema_1 = require("../tenants/tenant.schema");
+const admin_user_schema_1 = require("../admin-users/admin-user.schema");
+const platform_broadcast_schema_1 = require("./platform-broadcast.schema");
+const system_alert_schema_1 = require("./system-alert.schema");
+const firebase_service_1 = require("./firebase.service");
 const types_1 = require("../../shared/types");
-let NotificationsService = class NotificationsService {
-    constructor(notificationModel, readModel, userModel, membershipModel, volunteerModel) {
+let NotificationsService = NotificationsService_1 = class NotificationsService {
+    constructor(notificationModel, readModel, userModel, membershipModel, volunteerModel, broadcastModel, alertModel, adminUserModel, tenantModel, firebaseService) {
         this.notificationModel = notificationModel;
         this.readModel = readModel;
         this.userModel = userModel;
         this.membershipModel = membershipModel;
         this.volunteerModel = volunteerModel;
+        this.broadcastModel = broadcastModel;
+        this.alertModel = alertModel;
+        this.adminUserModel = adminUserModel;
+        this.tenantModel = tenantModel;
+        this.firebaseService = firebaseService;
+        this.logger = new common_1.Logger(NotificationsService_1.name);
     }
     async create(tenant, data) {
         return this.notificationModel.create({ tenantId: tenant._id, ...data });
@@ -91,19 +103,260 @@ let NotificationsService = class NotificationsService {
     async remove(tenant, id) {
         return this.notificationModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
     }
+    async getSystemInbox(query) {
+        const page = Math.max(query.page || 1, 1);
+        const limit = Math.min(query.limit || 20, 100);
+        const skip = (page - 1) * limit;
+        await this.seedDefaultAlertsIfEmpty();
+        const filter = {};
+        if (query.type)
+            filter.type = query.type;
+        if (query.category)
+            filter.category = query.category;
+        if (query.search) {
+            filter.$or = [
+                { title: { $regex: query.search, $options: 'i' } },
+                { message: { $regex: query.search, $options: 'i' } },
+            ];
+        }
+        const [alerts, total, unreadCount] = await Promise.all([
+            this.alertModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
+            this.alertModel.countDocuments(filter),
+            this.alertModel.countDocuments({ isRead: false }),
+        ]);
+        return {
+            data: alerts,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit) || 1,
+                unreadCount,
+            },
+        };
+    }
+    async markAlertRead(alertId) {
+        const updated = await this.alertModel.findByIdAndUpdate(alertId, { isRead: true }, { new: true });
+        if (!updated)
+            throw new common_1.NotFoundException('Alert not found');
+        return updated;
+    }
+    async markAllAlertsRead() {
+        await this.alertModel.updateMany({ isRead: false }, { isRead: true });
+        return { success: true, message: 'All alerts marked as read' };
+    }
+    async deleteAlert(alertId) {
+        await this.alertModel.findByIdAndDelete(alertId);
+        return { success: true, message: 'Alert deleted' };
+    }
+    async recordSystemAlert(dto) {
+        return this.alertModel.create({
+            title: dto.title,
+            message: dto.message,
+            type: dto.type || system_alert_schema_1.AlertType.INFO,
+            category: dto.category || system_alert_schema_1.AlertCategory.SYSTEM,
+            actionUrl: dto.actionUrl || undefined,
+            metadata: dto.metadata || {},
+            isRead: false,
+        });
+    }
+    async seedDefaultAlertsIfEmpty() {
+        const count = await this.alertModel.estimatedDocumentCount();
+        if (count > 0)
+            return;
+        const initialAlerts = [
+            {
+                title: 'Platform Maintenance Notice',
+                message: 'Scheduled core infrastructure update is planned for Sunday 02:00 AM IST. Downtime expected: < 15 mins.',
+                type: system_alert_schema_1.AlertType.ALERT,
+                category: system_alert_schema_1.AlertCategory.MAINTENANCE,
+                isRead: false,
+            },
+            {
+                title: 'New Client Onboarded',
+                message: 'Tenant "Amit Sharma Campaign" has completed onboarding with Vidhan Sabha Pro plan.',
+                type: system_alert_schema_1.AlertType.SUCCESS,
+                category: system_alert_schema_1.AlertCategory.TENANT,
+                isRead: false,
+            },
+            {
+                title: 'Domain Verification Alert',
+                message: 'Domain validation for "anitadesai.org" encountered DNS propagation delay. Check CNAME record.',
+                type: system_alert_schema_1.AlertType.WARNING,
+                category: system_alert_schema_1.AlertCategory.DOMAIN,
+                isRead: false,
+            },
+            {
+                title: 'Subscription Payment Processed',
+                message: 'Auto-renewal successful for Tenant "Ravi Kumar Lok Sabha" (₹49,999). Invoice generated.',
+                type: system_alert_schema_1.AlertType.INFO,
+                category: system_alert_schema_1.AlertCategory.PAYMENT,
+                isRead: true,
+            },
+        ];
+        await this.alertModel.insertMany(initialAlerts);
+    }
+    async getBroadcasts(page = 1, limit = 20) {
+        const safePage = Math.max(page, 1);
+        const safeLimit = Math.min(limit, 100);
+        const skip = (safePage - 1) * safeLimit;
+        const [data, total] = await Promise.all([
+            this.broadcastModel.find().sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
+            this.broadcastModel.countDocuments(),
+        ]);
+        return {
+            data,
+            meta: {
+                total,
+                page: safePage,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit) || 1,
+            },
+        };
+    }
+    async sendPlatformBroadcast(dto, adminUser) {
+        const { title, message, type = 'announcement', priority = 'normal', targetAudience = platform_broadcast_schema_1.BroadcastTarget.ALL_TENANTS, targetPlanId, targetStatus, targetTenantIds = [], channels = ['in_app'], actionUrl, } = dto;
+        let targetTenantsQuery = {};
+        if (targetAudience === platform_broadcast_schema_1.BroadcastTarget.ALL_TENANTS) {
+            targetTenantsQuery = { status: { $ne: 'deleted' } };
+        }
+        else if (targetAudience === platform_broadcast_schema_1.BroadcastTarget.BY_STATUS && targetStatus) {
+            targetTenantsQuery = { status: targetStatus };
+        }
+        else if (targetAudience === platform_broadcast_schema_1.BroadcastTarget.SPECIFIC_TENANTS && targetTenantIds.length > 0) {
+            targetTenantsQuery = { _id: { $in: targetTenantIds } };
+        }
+        const matchedTenants = await this.tenantModel.find(targetTenantsQuery).select('_id name');
+        const matchedTenantIds = matchedTenants.map((t) => t._id);
+        let adminUsersQuery = {};
+        if (targetAudience === platform_broadcast_schema_1.BroadcastTarget.SYSTEM_STAFF) {
+            adminUsersQuery = { isSuperAdmin: true };
+        }
+        else {
+            adminUsersQuery = { tenantId: { $in: matchedTenantIds } };
+        }
+        const targetAdmins = await this.adminUserModel.find(adminUsersQuery).select('_id email fcmTokens');
+        const recipientCount = targetAdmins.length || matchedTenants.length || 1;
+        const fcmTokens = [];
+        for (const admin of targetAdmins) {
+            if (Array.isArray(admin.fcmTokens)) {
+                for (const tok of admin.fcmTokens) {
+                    if (tok && !fcmTokens.includes(tok)) {
+                        fcmTokens.push(tok);
+                    }
+                }
+            }
+        }
+        let pushSuccess = 0;
+        let pushFailure = 0;
+        if (channels.includes('push') && fcmTokens.length > 0) {
+            const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
+                title: `📢 ${title}`,
+                body: message,
+                data: {
+                    type,
+                    priority,
+                    actionUrl: actionUrl || '/notifications',
+                    broadcast: 'true',
+                },
+            });
+            pushSuccess = pushResult.successCount;
+            pushFailure = pushResult.failureCount;
+        }
+        if (channels.includes('in_app')) {
+            await this.recordSystemAlert({
+                title: `[Broadcast] ${title}`,
+                message,
+                type: priority === 'critical' ? system_alert_schema_1.AlertType.ALERT : system_alert_schema_1.AlertType.INFO,
+                category: system_alert_schema_1.AlertCategory.SYSTEM,
+                actionUrl,
+                metadata: { targetAudience, type, priority },
+            });
+        }
+        const broadcastRecord = await this.broadcastModel.create({
+            title,
+            message,
+            type,
+            priority,
+            targetAudience,
+            targetPlanId: targetPlanId || null,
+            targetStatus: targetStatus || null,
+            targetTenantIds: matchedTenantIds,
+            channels,
+            actionUrl: actionUrl || null,
+            sentBy: adminUser?.sub || adminUser?._id,
+            sentByName: adminUser?.name || 'Super Admin',
+            recipientCount,
+            pushSuccessCount: pushSuccess,
+            pushFailureCount: pushFailure,
+            isSent: true,
+            sentAt: new Date(),
+        });
+        return {
+            success: true,
+            message: 'Platform broadcast sent successfully',
+            broadcast: broadcastRecord,
+            recipientCount,
+            pushStats: {
+                tokensTargeted: fcmTokens.length,
+                success: pushSuccess,
+                failure: pushFailure,
+            },
+        };
+    }
+    async registerFcmToken(userId, token) {
+        if (!token || token.trim().length < 10) {
+            return { success: false, message: 'Invalid FCM token' };
+        }
+        await this.adminUserModel.findByIdAndUpdate(userId, { $addToSet: { fcmTokens: token.trim() } }, { new: true });
+        return { success: true, message: 'FCM push token registered successfully' };
+    }
+    async testFcm(targetToken) {
+        let tokenToUse = targetToken;
+        if (!tokenToUse) {
+            const adminWithToken = await this.adminUserModel.findOne({
+                fcmTokens: { $exists: true, $not: { $size: 0 } },
+            });
+            tokenToUse = adminWithToken?.fcmTokens?.[0];
+        }
+        if (!tokenToUse) {
+            return {
+                success: false,
+                message: 'No registered device push token found. Please click "Enable Push Notifications" in your browser first.',
+            };
+        }
+        const result = await this.firebaseService.sendToSingleToken(tokenToUse, {
+            title: '🔔 Test Notification from Antigravity / SaaS Super Admin',
+            body: 'Firebase Cloud Messaging (FCM) is properly connected and operating in real-time!',
+            data: {
+                test: 'true',
+                timestamp: new Date().toISOString(),
+            },
+        });
+        return result;
+    }
 };
 exports.NotificationsService = NotificationsService;
-exports.NotificationsService = NotificationsService = __decorate([
+exports.NotificationsService = NotificationsService = NotificationsService_1 = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(notification_schema_1.Notification.name)),
     __param(1, (0, mongoose_1.InjectModel)(notification_schema_1.NotificationRead.name)),
     __param(2, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
     __param(3, (0, mongoose_1.InjectModel)(membership_schema_1.Membership.name)),
     __param(4, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
+    __param(5, (0, mongoose_1.InjectModel)(platform_broadcast_schema_1.PlatformBroadcast.name)),
+    __param(6, (0, mongoose_1.InjectModel)(system_alert_schema_1.SystemAlert.name)),
+    __param(7, (0, mongoose_1.InjectModel)(admin_user_schema_1.AdminUser.name)),
+    __param(8, (0, mongoose_1.InjectModel)(tenant_schema_1.Tenant.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
-        mongoose_2.Model])
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        mongoose_2.Model,
+        firebase_service_1.FirebaseService])
 ], NotificationsService);
 //# sourceMappingURL=notifications.service.js.map

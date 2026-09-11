@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AssignPlanDto = exports.UpdatePlanDto = exports.CreatePlanDto = exports.PlanLimitsDto = void 0;
+exports.AssignPlanDto = exports.UpdatePlanDto = exports.CreatePlanDto = exports.PlanOverageRatesDto = exports.PlanLimitsDto = void 0;
 const class_validator_1 = require("class-validator");
 const class_transformer_1 = require("class-transformer");
 const plan_schema_1 = require("./plan.schema");
@@ -49,11 +49,46 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], PlanLimitsDto.prototype, "maxStorageMB", void 0);
+class PlanOverageRatesDto {
+    constructor() {
+        this.citizenPer1kRate = 0;
+        this.storagePerGbRate = 0;
+        this.smsRate = 0;
+        this.whatsappRate = 0;
+    }
+}
+exports.PlanOverageRatesDto = PlanOverageRatesDto;
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PlanOverageRatesDto.prototype, "citizenPer1kRate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PlanOverageRatesDto.prototype, "storagePerGbRate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PlanOverageRatesDto.prototype, "smsRate", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], PlanOverageRatesDto.prototype, "whatsappRate", void 0);
 class CreatePlanDto {
     constructor() {
         this.currency = 'INR';
         this.billingCycle = plan_schema_1.BillingCycle.YEARLY;
         this.trialDays = 14;
+        this.supportLevel = plan_schema_1.SupportLevel.EMAIL_24H;
+        this.targetSegment = plan_schema_1.TargetSegment.VIDHAN_SABHA;
         this.features = [];
         this.isPopular = false;
         this.isActive = true;
@@ -99,6 +134,16 @@ __decorate([
 ], CreatePlanDto.prototype, "trialDays", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(plan_schema_1.SupportLevel),
+    __metadata("design:type", String)
+], CreatePlanDto.prototype, "supportLevel", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(plan_schema_1.TargetSegment),
+    __metadata("design:type", String)
+], CreatePlanDto.prototype, "targetSegment", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
@@ -109,6 +154,12 @@ __decorate([
     (0, class_transformer_1.Type)(() => PlanLimitsDto),
     __metadata("design:type", PlanLimitsDto)
 ], CreatePlanDto.prototype, "limits", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => PlanOverageRatesDto),
+    __metadata("design:type", PlanOverageRatesDto)
+], CreatePlanDto.prototype, "overageRates", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
@@ -161,6 +212,16 @@ __decorate([
 ], UpdatePlanDto.prototype, "trialDays", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(plan_schema_1.SupportLevel),
+    __metadata("design:type", String)
+], UpdatePlanDto.prototype, "supportLevel", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsEnum)(plan_schema_1.TargetSegment),
+    __metadata("design:type", String)
+], UpdatePlanDto.prototype, "targetSegment", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsArray)(),
     (0, class_validator_1.IsString)({ each: true }),
     __metadata("design:type", Array)
@@ -171,6 +232,12 @@ __decorate([
     (0, class_transformer_1.Type)(() => PlanLimitsDto),
     __metadata("design:type", PlanLimitsDto)
 ], UpdatePlanDto.prototype, "limits", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.ValidateNested)(),
+    (0, class_transformer_1.Type)(() => PlanOverageRatesDto),
+    __metadata("design:type", PlanOverageRatesDto)
+], UpdatePlanDto.prototype, "overageRates", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),

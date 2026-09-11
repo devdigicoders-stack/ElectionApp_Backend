@@ -97,12 +97,15 @@ export class DashboardService {
       activeTenants,
       trialTenants,
       suspendedTenants,
+      expiredTenantIds,
     ] = await Promise.all([
       this.tenantModel.countDocuments(),
       this.tenantModel.countDocuments({ status: TenantStatus.ACTIVE }),
       this.tenantModel.countDocuments({ status: TenantStatus.TRIAL }),
       this.tenantModel.countDocuments({ status: TenantStatus.SUSPENDED }),
+      this.subscriptionModel.distinct('tenantId', { status: SubscriptionStatus.EXPIRED }),
     ]);
+    const expiredTenants = Array.isArray(expiredTenantIds) ? expiredTenantIds.length : 0;
 
     // 2. Citizens across all tenants (SRS Sec 45.1: Registered Users vs Active Users)
     const thirtyDaysAgo = new Date();
@@ -290,6 +293,7 @@ export class DashboardService {
         active: activeTenants,
         trial: trialTenants,
         suspended: suspendedTenants,
+        expired: expiredTenants,
       },
       subscriptions: {
         total: totalSubscriptions,

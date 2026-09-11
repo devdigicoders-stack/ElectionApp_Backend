@@ -1,4 +1,4 @@
-import { BillingCycle } from './plan.schema';
+import { BillingCycle, SupportLevel, TargetSegment } from './plan.schema';
 import { TenantStatus } from '../../shared/types';
 export declare class PlanLimitsDto {
     maxCitizens?: number;
@@ -6,6 +6,12 @@ export declare class PlanLimitsDto {
     maxPostersPerMonth?: number;
     maxNotificationsPerMonth?: number;
     maxStorageMB?: number;
+}
+export declare class PlanOverageRatesDto {
+    citizenPer1kRate?: number;
+    storagePerGbRate?: number;
+    smsRate?: number;
+    whatsappRate?: number;
 }
 export declare class CreatePlanDto {
     name: string;
@@ -15,8 +21,11 @@ export declare class CreatePlanDto {
     currency?: string;
     billingCycle?: BillingCycle;
     trialDays?: number;
+    supportLevel?: SupportLevel;
+    targetSegment?: TargetSegment;
     features?: string[];
     limits?: PlanLimitsDto;
+    overageRates?: PlanOverageRatesDto;
     isPopular?: boolean;
     isActive?: boolean;
     sortOrder?: number;
@@ -28,8 +37,11 @@ export declare class UpdatePlanDto {
     currency?: string;
     billingCycle?: BillingCycle;
     trialDays?: number;
+    supportLevel?: SupportLevel;
+    targetSegment?: TargetSegment;
     features?: string[];
     limits?: PlanLimitsDto;
+    overageRates?: PlanOverageRatesDto;
     isPopular?: boolean;
     isActive?: boolean;
     sortOrder?: number;

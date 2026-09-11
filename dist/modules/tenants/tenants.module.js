@@ -26,6 +26,7 @@ const poll_schema_1 = require("../polls/poll.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let TenantsModule = class TenantsModule {
 };
 exports.TenantsModule = TenantsModule;
@@ -47,6 +48,7 @@ exports.TenantsModule = TenantsModule = __decorate([
                 { name: plan_schema_1.Plan.name, schema: plan_schema_1.PlanSchema },
             ]),
             audit_logs_module_1.AuditLogsModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [
             tenants_controller_1.TenantsController,

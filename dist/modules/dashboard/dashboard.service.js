@@ -115,12 +115,14 @@ let DashboardService = class DashboardService {
         };
     }
     async getSuperAdminStats() {
-        const [totalTenants, activeTenants, trialTenants, suspendedTenants,] = await Promise.all([
+        const [totalTenants, activeTenants, trialTenants, suspendedTenants, expiredTenantIds,] = await Promise.all([
             this.tenantModel.countDocuments(),
             this.tenantModel.countDocuments({ status: types_1.TenantStatus.ACTIVE }),
             this.tenantModel.countDocuments({ status: types_1.TenantStatus.TRIAL }),
             this.tenantModel.countDocuments({ status: types_1.TenantStatus.SUSPENDED }),
+            this.subscriptionModel.distinct('tenantId', { status: subscription_schema_1.SubscriptionStatus.EXPIRED }),
         ]);
+        const expiredTenants = Array.isArray(expiredTenantIds) ? expiredTenantIds.length : 0;
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
         const [totalCitizens, activeCitizens, completedProfiles, newCitizensLast30Days, activeLast30Days,] = await Promise.all([
@@ -265,6 +267,7 @@ let DashboardService = class DashboardService {
                 active: activeTenants,
                 trial: trialTenants,
                 suspended: suspendedTenants,
+                expired: expiredTenants,
             },
             subscriptions: {
                 total: totalSubscriptions,

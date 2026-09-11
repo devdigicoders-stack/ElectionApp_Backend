@@ -66,6 +66,8 @@ const poll_schema_1 = require("../polls/poll.schema");
 const subscription_schema_1 = require("../subscriptions/subscription.schema");
 const plan_schema_1 = require("../plans/plan.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
+const notifications_service_1 = require("../notifications/notifications.service");
+const system_alert_schema_1 = require("../notifications/system-alert.schema");
 const types_1 = require("../../shared/types");
 const registration_form_types_1 = require("../registration-form/registration-form.types");
 function saveBase64Image(base64Str, tenantSlug, prefix) {
@@ -133,7 +135,7 @@ function sanitizeBrandingImages(branding, slug) {
     return result;
 }
 let TenantsService = class TenantsService {
-    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, areaModel, userModel, complaintModel, volunteerModel, eventModel, pollModel, subscriptionModel, planModel, configService, auditLogsService) {
+    constructor(tenantModel, featureModel, adminUserModel, areaLevelModel, areaModel, userModel, complaintModel, volunteerModel, eventModel, pollModel, subscriptionModel, planModel, configService, auditLogsService, notificationsService) {
         this.tenantModel = tenantModel;
         this.featureModel = featureModel;
         this.adminUserModel = adminUserModel;
@@ -148,6 +150,7 @@ let TenantsService = class TenantsService {
         this.planModel = planModel;
         this.configService = configService;
         this.auditLogsService = auditLogsService;
+        this.notificationsService = notificationsService;
     }
     async onModuleInit() {
         try {
@@ -261,6 +264,18 @@ let TenantsService = class TenantsService {
                     await this.featureModel.updateOne({ tenantId: tenant._id, featureKey: fKey }, { $set: { isEnabled: planFeatures.has(fKey) } });
                 }
             }
+        }
+        try {
+            await this.notificationsService.recordSystemAlert({
+                title: 'New Client Onboarded',
+                message: `Client "${tenant.name}" (${tenant.slug}) has successfully onboarded on ${tenant.electionType} campaign.`,
+                type: system_alert_schema_1.AlertType.SUCCESS,
+                category: system_alert_schema_1.AlertCategory.TENANT,
+                actionUrl: '/clients',
+            });
+        }
+        catch (e) {
+            console.warn('Could not record system alert for tenant creation:', e);
         }
         return tenant;
     }
@@ -903,6 +918,7 @@ exports.TenantsService = TenantsService = __decorate([
         mongoose_2.Model,
         mongoose_2.Model,
         config_1.ConfigService,
-        audit_logs_service_1.AuditLogsService])
+        audit_logs_service_1.AuditLogsService,
+        notifications_service_1.NotificationsService])
 ], TenantsService);
 //# sourceMappingURL=tenants.service.js.map

@@ -9,7 +9,7 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PlanSchema = exports.Plan = exports.PlanLimits = exports.BillingCycle = void 0;
+exports.PlanSchema = exports.Plan = exports.PlanOverageRates = exports.PlanLimits = exports.TargetSegment = exports.SupportLevel = exports.BillingCycle = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 var BillingCycle;
 (function (BillingCycle) {
@@ -18,6 +18,22 @@ var BillingCycle;
     BillingCycle["YEARLY"] = "yearly";
     BillingCycle["ONE_TIME"] = "one_time";
 })(BillingCycle || (exports.BillingCycle = BillingCycle = {}));
+var SupportLevel;
+(function (SupportLevel) {
+    SupportLevel["COMMUNITY"] = "community";
+    SupportLevel["EMAIL_24H"] = "email_24h";
+    SupportLevel["PRIORITY_WHATSAPP"] = "priority_whatsapp";
+    SupportLevel["DEDICATED_MANAGER"] = "dedicated_manager";
+})(SupportLevel || (exports.SupportLevel = SupportLevel = {}));
+var TargetSegment;
+(function (TargetSegment) {
+    TargetSegment["GRAM_PANCHAYAT"] = "gram_panchayat";
+    TargetSegment["MUNICIPAL_WARD"] = "municipal_ward";
+    TargetSegment["VIDHAN_SABHA"] = "vidhan_sabha";
+    TargetSegment["LOK_SABHA"] = "lok_sabha";
+    TargetSegment["POLITICAL_PARTY"] = "political_party";
+    TargetSegment["ALL"] = "all";
+})(TargetSegment || (exports.TargetSegment = TargetSegment = {}));
 let PlanLimits = class PlanLimits {
 };
 exports.PlanLimits = PlanLimits;
@@ -44,6 +60,28 @@ __decorate([
 exports.PlanLimits = PlanLimits = __decorate([
     (0, mongoose_1.Schema)({ _id: false })
 ], PlanLimits);
+let PlanOverageRates = class PlanOverageRates {
+};
+exports.PlanOverageRates = PlanOverageRates;
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], PlanOverageRates.prototype, "citizenPer1kRate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], PlanOverageRates.prototype, "storagePerGbRate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], PlanOverageRates.prototype, "smsRate", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 0 }),
+    __metadata("design:type", Number)
+], PlanOverageRates.prototype, "whatsappRate", void 0);
+exports.PlanOverageRates = PlanOverageRates = __decorate([
+    (0, mongoose_1.Schema)({ _id: false })
+], PlanOverageRates);
 let Plan = class Plan {
 };
 exports.Plan = Plan;
@@ -76,6 +114,22 @@ __decorate([
     __metadata("design:type", Number)
 ], Plan.prototype, "trialDays", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({
+        required: true,
+        enum: Object.values(SupportLevel),
+        default: SupportLevel.EMAIL_24H,
+    }),
+    __metadata("design:type", String)
+], Plan.prototype, "supportLevel", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({
+        required: true,
+        enum: Object.values(TargetSegment),
+        default: TargetSegment.VIDHAN_SABHA,
+    }),
+    __metadata("design:type", String)
+], Plan.prototype, "targetSegment", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: [String], default: [] }),
     __metadata("design:type", Array)
 ], Plan.prototype, "features", void 0);
@@ -83,6 +137,10 @@ __decorate([
     (0, mongoose_1.Prop)({ type: PlanLimits, default: () => ({}) }),
     __metadata("design:type", PlanLimits)
 ], Plan.prototype, "limits", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: PlanOverageRates, default: () => ({}) }),
+    __metadata("design:type", PlanOverageRates)
+], Plan.prototype, "overageRates", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ default: false }),
     __metadata("design:type", Boolean)
@@ -100,4 +158,5 @@ exports.Plan = Plan = __decorate([
 ], Plan);
 exports.PlanSchema = mongoose_1.SchemaFactory.createForClass(Plan);
 exports.PlanSchema.index({ isActive: 1, sortOrder: 1 });
+exports.PlanSchema.index({ targetSegment: 1, supportLevel: 1 });
 //# sourceMappingURL=plan.schema.js.map
