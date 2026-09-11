@@ -99,7 +99,7 @@ export class PollsController {
     @Param('id') id: string,
     @Body() dto: VotePollDto,
   ) {
-    return this.pollsService.vote(req.tenant, id, req.user.sub, dto.optionId);
+    return this.pollsService.vote(req.tenant, id, req.user.sub, dto);
   }
 
   /**
@@ -196,7 +196,41 @@ export class PollsController {
   }
 
   /**
-   * 9. Delete poll and associated votes (Admin / Leader)
+   * 9. Manually declare poll results immediately (Admin / Leader)
+   * POST /polls/:id/declare-result or PATCH /polls/:id/declare-result
+   */
+  @Post(':id/declare-result')
+  @Patch(':id/declare-result')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.CONTENT_MANAGER,
+  )
+  declareResult(@Req() req: TenantRequest, @Param('id') id: string) {
+    return this.pollsService.declareResult(req.tenant, id);
+  }
+
+  /**
+   * 10. Manually close poll immediately (Admin / Leader)
+   * POST /polls/:id/close or PATCH /polls/:id/close
+   */
+  @Post(':id/close')
+  @Patch(':id/close')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.CONTENT_MANAGER,
+  )
+  closePoll(@Req() req: TenantRequest, @Param('id') id: string) {
+    return this.pollsService.closePoll(req.tenant, id);
+  }
+
+  /**
+   * 11. Delete poll and associated votes (Admin / Leader)
    * DELETE /polls/:id
    */
   @Delete(':id')

@@ -19,9 +19,13 @@ export declare class Poll {
     targetMaxAge?: number;
     resultVisibility: PollResultVisibility;
     allowRevote: boolean;
+    allowMultipleChoices: boolean;
+    maxChoices: number;
     isActive: boolean;
     startsAt?: Date;
     endsAt?: Date;
+    durationHours?: number;
+    resultDeclaredAt?: Date;
     totalVotes: number;
 }
 export declare const PollSchema: import("mongoose").Schema<Poll, import("mongoose").Model<Poll, any, any, any, any, any, Poll>, {}, {}, {}, {}, import("mongoose").DefaultSchemaOptions, Poll, Document<unknown, {}, Poll, {
@@ -145,6 +149,24 @@ export declare const PollSchema: import("mongoose").Schema<Poll, import("mongoos
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    allowMultipleChoices?: import("mongoose").SchemaDefinitionProperty<boolean, Poll, Document<unknown, {}, Poll, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    maxChoices?: import("mongoose").SchemaDefinitionProperty<number, Poll, Document<unknown, {}, Poll, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     isActive?: import("mongoose").SchemaDefinitionProperty<boolean, Poll, Document<unknown, {}, Poll, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
@@ -172,6 +194,24 @@ export declare const PollSchema: import("mongoose").Schema<Poll, import("mongoos
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
+    durationHours?: import("mongoose").SchemaDefinitionProperty<number | undefined, Poll, Document<unknown, {}, Poll, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    resultDeclaredAt?: import("mongoose").SchemaDefinitionProperty<Date | undefined, Poll, Document<unknown, {}, Poll, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
     totalVotes?: import("mongoose").SchemaDefinitionProperty<number, Poll, Document<unknown, {}, Poll, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Poll & {
@@ -186,7 +226,8 @@ export declare class PollVote {
     tenantId: Types.ObjectId;
     pollId: Types.ObjectId;
     userId: Types.ObjectId;
-    optionId: string;
+    optionId?: string;
+    optionIds: string[];
     areaId?: Types.ObjectId;
     gender?: string;
     age?: number;
@@ -229,7 +270,16 @@ export declare const PollVoteSchema: import("mongoose").Schema<PollVote, import(
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    optionId?: import("mongoose").SchemaDefinitionProperty<string, PollVote, Document<unknown, {}, PollVote, {
+    optionId?: import("mongoose").SchemaDefinitionProperty<string | undefined, PollVote, Document<unknown, {}, PollVote, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<PollVote & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    optionIds?: import("mongoose").SchemaDefinitionProperty<string[], PollVote, Document<unknown, {}, PollVote, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<PollVote & {
         _id: Types.ObjectId;

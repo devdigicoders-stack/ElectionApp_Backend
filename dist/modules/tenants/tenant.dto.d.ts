@@ -9,6 +9,9 @@ export declare class CreateTenantDto {
     contactPerson?: string;
     mobileNumber?: string;
     email?: string;
+    gstin?: string;
+    billingState?: string;
+    billingAddress?: string;
     electionType?: string;
     planId?: string;
     subscriptionStartDate?: string;
@@ -25,6 +28,9 @@ export declare class UpdateTenantDto {
     contactPerson?: string;
     mobileNumber?: string;
     email?: string;
+    gstin?: string;
+    billingState?: string;
+    billingAddress?: string;
     electionType?: string;
     customDomain?: string;
     status?: TenantStatus;

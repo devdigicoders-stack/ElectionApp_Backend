@@ -68,6 +68,18 @@ __decorate([
     __metadata("design:type", Object)
 ], Tenant.prototype, "email", void 0);
 __decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "gstin", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "billingState", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ type: String, default: null }),
+    __metadata("design:type", Object)
+], Tenant.prototype, "billingAddress", void 0);
+__decorate([
     (0, mongoose_1.Prop)({ type: String, default: 'other' }),
     __metadata("design:type", String)
 ], Tenant.prototype, "electionType", void 0);
