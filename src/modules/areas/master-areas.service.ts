@@ -276,6 +276,58 @@ export class MasterAreasService {
     return this.masterAreaModel.create(payload);
   }
 
+  async createMasterAreaBulk(items: any[]) {
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new BadRequestException('Items array must be non-empty');
+    }
+    const created = [];
+    for (const item of items) {
+      if (!item.name || !item.levelType) continue;
+      const doc = await this.createMasterArea(item);
+      created.push(doc);
+    }
+    return {
+      success: true,
+      count: created.length,
+      data: created,
+    };
+  }
+
+  async getByParent(parentId: string) {
+    const parentObjId = new Types.ObjectId(parentId);
+    return this.masterAreaModel
+      .find({
+        $or: [
+          { parentId: parentObjId },
+          { stateId: parentObjId },
+          { lokSabhaId: parentObjId },
+          { districtId: parentObjId },
+          { vidhanSabhaId: parentObjId },
+          { blockId: parentObjId },
+          { panchayatId: parentObjId },
+          { gramId: parentObjId },
+        ],
+        isActive: true,
+      })
+      .sort({ sortOrder: 1, name: 1 })
+      .lean();
+  }
+
+  async getById(id: string) {
+    const doc = await this.masterAreaModel
+      .findById(id)
+      .populate('stateId', 'name code')
+      .populate('lokSabhaId', 'name code')
+      .populate('districtId', 'name')
+      .populate('vidhanSabhaId', 'name code')
+      .populate('blockId', 'name code')
+      .populate('panchayatId', 'name code')
+      .populate('parentId', 'name code levelType')
+      .lean();
+    if (!doc) throw new NotFoundException('Master area not found');
+    return doc;
+  }
+
   async updateMasterArea(
     id: string,
     data: Partial<{
@@ -502,8 +554,8 @@ export class MasterAreasService {
     const scopeObjId = new Types.ObjectId(options.scopeId);
 
     // 1. Determine Levels to create for this tenant
-    // Standard Indian hierarchy: District -> Vidhan Sabha -> Block -> Gram Panchayat / Ward
-    const levelNames = ['District', 'Vidhan Sabha', 'Block', 'Gram Panchayat / Ward'];
+    // Complete hierarchy: District -> Vidhan Sabha -> Block -> Gram Panchayat -> Ward
+    const levelNames = ['District', 'Vidhan Sabha', 'Block', 'Gram Panchayat', 'Ward'];
     const createdLevels: AreaLevelDocument[] = [];
 
     for (let i = 0; i < levelNames.length; i++) {
@@ -525,6 +577,8 @@ export class MasterAreasService {
     const districtLvl = createdLevels[0];
     const vsLvl = createdLevels[1];
     const blockLvl = createdLevels[2];
+    const gpLvl = createdLevels[3];
+    const wardLvl = createdLevels[4];
 
     // 2. Fetch master areas matching the tenant's scope
     let targetVidhanSabhas: MasterAreaDocument[] = [];
@@ -602,14 +656,14 @@ export class MasterAreasService {
         .exec();
 
       for (const blk of masterBlocks) {
-        const existingBlk = await this.areaModel.findOne({
+        let existingBlk = await this.areaModel.findOne({
           tenantId: tenant._id,
           levelId: blockLvl._id,
           parentId: tenantVs._id,
           name: blk.name,
         });
         if (!existingBlk) {
-          await this.areaModel.create({
+          existingBlk = await this.areaModel.create({
             tenantId: tenant._id,
             levelId: blockLvl._id,
             parentId: tenantVs._id,
@@ -618,6 +672,64 @@ export class MasterAreasService {
             isActive: true,
           });
           createdCount++;
+        }
+
+        // 2d. Fetch and create Panchayats under this Block
+        const masterPanchayats = await this.masterAreaModel
+          .find({
+            levelType: 'panchayat',
+            $or: [{ blockId: blk._id }, { parentId: blk._id }],
+            isActive: true,
+          })
+          .exec();
+
+        for (const gp of masterPanchayats) {
+          let existingGp = await this.areaModel.findOne({
+            tenantId: tenant._id,
+            levelId: gpLvl._id,
+            parentId: existingBlk._id,
+            name: gp.name,
+          });
+          if (!existingGp) {
+            existingGp = await this.areaModel.create({
+              tenantId: tenant._id,
+              levelId: gpLvl._id,
+              parentId: existingBlk._id,
+              name: gp.name,
+              code: gp.code || undefined,
+              isActive: true,
+            });
+            createdCount++;
+          }
+
+          // 2e. Fetch and create Wards under this Panchayat
+          const masterWards = await this.masterAreaModel
+            .find({
+              levelType: 'ward',
+              $or: [{ panchayatId: gp._id }, { parentId: gp._id }],
+              isActive: true,
+            })
+            .exec();
+
+          for (const w of masterWards) {
+            const existingWard = await this.areaModel.findOne({
+              tenantId: tenant._id,
+              levelId: wardLvl._id,
+              parentId: existingGp._id,
+              name: w.name,
+            });
+            if (!existingWard) {
+              await this.areaModel.create({
+                tenantId: tenant._id,
+                levelId: wardLvl._id,
+                parentId: existingGp._id,
+                name: w.name,
+                code: w.code || undefined,
+                isActive: true,
+              });
+              createdCount++;
+            }
+          }
         }
       }
     }

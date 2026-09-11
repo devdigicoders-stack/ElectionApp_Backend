@@ -7,12 +7,8 @@ import {
   Body,
   Param,
   Query,
-  UseGuards,
 } from '@nestjs/common';
 import { MasterAreasService } from './master-areas.service';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
-import { RolesGuard, Roles } from '../../common/guards/roles.guard';
-import { UserRole } from '../../shared/types';
 import { AreaLevelType } from './master-area.schema';
 
 @Controller('master-areas')
@@ -91,16 +87,30 @@ export class MasterAreasController {
     return this.masterAreasService.getHierarchyTree(stateId);
   }
 
-  // ─── Super Admin Management Endpoints ─────────────────────────────────────
+  @Get('by-parent/:parentId')
+  getByParent(@Param('parentId') parentId: string) {
+    return this.masterAreasService.getByParent(parentId);
+  }
+
+  // ─── Management Endpoints (Dynamic cURL & Admin) ──────────────────────────
 
   @Post('seed-up')
   seedUttarPradesh() {
     return this.masterAreasService.seedUttarPradesh();
   }
 
+  @Post('bulk')
+  createMasterAreaBulk(
+    @Body()
+    body: {
+      items?: any[];
+    } | any[],
+  ) {
+    const items = Array.isArray(body) ? body : body.items || [];
+    return this.masterAreasService.createMasterAreaBulk(items);
+  }
+
   @Post('provision-tenant/:tenantId')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
   provisionTenant(
     @Param('tenantId') tenantId: string,
     @Body()
@@ -114,8 +124,6 @@ export class MasterAreasController {
   }
 
   @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
   createMasterArea(
     @Body()
     body: {
@@ -136,16 +144,17 @@ export class MasterAreasController {
     return this.masterAreasService.createMasterArea(body);
   }
 
+  @Get(':id')
+  getById(@Param('id') id: string) {
+    return this.masterAreasService.getById(id);
+  }
+
   @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
   updateMasterArea(@Param('id') id: string, @Body() body: any) {
     return this.masterAreasService.updateMasterArea(id, body);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.SUPER_ADMIN)
   deleteMasterArea(@Param('id') id: string) {
     return this.masterAreasService.deleteMasterArea(id);
   }
