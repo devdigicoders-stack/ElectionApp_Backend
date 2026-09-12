@@ -72,6 +72,7 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
         this.userModel = userModel;
         this.bgRemovalService = bgRemovalService;
         this.logger = new common_1.Logger(PosterGeneratorService_1.name);
+        this.seedingLocks = new Set();
     }
     drawRoundedRect(ctx, x, y, w, h, r) {
         ctx.beginPath();
@@ -132,243 +133,257 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
         return `/uploads/${tenantSlug}/poster-templates/${filename}`;
     }
     async seedDefaultTemplatesIfEmpty(tenant) {
-        const count = await this.templateModel.countDocuments({ tenantId: tenant._id });
-        if (count > 0)
+        const tenantIdStr = tenant._id.toString();
+        if (this.seedingLocks.has(tenantIdStr))
             return;
-        const primaryColor = tenant.branding?.primaryColor || '#1e3a8a';
-        const secondaryColor = tenant.branding?.secondaryColor || '#f59e0b';
-        const festivalImg = await this.createBaseTemplateImage(tenant.slug, 'festival_greeting_base.png', 1080, 1080, {
-            title: 'पावन पर्व की हार्दिक शुभकामनाएं',
-            subtitle: '★ समस्त क्षेत्रवासियों को हार्दिक बधाई एवं शुभकामनाएं ★',
-            primary: primaryColor,
-            secondary: secondaryColor,
-            dark: '#451a03',
-        });
-        const campaignImg = await this.createBaseTemplateImage(tenant.slug, 'campaign_feed_base.png', 1080, 1350, {
-            title: 'जन संकल्प विजय अभियान',
-            subtitle: 'विकास की नई राह • सशक्त नेतृत्व • सशक्त समाज',
-            primary: primaryColor,
-            secondary: secondaryColor,
-            dark: '#0f172a',
-        });
-        const congratsImg = await this.createBaseTemplateImage(tenant.slug, 'congratulations_base.png', 1080, 1080, {
-            title: 'हार्दिक बधाई एवं मंगलकामनाएं',
-            subtitle: 'उज्ज्वल भविष्य एवं निरंतर प्रगति की कामना सहित',
-            primary: primaryColor,
-            secondary: secondaryColor,
-            dark: '#1e1b4b',
-        });
-        const storyImg = await this.createBaseTemplateImage(tenant.slug, 'national_day_story_base.png', 1080, 1920, {
-            title: 'राष्ट्रीय पर्व पर कोटि-कोटि नमन',
-            subtitle: 'जय हिन्द • वन्दे मातरम्',
-            primary: primaryColor,
-            secondary: secondaryColor,
-            dark: '#064e3b',
-        });
-        const defaultTemplates = [
-            {
-                tenantId: tenant._id,
-                title: 'पावन पर्व शुभकामना पोस्टर (Festival Greeting)',
-                category: 'Festival',
-                description: 'त्योहारों और विशेष अवसरों पर अपनी फोटो और पद के साथ आकर्षक बधाई संदेश तैयार करें।',
-                templateImageUrl: festivalImg,
-                thumbnailUrl: festivalImg,
-                width: 1080,
-                height: 1080,
-                dimensionPreset: '1080x1080',
-                includeTenantBranding: true,
-                tags: ['festival', 'greeting', 'social-post', 'diwali', 'holi'],
-                sortOrder: 1,
-                fields: [
-                    {
-                        key: 'photo',
-                        label: 'आपकी फोटो (Photo)',
-                        type: 'photo',
-                        editable: true,
-                        required: true,
-                        position: { x: 8, y: 55, width: 34, height: 38 },
-                        style: { maskShape: 'circle' },
-                    },
-                    {
-                        key: 'name',
-                        label: 'नाम (Full Name)',
-                        type: 'text',
-                        editable: true,
-                        required: true,
-                        defaultValue: 'नागरिक / कार्यकर्ता',
-                        position: { x: 45, y: 72, width: 50, height: 8 },
-                        style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'designation',
-                        label: 'पद / दायित्व (Designation)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'सक्रिय सदस्य / Active Worker',
-                        position: { x: 45, y: 81, width: 50, height: 6 },
-                        style: { fontSize: 24, fontColor: '#fbbf24', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'area',
-                        label: 'विधानसभा / वार्ड (Area)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'विधानसभा क्षेत्र',
-                        position: { x: 45, y: 88, width: 50, height: 6 },
-                        style: { fontSize: 20, fontColor: '#94a3b8', fontWeight: 'normal', textAlign: 'left' },
-                    },
-                ],
-            },
-            {
-                tenantId: tenant._id,
-                title: 'जन संकल्प विजय अभियान (Campaign Portrait Feed)',
-                category: 'Political Campaign',
-                description: 'राजनीतिक अभियान और जनसंपर्क के लिए उच्च-गुणवत्ता 4:5 पोर्ट्रेट सोशल मीडिया पोस्टर।',
-                templateImageUrl: campaignImg,
-                thumbnailUrl: campaignImg,
-                width: 1080,
-                height: 1350,
-                dimensionPreset: '1080x1350',
-                includeTenantBranding: true,
-                tags: ['campaign', 'feed', 'rally', 'election'],
-                sortOrder: 2,
-                fields: [
-                    {
-                        key: 'photo',
-                        label: 'आपकी फोटो (Photo)',
-                        type: 'photo',
-                        editable: true,
-                        required: true,
-                        position: { x: 8, y: 60, width: 32, height: 32 },
-                        style: { maskShape: 'rounded' },
-                    },
-                    {
-                        key: 'name',
-                        label: 'नाम (Full Name)',
-                        type: 'text',
-                        editable: true,
-                        required: true,
-                        defaultValue: 'पार्टी कार्यकर्ता',
-                        position: { x: 44, y: 75, width: 52, height: 7 },
-                        style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'designation',
-                        label: 'पद / दायित्व (Designation)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'मंडल संयोजक',
-                        position: { x: 44, y: 83, width: 52, height: 6 },
-                        style: { fontSize: 24, fontColor: '#38bdf8', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'area',
-                        label: 'क्षेत्र (Area)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'वार्ड क्र. 12',
-                        position: { x: 44, y: 90, width: 52, height: 5 },
-                        style: { fontSize: 20, fontColor: '#cbd5e1', fontWeight: 'normal', textAlign: 'left' },
-                    },
-                ],
-            },
-            {
-                tenantId: tenant._id,
-                title: 'हार्दिक बधाई एवं शुभकामनाएं (Congratulations Banner)',
-                category: 'Congratulations',
-                description: 'विशेष उपलब्धि, जन्मदिन या पदभार ग्रहण पर बधाई संदेश बनाने हेतु वर्गकार पोस्टर।',
-                templateImageUrl: congratsImg,
-                thumbnailUrl: congratsImg,
-                width: 1080,
-                height: 1080,
-                dimensionPreset: '1080x1080',
-                includeTenantBranding: true,
-                tags: ['congratulations', 'birthday', 'achievement'],
-                sortOrder: 3,
-                fields: [
-                    {
-                        key: 'photo',
-                        label: 'आपकी फोटो (Photo)',
-                        type: 'photo',
-                        editable: true,
-                        required: true,
-                        position: { x: 10, y: 55, width: 32, height: 38 },
-                        style: { maskShape: 'circle' },
-                    },
-                    {
-                        key: 'name',
-                        label: 'नाम (Full Name)',
-                        type: 'text',
-                        editable: true,
-                        required: true,
-                        defaultValue: 'नागरिक',
-                        position: { x: 46, y: 73, width: 50, height: 8 },
-                        style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'designation',
-                        label: 'पद / दायित्व (Designation)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'शुभचिंतक',
-                        position: { x: 46, y: 82, width: 50, height: 6 },
-                        style: { fontSize: 24, fontColor: '#f43f5e', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                ],
-            },
-            {
-                tenantId: tenant._id,
-                title: 'राष्ट्रीय पर्व स्टेटस/स्टोरी पोस्टर (Story / WhatsApp Status)',
-                category: 'National Day',
-                description: '9:16 अनुपात में WhatsApp Status और Instagram Story के लिए आदर्श लंबवत पोस्टर।',
-                templateImageUrl: storyImg,
-                thumbnailUrl: storyImg,
-                width: 1080,
-                height: 1920,
-                dimensionPreset: '1080x1920',
-                includeTenantBranding: true,
-                tags: ['story', 'status', 'national-day', 'republic-day', 'independence-day'],
-                sortOrder: 4,
-                fields: [
-                    {
-                        key: 'photo',
-                        label: 'आपकी फोटो (Photo)',
-                        type: 'photo',
-                        editable: true,
-                        required: true,
-                        position: { x: 12, y: 72, width: 28, height: 18 },
-                        style: { maskShape: 'circle' },
-                    },
-                    {
-                        key: 'name',
-                        label: 'नाम (Full Name)',
-                        type: 'text',
-                        editable: true,
-                        required: true,
-                        defaultValue: 'देशभक्त नागरिक',
-                        position: { x: 44, y: 80, width: 50, height: 5 },
-                        style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                    {
-                        key: 'designation',
-                        label: 'पद (Designation)',
-                        type: 'text',
-                        editable: true,
-                        required: false,
-                        defaultValue: 'राष्ट्रसेवी कार्यकर्ता',
-                        position: { x: 44, y: 86, width: 50, height: 4 },
-                        style: { fontSize: 24, fontColor: '#10b981', fontWeight: 'bold', textAlign: 'left' },
-                    },
-                ],
-            },
-        ];
-        await this.templateModel.insertMany(defaultTemplates);
-        this.logger.log(`Successfully seeded ${defaultTemplates.length} default poster templates for tenant ${tenant.slug}`);
+        if (tenant.settings?.postersSeeded)
+            return;
+        this.seedingLocks.add(tenantIdStr);
+        try {
+            const count = await this.templateModel.countDocuments({ tenantId: tenant._id });
+            if (count > 0) {
+                await tenant.updateOne({ $set: { 'settings.postersSeeded': true } });
+                return;
+            }
+            const primaryColor = tenant.branding?.primaryColor || '#1e3a8a';
+            const secondaryColor = tenant.branding?.secondaryColor || '#f59e0b';
+            const festivalImg = await this.createBaseTemplateImage(tenant.slug, 'festival_greeting_base.png', 1080, 1080, {
+                title: 'पावन पर्व की हार्दिक शुभकामनाएं',
+                subtitle: '★ समस्त क्षेत्रवासियों को हार्दिक बधाई एवं शुभकामनाएं ★',
+                primary: primaryColor,
+                secondary: secondaryColor,
+                dark: '#451a03',
+            });
+            const campaignImg = await this.createBaseTemplateImage(tenant.slug, 'campaign_feed_base.png', 1080, 1350, {
+                title: 'जन संकल्प विजय अभियान',
+                subtitle: 'विकास की नई राह • सशक्त नेतृत्व • सशक्त समाज',
+                primary: primaryColor,
+                secondary: secondaryColor,
+                dark: '#0f172a',
+            });
+            const congratsImg = await this.createBaseTemplateImage(tenant.slug, 'congratulations_base.png', 1080, 1080, {
+                title: 'हार्दिक बधाई एवं मंगलकामनाएं',
+                subtitle: 'उज्ज्वल भविष्य एवं निरंतर प्रगति की कामना सहित',
+                primary: primaryColor,
+                secondary: secondaryColor,
+                dark: '#1e1b4b',
+            });
+            const storyImg = await this.createBaseTemplateImage(tenant.slug, 'national_day_story_base.png', 1080, 1920, {
+                title: 'राष्ट्रीय पर्व पर कोटि-कोटि नमन',
+                subtitle: 'जय हिन्द • वन्दे मातरम्',
+                primary: primaryColor,
+                secondary: secondaryColor,
+                dark: '#064e3b',
+            });
+            const defaultTemplates = [
+                {
+                    tenantId: tenant._id,
+                    title: 'पावन पर्व शुभकामना पोस्टर (Festival Greeting)',
+                    category: 'Festival',
+                    description: 'त्योहारों और विशेष अवसरों पर अपनी फोटो और पद के साथ आकर्षक बधाई संदेश तैयार करें।',
+                    templateImageUrl: festivalImg,
+                    thumbnailUrl: festivalImg,
+                    width: 1080,
+                    height: 1080,
+                    dimensionPreset: '1080x1080',
+                    includeTenantBranding: true,
+                    tags: ['festival', 'greeting', 'social-post', 'diwali', 'holi'],
+                    sortOrder: 1,
+                    fields: [
+                        {
+                            key: 'photo',
+                            label: 'आपकी फोटो (Photo)',
+                            type: 'photo',
+                            editable: true,
+                            required: true,
+                            position: { x: 8, y: 55, width: 34, height: 38 },
+                            style: { maskShape: 'circle' },
+                        },
+                        {
+                            key: 'name',
+                            label: 'नाम (Full Name)',
+                            type: 'text',
+                            editable: true,
+                            required: true,
+                            defaultValue: 'नागरिक / कार्यकर्ता',
+                            position: { x: 45, y: 72, width: 50, height: 8 },
+                            style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'designation',
+                            label: 'पद / दायित्व (Designation)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'सक्रिय सदस्य / Active Worker',
+                            position: { x: 45, y: 81, width: 50, height: 6 },
+                            style: { fontSize: 24, fontColor: '#fbbf24', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'area',
+                            label: 'विधानसभा / वार्ड (Area)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'विधानसभा क्षेत्र',
+                            position: { x: 45, y: 88, width: 50, height: 6 },
+                            style: { fontSize: 20, fontColor: '#94a3b8', fontWeight: 'normal', textAlign: 'left' },
+                        },
+                    ],
+                },
+                {
+                    tenantId: tenant._id,
+                    title: 'जन संकल्प विजय अभियान (Campaign Portrait Feed)',
+                    category: 'Political Campaign',
+                    description: 'राजनीतिक अभियान और जनसंपर्क के लिए उच्च-गुणवत्ता 4:5 पोर्ट्रेट सोशल मीडिया पोस्टर।',
+                    templateImageUrl: campaignImg,
+                    thumbnailUrl: campaignImg,
+                    width: 1080,
+                    height: 1350,
+                    dimensionPreset: '1080x1350',
+                    includeTenantBranding: true,
+                    tags: ['campaign', 'feed', 'rally', 'election'],
+                    sortOrder: 2,
+                    fields: [
+                        {
+                            key: 'photo',
+                            label: 'आपकी फोटो (Photo)',
+                            type: 'photo',
+                            editable: true,
+                            required: true,
+                            position: { x: 8, y: 60, width: 32, height: 32 },
+                            style: { maskShape: 'rounded' },
+                        },
+                        {
+                            key: 'name',
+                            label: 'नाम (Full Name)',
+                            type: 'text',
+                            editable: true,
+                            required: true,
+                            defaultValue: 'पार्टी कार्यकर्ता',
+                            position: { x: 44, y: 75, width: 52, height: 7 },
+                            style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'designation',
+                            label: 'पद / दायित्व (Designation)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'मंडल संयोजक',
+                            position: { x: 44, y: 83, width: 52, height: 6 },
+                            style: { fontSize: 24, fontColor: '#38bdf8', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'area',
+                            label: 'क्षेत्र (Area)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'वार्ड क्र. 12',
+                            position: { x: 44, y: 90, width: 52, height: 5 },
+                            style: { fontSize: 20, fontColor: '#cbd5e1', fontWeight: 'normal', textAlign: 'left' },
+                        },
+                    ],
+                },
+                {
+                    tenantId: tenant._id,
+                    title: 'हार्दिक बधाई एवं शुभकामनाएं (Congratulations Banner)',
+                    category: 'Congratulations',
+                    description: 'विशेष उपलब्धि, जन्मदिन या पदभार ग्रहण पर बधाई संदेश बनाने हेतु वर्गकार पोस्टर।',
+                    templateImageUrl: congratsImg,
+                    thumbnailUrl: congratsImg,
+                    width: 1080,
+                    height: 1080,
+                    dimensionPreset: '1080x1080',
+                    includeTenantBranding: true,
+                    tags: ['congratulations', 'birthday', 'achievement'],
+                    sortOrder: 3,
+                    fields: [
+                        {
+                            key: 'photo',
+                            label: 'आपकी फोटो (Photo)',
+                            type: 'photo',
+                            editable: true,
+                            required: true,
+                            position: { x: 10, y: 55, width: 32, height: 38 },
+                            style: { maskShape: 'circle' },
+                        },
+                        {
+                            key: 'name',
+                            label: 'नाम (Full Name)',
+                            type: 'text',
+                            editable: true,
+                            required: true,
+                            defaultValue: 'नागरिक',
+                            position: { x: 46, y: 73, width: 50, height: 8 },
+                            style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'designation',
+                            label: 'पद / दायित्व (Designation)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'शुभचिंतक',
+                            position: { x: 46, y: 82, width: 50, height: 6 },
+                            style: { fontSize: 24, fontColor: '#f43f5e', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                    ],
+                },
+                {
+                    tenantId: tenant._id,
+                    title: 'राष्ट्रीय पर्व स्टेटस/स्टोरी पोस्टर (Story / WhatsApp Status)',
+                    category: 'National Day',
+                    description: '9:16 अनुपात में WhatsApp Status और Instagram Story के लिए आदर्श लंबवत पोस्टर।',
+                    templateImageUrl: storyImg,
+                    thumbnailUrl: storyImg,
+                    width: 1080,
+                    height: 1920,
+                    dimensionPreset: '1080x1920',
+                    includeTenantBranding: true,
+                    tags: ['story', 'status', 'national-day', 'republic-day', 'independence-day'],
+                    sortOrder: 4,
+                    fields: [
+                        {
+                            key: 'photo',
+                            label: 'आपकी फोटो (Photo)',
+                            type: 'photo',
+                            editable: true,
+                            required: true,
+                            position: { x: 12, y: 72, width: 28, height: 18 },
+                            style: { maskShape: 'circle' },
+                        },
+                        {
+                            key: 'name',
+                            label: 'नाम (Full Name)',
+                            type: 'text',
+                            editable: true,
+                            required: true,
+                            defaultValue: 'देशभक्त नागरिक',
+                            position: { x: 44, y: 80, width: 50, height: 5 },
+                            style: { fontSize: 36, fontColor: '#ffffff', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                        {
+                            key: 'designation',
+                            label: 'पद (Designation)',
+                            type: 'text',
+                            editable: true,
+                            required: false,
+                            defaultValue: 'राष्ट्रसेवी कार्यकर्ता',
+                            position: { x: 44, y: 86, width: 50, height: 4 },
+                            style: { fontSize: 24, fontColor: '#10b981', fontWeight: 'bold', textAlign: 'left' },
+                        },
+                    ],
+                },
+            ];
+            await this.templateModel.insertMany(defaultTemplates);
+            await tenant.updateOne({ $set: { 'settings.postersSeeded': true } });
+            this.logger.log(`Successfully seeded ${defaultTemplates.length} default poster templates for tenant ${tenant.slug}`);
+        }
+        finally {
+            this.seedingLocks.delete(tenantIdStr);
+        }
     }
     async createTemplate(tenant, dto, uploadedFile) {
         let imageUrl = dto.templateImageUrl;
@@ -459,7 +474,6 @@ let PosterGeneratorService = PosterGeneratorService_1 = class PosterGeneratorSer
         return this.templateModel.find(filter).sort({ sortOrder: 1, createdAt: -1 }).lean();
     }
     async getTemplateCategories(tenant) {
-        await this.seedDefaultTemplatesIfEmpty(tenant);
         return this.templateModel.distinct('category', { tenantId: tenant._id, isActive: true });
     }
     async getTemplate(tenant, id) {
