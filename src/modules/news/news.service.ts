@@ -217,7 +217,9 @@ export class NewsService {
     const isObjectId = Types.ObjectId.isValid(idOrSlug);
     const query: any = {
       tenantId: tenant._id,
-      ...(isObjectId ? { $or: [{ _id: idOrSlug }, { slug: idOrSlug }] } : { slug: idOrSlug }),
+      ...(isObjectId
+        ? { $or: [{ _id: new Types.ObjectId(idOrSlug) }, { slug: idOrSlug }] }
+        : { slug: idOrSlug }),
     };
 
     if (isPublic) {
@@ -314,7 +316,11 @@ export class NewsService {
    * Update news article
    */
   async update(tenant: TenantDocument, id: string, dto: UpdateNewsDto) {
-    const news = await this.newsModel.findOne({ _id: id, tenantId: tenant._id });
+    const isObjectId = Types.ObjectId.isValid(id);
+    const news = await this.newsModel.findOne({
+      _id: isObjectId ? new Types.ObjectId(id) : id,
+      tenantId: tenant._id,
+    });
     if (!news) throw new NotFoundException('News article not found');
 
     if (dto.title && dto.title !== news.title && !dto.slug) {
@@ -357,7 +363,11 @@ export class NewsService {
    * Quick status update (publish / unpublish / schedule / archive)
    */
   async updateStatus(tenant: TenantDocument, id: string, dto: UpdateNewsStatusDto) {
-    const news = await this.newsModel.findOne({ _id: id, tenantId: tenant._id });
+    const isObjectId = Types.ObjectId.isValid(id);
+    const news = await this.newsModel.findOne({
+      _id: isObjectId ? new Types.ObjectId(id) : id,
+      tenantId: tenant._id,
+    });
     if (!news) throw new NotFoundException('News article not found');
 
     news.status = dto.status;
@@ -376,7 +386,11 @@ export class NewsService {
    * Delete news article
    */
   async remove(tenant: TenantDocument, id: string) {
-    const deleted = await this.newsModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const isObjectId = Types.ObjectId.isValid(id);
+    const deleted = await this.newsModel.findOneAndDelete({
+      _id: isObjectId ? new Types.ObjectId(id) : id,
+      tenantId: tenant._id,
+    });
     if (!deleted) throw new NotFoundException('News article not found');
     return { success: true, message: 'News article deleted successfully' };
   }

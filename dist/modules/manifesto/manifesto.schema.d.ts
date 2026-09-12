@@ -2,8 +2,12 @@ import { Document, Types } from 'mongoose';
 export type ManifestoDocument = Manifesto & Document;
 export declare class Manifesto {
     tenantId: Types.ObjectId;
-    category: string;
     title: string;
+    pdfUrl?: string;
+    fileUrl?: string;
+    fileType?: string;
+    coverImageUrl?: string;
+    category: string;
     description: string;
     points: string[];
     images: string[];
@@ -28,7 +32,7 @@ export declare const ManifestoSchema: import("mongoose").Schema<Manifesto, impor
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    category?: import("mongoose").SchemaDefinitionProperty<string, Manifesto, Document<unknown, {}, Manifesto, {
+    title?: import("mongoose").SchemaDefinitionProperty<string, Manifesto, Document<unknown, {}, Manifesto, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
         _id: Types.ObjectId;
@@ -37,7 +41,43 @@ export declare const ManifestoSchema: import("mongoose").Schema<Manifesto, impor
     }, "id"> & import("mongoose").HydratedDocumentOverrides<{
         id: string;
     }>> | undefined;
-    title?: import("mongoose").SchemaDefinitionProperty<string, Manifesto, Document<unknown, {}, Manifesto, {
+    pdfUrl?: import("mongoose").SchemaDefinitionProperty<string | undefined, Manifesto, Document<unknown, {}, Manifesto, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    fileUrl?: import("mongoose").SchemaDefinitionProperty<string | undefined, Manifesto, Document<unknown, {}, Manifesto, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    fileType?: import("mongoose").SchemaDefinitionProperty<string | undefined, Manifesto, Document<unknown, {}, Manifesto, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    coverImageUrl?: import("mongoose").SchemaDefinitionProperty<string | undefined, Manifesto, Document<unknown, {}, Manifesto, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    category?: import("mongoose").SchemaDefinitionProperty<string, Manifesto, Document<unknown, {}, Manifesto, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<Manifesto & {
         _id: Types.ObjectId;

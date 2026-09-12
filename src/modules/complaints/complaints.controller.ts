@@ -324,4 +324,24 @@ export class ComplaintsController {
   ) {
     return this.complaintsService.togglePublic(req.tenant, id, dto, req.user);
   }
+
+  /**
+   * 20. Admin: Delete Complaint
+   * DELETE /complaints/:id
+   */
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.COMPLAINT_MANAGER,
+  )
+  remove(
+    @Req() req: TenantRequest & { user: any },
+    @Param('id') id: string,
+  ) {
+    return this.complaintsService.remove(req.tenant, id, req.user);
+  }
 }
+

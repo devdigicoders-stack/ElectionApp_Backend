@@ -416,6 +416,47 @@ let ComplaintsService = class ComplaintsService {
         await complaint.save();
         return this.findOne(tenant, id, adminUser);
     }
+    async remove(tenant, id, adminUser) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.NotFoundException(`Complaint not found (invalid ID: "${id}")`);
+        }
+        const complaint = await this.complaintModel.findOne({
+            _id: new mongoose_2.Types.ObjectId(id),
+            tenantId: tenant._id,
+        });
+        if (!complaint) {
+            throw new common_1.NotFoundException('Complaint not found');
+        }
+        await this.complaintModel.deleteOne({
+            _id: new mongoose_2.Types.ObjectId(id),
+            tenantId: tenant._id,
+        });
+        if (this.auditLogsService && adminUser) {
+            await this.auditLogsService
+                .log({
+                tenantId: tenant._id,
+                tenantName: tenant.name,
+                action: 'DELETE_COMPLAINT',
+                performedBy: {
+                    id: adminUser.sub || adminUser.id || 'admin',
+                    email: adminUser.email || 'admin@platform.local',
+                    name: adminUser.name || 'Admin',
+                    role: adminUser.role || 'admin',
+                },
+                details: {
+                    complaintId: id,
+                    complaintNumber: complaint.complaintNumber,
+                    title: complaint.title,
+                    category: complaint.category,
+                },
+            })
+                .catch(() => { });
+        }
+        return {
+            success: true,
+            message: `Complaint ${complaint.complaintNumber || id} deleted successfully`,
+        };
+    }
     async findPublic(tenant, queryDto) {
         const page = Math.max(Number(queryDto.page) || 1, 1);
         const limit = Math.min(Math.max(Number(queryDto.limit) || 20, 1), 50);

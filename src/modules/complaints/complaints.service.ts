@@ -520,6 +520,57 @@ export class ComplaintsService {
   }
 
   /**
+   * Delete complaint permanently (Admin / Super Admin)
+   */
+  async remove(tenant: TenantDocument, id: string, adminUser?: any) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException(`Complaint not found (invalid ID: "${id}")`);
+    }
+
+    const complaint = await this.complaintModel.findOne({
+      _id: new Types.ObjectId(id),
+      tenantId: tenant._id,
+    });
+
+    if (!complaint) {
+      throw new NotFoundException('Complaint not found');
+    }
+
+    await this.complaintModel.deleteOne({
+      _id: new Types.ObjectId(id),
+      tenantId: tenant._id,
+    });
+
+    // Audit log if audit logs service is available
+    if (this.auditLogsService && adminUser) {
+      await this.auditLogsService
+        .log({
+          tenantId: tenant._id,
+          tenantName: tenant.name,
+          action: 'DELETE_COMPLAINT',
+          performedBy: {
+            id: adminUser.sub || adminUser.id || 'admin',
+            email: adminUser.email || 'admin@platform.local',
+            name: adminUser.name || 'Admin',
+            role: adminUser.role || 'admin',
+          },
+          details: {
+            complaintId: id,
+            complaintNumber: complaint.complaintNumber,
+            title: complaint.title,
+            category: complaint.category,
+          },
+        })
+        .catch(() => {});
+    }
+
+    return {
+      success: true,
+      message: `Complaint ${complaint.complaintNumber || id} deleted successfully`,
+    };
+  }
+
+  /**
    * List public complaints for Citizen PWA Community Board
    * Privacy Protection: Strips citizen mobile, email, voterId, and internal remarks
    */

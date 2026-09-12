@@ -8,13 +8,25 @@ export class Manifesto {
   @Prop({ type: Types.ObjectId, ref: 'Tenant', required: true })
   tenantId: Types.ObjectId;
 
-  @Prop({ required: true })
-  category: string; // Employment, Education, Health, etc.
-
-  @Prop({ required: true })
+  @Prop({ required: true, trim: true })
   title: string;
 
-  @Prop({ required: true })
+  @Prop({ default: null })
+  pdfUrl?: string;
+
+  @Prop({ default: null })
+  fileUrl?: string;
+
+  @Prop({ default: null })
+  fileType?: string; // 'pdf' | 'image'
+
+  @Prop({ default: null })
+  coverImageUrl?: string;
+
+  @Prop({ default: 'Manifesto' })
+  category: string;
+
+  @Prop({ default: '' })
   description: string;
 
   @Prop({ type: [String], default: [] })
@@ -31,4 +43,4 @@ export class Manifesto {
 }
 
 export const ManifestoSchema = SchemaFactory.createForClass(Manifesto);
-ManifestoSchema.index({ tenantId: 1, category: 1 });
+ManifestoSchema.index({ tenantId: 1, createdAt: -1 });
