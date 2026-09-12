@@ -319,19 +319,25 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         }
         let pushSuccess = 0;
         let pushFailure = 0;
-        if (channels.includes('push') && fcmTokens.length > 0) {
-            const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
-                title: `📢 ${title}`,
-                body: message,
-                data: {
-                    type,
-                    priority,
-                    actionUrl: actionUrl || '/notifications',
-                    broadcast: 'true',
-                },
-            });
-            pushSuccess = pushResult.successCount;
-            pushFailure = pushResult.failureCount;
+        if (channels.includes('push')) {
+            if (fcmTokens.length > 0) {
+                const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
+                    title: `📢 ${title}`,
+                    body: message,
+                    data: {
+                        type,
+                        priority,
+                        actionUrl: actionUrl || '/notifications',
+                        broadcast: 'true',
+                    },
+                });
+                pushSuccess = pushResult.successCount;
+                pushFailure = pushResult.failureCount;
+            }
+            else {
+                this.logger.warn(`Platform broadcast requested push, but 0 FCM device tokens were registered for target tenants.`);
+                pushFailure = recipientCount;
+            }
         }
         if (channels.includes('in_app')) {
             await this.recordSystemAlert({
@@ -371,6 +377,32 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
                 tokensTargeted: fcmTokens.length,
                 success: pushSuccess,
                 failure: pushFailure,
+            },
+        };
+    }
+    async getTenantPlatformBroadcasts(tenant, page = 1, limit = 20) {
+        const safePage = Math.max(page, 1);
+        const safeLimit = Math.min(limit, 50);
+        const skip = (safePage - 1) * safeLimit;
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant._id;
+        const filter = {
+            $or: [
+                { targetAudience: platform_broadcast_schema_1.BroadcastTarget.ALL_TENANTS },
+                { targetTenantIds: tenantObjectId },
+                { targetTenantIds: tenant._id.toString() },
+            ],
+        };
+        const [data, total] = await Promise.all([
+            this.broadcastModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
+            this.broadcastModel.countDocuments(filter),
+        ]);
+        return {
+            data,
+            meta: {
+                total,
+                page: safePage,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit) || 1,
             },
         };
     }

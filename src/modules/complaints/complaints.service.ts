@@ -7,6 +7,9 @@ import { ComplaintCategory, ComplaintCategoryDocument } from './complaint-catego
 import { TenantDocument } from '../tenants/tenant.schema';
 import { ComplaintStatus, ComplaintPriority } from '../../shared/types';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { FirebaseService } from '../notifications/firebase.service';
+import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
+import { User, UserDocument } from '../users/user.schema';
 import {
   CreateComplaintDto,
   QueryComplaintsDto,
@@ -27,7 +30,10 @@ export class ComplaintsService {
   constructor(
     @InjectModel(Complaint.name) private complaintModel: Model<ComplaintDocument>,
     @InjectModel(ComplaintCategory.name) private categoryModel: Model<ComplaintCategoryDocument>,
+    @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUserDocument>,
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
     @Optional() private auditLogsService?: AuditLogsService,
+    @Optional() private firebaseService?: FirebaseService,
   ) {}
 
   /**
@@ -43,6 +49,54 @@ export class ComplaintsService {
       },
     });
     return `CMP-${year}-${String(count + 1).padStart(6, '0')}`;
+  }
+
+  // ── FCM PUSH HELPERS ────────────────────────────────────────────────────────
+
+  /**
+   * Send FCM push to all active admins of a tenant.
+   * Used when a citizen submits a new complaint.
+   */
+  private async pushToAdmins(
+    tenantId: any,
+    payload: { title: string; body: string; data?: Record<string, string> },
+  ): Promise<void> {
+    if (!this.firebaseService?.isReady()) return;
+    try {
+      const admins = await this.adminUserModel
+        .find({ tenantId, isActive: true, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+        .select('fcmTokens')
+        .lean();
+      const tokens: string[] = [];
+      for (const admin of admins) {
+        for (const tok of admin.fcmTokens || []) {
+          if (tok && !tokens.includes(tok)) tokens.push(tok);
+        }
+      }
+      if (tokens.length > 0) {
+        await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => {});
+      }
+    } catch { /* silent fail — don't block complaint creation */ }
+  }
+
+  /**
+   * Send FCM push to the citizen who filed a complaint.
+   * Used when admin responds / resolves / closes / rejects.
+   */
+  private async pushToCitizen(
+    userId: any,
+    payload: { title: string; body: string; data?: Record<string, string> },
+  ): Promise<void> {
+    if (!this.firebaseService?.isReady()) return;
+    try {
+      const userObjId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId.toString()) : null;
+      if (!userObjId) return;
+      const user = await this.userModel.findById(userObjId).select('fcmTokens').lean();
+      const tokens: string[] = (user as any)?.fcmTokens || [];
+      if (tokens.length === 0) return;
+      // Send to first available token (citizen typically has one device)
+      await this.firebaseService.sendToSingleToken(tokens[0], payload).catch(() => {});
+    } catch { /* silent fail */ }
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -87,7 +141,16 @@ export class ComplaintsService {
       ],
     });
 
-    return this.findOne(tenant, complaint._id.toString(), { sub: userId, role: 'citizen' });
+    const saved = await this.findOne(tenant, complaint._id.toString(), { sub: userId, role: 'citizen' });
+
+    // 🔔 Notify all tenant admins about new complaint via FCM push
+    this.pushToAdmins(tenant._id, {
+      title: '🆕 New Complaint Filed',
+      body: `${complaint.title} — ${complaint.complaintNumber}`,
+      data: { type: 'complaint_new', complaintId: complaint._id.toString(), complaintNumber: complaint.complaintNumber },
+    });
+
+    return saved;
   }
 
   /**
@@ -393,7 +456,16 @@ export class ComplaintsService {
     });
 
     await complaint.save();
-    return this.findOne(tenant, id, adminUser);
+    const result = await this.findOne(tenant, id, adminUser);
+
+    // 🔔 Notify citizen that complaint is resolved
+    this.pushToCitizen(complaint.userId, {
+      title: '✅ Complaint Resolved',
+      body: `Your complaint "${complaint.title}" has been resolved.`,
+      data: { type: 'complaint_resolved', complaintId: id },
+    });
+
+    return result;
   }
 
   /**
@@ -423,7 +495,16 @@ export class ComplaintsService {
     });
 
     await complaint.save();
-    return this.findOne(tenant, id, adminUser);
+    const closedResult = await this.findOne(tenant, id, adminUser);
+
+    // 🔔 Notify citizen that complaint is closed
+    this.pushToCitizen(complaint.userId, {
+      title: '🔒 Complaint Closed',
+      body: `Your complaint "${complaint.title}" has been officially closed.`,
+      data: { type: 'complaint_closed', complaintId: id },
+    });
+
+    return closedResult;
   }
 
   /**
@@ -451,7 +532,16 @@ export class ComplaintsService {
     });
 
     await complaint.save();
-    return this.findOne(tenant, id, adminUser);
+    const rejectedResult = await this.findOne(tenant, id, adminUser);
+
+    // 🔔 Notify citizen that complaint was rejected
+    this.pushToCitizen(complaint.userId, {
+      title: '❌ Complaint Rejected',
+      body: `Your complaint "${complaint.title}" was rejected: ${dto.reason.trim()}`,
+      data: { type: 'complaint_rejected', complaintId: id },
+    });
+
+    return rejectedResult;
   }
 
   /**
@@ -482,7 +572,19 @@ export class ComplaintsService {
     });
 
     await complaint.save();
-    return this.findOne(tenant, id);
+    const updatedResult = await this.findOne(tenant, id);
+
+    // 🔔 Notify citizen of status update (resolved or closed)
+    if (status === ComplaintStatus.RESOLVED || status === ComplaintStatus.CLOSED) {
+      const statusLabel = status === ComplaintStatus.RESOLVED ? '✅ Resolved' : '🔒 Closed';
+      this.pushToCitizen(complaint.userId, {
+        title: `Complaint ${statusLabel}`,
+        body: note || `Your complaint status updated to ${status}`,
+        data: { type: 'complaint_status', complaintId: id, status },
+      });
+    }
+
+    return updatedResult;
   }
 
   /**

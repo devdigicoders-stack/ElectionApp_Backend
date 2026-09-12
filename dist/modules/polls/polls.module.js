@@ -17,7 +17,9 @@ const user_schema_1 = require("../users/user.schema");
 const area_schema_1 = require("../areas/area.schema");
 const membership_schema_1 = require("../membership/membership.schema");
 const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const admin_user_schema_1 = require("../admin-users/admin-user.schema");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let PollsModule = class PollsModule {
 };
 exports.PollsModule = PollsModule;
@@ -32,8 +34,10 @@ exports.PollsModule = PollsModule = __decorate([
                 { name: area_schema_1.Area.name, schema: area_schema_1.AreaSchema },
                 { name: membership_schema_1.Membership.name, schema: membership_schema_1.MembershipSchema },
                 { name: volunteer_schema_1.Volunteer.name, schema: volunteer_schema_1.VolunteerSchema },
+                { name: admin_user_schema_1.AdminUser.name, schema: admin_user_schema_1.AdminUserSchema },
             ]),
             audit_logs_module_1.AuditLogsModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [polls_controller_1.PollsController],
         providers: [polls_service_1.PollsService],

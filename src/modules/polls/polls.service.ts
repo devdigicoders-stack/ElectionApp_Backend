@@ -13,8 +13,10 @@ import { User, UserDocument } from '../users/user.schema';
 import { Area, AreaDocument } from '../areas/area.schema';
 import { Membership, MembershipDocument } from '../membership/membership.schema';
 import { Volunteer, VolunteerDocument } from '../volunteers/volunteer.schema';
+import { AdminUser, AdminUserDocument } from '../admin-users/admin-user.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { FirebaseService } from '../notifications/firebase.service';
 import {
   PollTargetAudience,
   PollResultVisibility,
@@ -138,8 +140,60 @@ export class PollsService {
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @InjectModel(Membership.name) private membershipModel: Model<MembershipDocument>,
     @InjectModel(Volunteer.name) private volunteerModel: Model<VolunteerDocument>,
+    @InjectModel(AdminUser.name) private adminUserModel: Model<AdminUserDocument>,
     @Optional() private auditLogsService?: AuditLogsService,
+    @Optional() private firebaseService?: FirebaseService,
   ) {}
+
+  // ── FCM PUSH HELPERS ─────────────────────────────────────────────────────
+
+  /** Push to all active admins of a tenant */
+  private async pushToAdmins(
+    tenantId: any,
+    payload: { title: string; body: string; data?: Record<string, string> },
+  ): Promise<void> {
+    if (!this.firebaseService?.isReady()) return;
+    try {
+      const admins = await this.adminUserModel
+        .find({ tenantId, isActive: true, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+        .select('fcmTokens').lean();
+      const tokens: string[] = [];
+      for (const admin of admins) {
+        for (const tok of admin.fcmTokens || []) {
+          if (tok && !tokens.includes(tok)) tokens.push(tok);
+        }
+      }
+      if (tokens.length > 0) {
+        await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => {});
+      }
+    } catch { /* silent fail */ }
+  }
+
+  /** Push to all users who voted in a specific poll */
+  private async pushToVoters(
+    tenantId: any,
+    pollId: any,
+    payload: { title: string; body: string; data?: Record<string, string> },
+  ): Promise<void> {
+    if (!this.firebaseService?.isReady()) return;
+    try {
+      const votes = await this.voteModel.find({ tenantId, pollId }).select('userId').lean();
+      const userIds = votes.map((v) => v.userId);
+      if (userIds.length === 0) return;
+      const users = await this.userModel
+        .find({ _id: { $in: userIds }, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+        .select('fcmTokens').lean();
+      const tokens: string[] = [];
+      for (const u of users) {
+        for (const tok of (u as any).fcmTokens || []) {
+          if (tok && !tokens.includes(tok)) tokens.push(tok);
+        }
+      }
+      if (tokens.length > 0) {
+        await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => {});
+      }
+    } catch { /* silent fail */ }
+  }
 
   /**
    * Auto-seed default opinion polls for a tenant if none exist.
@@ -779,6 +833,13 @@ export class PollsService {
     const updatedPoll = await this.pollModel.findById(pollId);
     const state = getPollComputedState(updatedPoll || poll, now, false, true);
 
+    // 🔔 Notify all tenant admins that someone voted
+    this.pushToAdmins(tenant._id, {
+      title: '🗳️ New Vote Recorded',
+      body: `Someone voted on poll: "${poll.question.substring(0, 60)}${poll.question.length > 60 ? '...' : ''}"`,
+      data: { type: 'poll_vote', pollId: pollId.toString() },
+    });
+
     return {
       message: state.isResultDeclared
         ? 'Your vote has been recorded successfully.'
@@ -1190,6 +1251,13 @@ export class PollsService {
     await poll.save();
 
     const state = getPollComputedState(poll, new Date(), true);
+
+    // 🔔 Notify all voters that results are declared
+    this.pushToVoters(tenant._id, poll._id, {
+      title: '🏆 Poll Results Declared!',
+      body: `Results are live for: "${poll.question.substring(0, 70)}${poll.question.length > 70 ? '...' : ''}"`,
+      data: { type: 'poll_result', pollId: poll._id.toString() },
+    });
 
     return {
       message: `Poll results for "${poll.question}" have been declared successfully.`,

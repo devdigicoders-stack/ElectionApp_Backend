@@ -23,7 +23,9 @@ const user_schema_1 = require("../users/user.schema");
 const area_schema_1 = require("../areas/area.schema");
 const membership_schema_1 = require("../membership/membership.schema");
 const volunteer_schema_1 = require("../volunteers/volunteer.schema");
+const admin_user_schema_1 = require("../admin-users/admin-user.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
+const firebase_service_1 = require("../notifications/firebase.service");
 const types_1 = require("../../shared/types");
 const uuid_1 = require("uuid");
 const toObjectId = (id) => {
@@ -124,15 +126,61 @@ function getPollComputedState(poll, now = new Date(), isAdmin = false, hasVoted 
     };
 }
 let PollsService = PollsService_1 = class PollsService {
-    constructor(pollModel, voteModel, userModel, areaModel, membershipModel, volunteerModel, auditLogsService) {
+    constructor(pollModel, voteModel, userModel, areaModel, membershipModel, volunteerModel, adminUserModel, auditLogsService, firebaseService) {
         this.pollModel = pollModel;
         this.voteModel = voteModel;
         this.userModel = userModel;
         this.areaModel = areaModel;
         this.membershipModel = membershipModel;
         this.volunteerModel = volunteerModel;
+        this.adminUserModel = adminUserModel;
         this.auditLogsService = auditLogsService;
+        this.firebaseService = firebaseService;
         this.logger = new common_1.Logger(PollsService_1.name);
+    }
+    async pushToAdmins(tenantId, payload) {
+        if (!this.firebaseService?.isReady())
+            return;
+        try {
+            const admins = await this.adminUserModel
+                .find({ tenantId, isActive: true, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+                .select('fcmTokens').lean();
+            const tokens = [];
+            for (const admin of admins) {
+                for (const tok of admin.fcmTokens || []) {
+                    if (tok && !tokens.includes(tok))
+                        tokens.push(tok);
+                }
+            }
+            if (tokens.length > 0) {
+                await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => { });
+            }
+        }
+        catch { }
+    }
+    async pushToVoters(tenantId, pollId, payload) {
+        if (!this.firebaseService?.isReady())
+            return;
+        try {
+            const votes = await this.voteModel.find({ tenantId, pollId }).select('userId').lean();
+            const userIds = votes.map((v) => v.userId);
+            if (userIds.length === 0)
+                return;
+            const users = await this.userModel
+                .find({ _id: { $in: userIds }, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+                .select('fcmTokens').lean();
+            const tokens = [];
+            for (const u of users) {
+                for (const tok of u.fcmTokens || []) {
+                    if (tok && !tokens.includes(tok))
+                        tokens.push(tok);
+                }
+            }
+            if (tokens.length > 0) {
+                await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => { });
+            }
+        }
+        catch { }
     }
     async seedDefaultPollsIfEmpty(tenant) {
         const count = await this.pollModel.countDocuments({ tenantId: tenant._id });
@@ -637,6 +685,11 @@ let PollsService = PollsService_1 = class PollsService {
         await this.pollModel.updateOne({ _id: pollId }, { $inc: { totalVotes: 1 } });
         const updatedPoll = await this.pollModel.findById(pollId);
         const state = getPollComputedState(updatedPoll || poll, now, false, true);
+        this.pushToAdmins(tenant._id, {
+            title: '🗳️ New Vote Recorded',
+            body: `Someone voted on poll: "${poll.question.substring(0, 60)}${poll.question.length > 60 ? '...' : ''}"`,
+            data: { type: 'poll_vote', pollId: pollId.toString() },
+        });
         return {
             message: state.isResultDeclared
                 ? 'Your vote has been recorded successfully.'
@@ -974,6 +1027,11 @@ let PollsService = PollsService_1 = class PollsService {
         poll.resultVisibility = types_1.PollResultVisibility.ALWAYS_PUBLIC;
         await poll.save();
         const state = getPollComputedState(poll, new Date(), true);
+        this.pushToVoters(tenant._id, poll._id, {
+            title: '🏆 Poll Results Declared!',
+            body: `Results are live for: "${poll.question.substring(0, 70)}${poll.question.length > 70 ? '...' : ''}"`,
+            data: { type: 'poll_result', pollId: poll._id.toString() },
+        });
         return {
             message: `Poll results for "${poll.question}" have been declared successfully.`,
             pollId: poll._id,
@@ -1025,13 +1083,17 @@ exports.PollsService = PollsService = PollsService_1 = __decorate([
     __param(3, (0, mongoose_1.InjectModel)(area_schema_1.Area.name)),
     __param(4, (0, mongoose_1.InjectModel)(membership_schema_1.Membership.name)),
     __param(5, (0, mongoose_1.InjectModel)(volunteer_schema_1.Volunteer.name)),
-    __param(6, (0, common_1.Optional)()),
+    __param(6, (0, mongoose_1.InjectModel)(admin_user_schema_1.AdminUser.name)),
+    __param(7, (0, common_1.Optional)()),
+    __param(8, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
         mongoose_2.Model,
-        audit_logs_service_1.AuditLogsService])
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService,
+        firebase_service_1.FirebaseService])
 ], PollsService);
 //# sourceMappingURL=polls.service.js.map

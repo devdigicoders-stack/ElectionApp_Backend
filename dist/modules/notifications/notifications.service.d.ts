@@ -145,6 +145,19 @@ export declare class NotificationsService {
             failure: number;
         };
     }>;
+    getTenantPlatformBroadcasts(tenant: TenantDocument, page?: number, limit?: number): Promise<{
+        data: (PlatformBroadcast & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     registerFcmToken(userId: string, token: string): Promise<{
         success: boolean;
         message: string;

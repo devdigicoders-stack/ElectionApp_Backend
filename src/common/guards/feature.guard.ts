@@ -13,10 +13,13 @@ export class FeatureGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const featureKey =
-      this.reflector.get<string>(FEATURE_KEY, context.getHandler()) ||
-      this.reflector.get<string>(FEATURE_KEY, context.getClass());
-    if (!featureKey) return true;
+    // getAllAndOverride gives handler-level priority over class-level.
+    // If a method explicitly sets FEATURE_KEY to null it overrides the class decorator.
+    const featureKey = this.reflector.getAllAndOverride<string | null>(
+      FEATURE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    if (!featureKey) return true; // null / undefined → no feature gate, allow through
 
     const request = context.switchToHttp().getRequest();
     const tenant = request.tenant;

@@ -8,7 +8,9 @@ import { User, UserSchema } from '../users/user.schema';
 import { Area, AreaSchema } from '../areas/area.schema';
 import { Membership, MembershipSchema } from '../membership/membership.schema';
 import { Volunteer, VolunteerSchema } from '../volunteers/volunteer.schema';
+import { AdminUser, AdminUserSchema } from '../admin-users/admin-user.schema';
 import { AuditLogsModule } from '../audit-logs/audit-logs.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -20,8 +22,10 @@ import { AuditLogsModule } from '../audit-logs/audit-logs.module';
       { name: Area.name, schema: AreaSchema },
       { name: Membership.name, schema: MembershipSchema },
       { name: Volunteer.name, schema: VolunteerSchema },
+      { name: AdminUser.name, schema: AdminUserSchema },
     ]),
     AuditLogsModule,
+    NotificationsModule,
   ],
   controllers: [PollsController],
   providers: [PollsService],

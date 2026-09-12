@@ -25,8 +25,7 @@ let FeatureGuard = class FeatureGuard {
         this.featureModel = featureModel;
     }
     async canActivate(context) {
-        const featureKey = this.reflector.get(feature_decorator_1.FEATURE_KEY, context.getHandler()) ||
-            this.reflector.get(feature_decorator_1.FEATURE_KEY, context.getClass());
+        const featureKey = this.reflector.getAllAndOverride(feature_decorator_1.FEATURE_KEY, [context.getHandler(), context.getClass()]);
         if (!featureKey)
             return true;
         const request = context.switchToHttp().getRequest();

@@ -386,19 +386,24 @@ export class NotificationsService {
     let pushSuccess = 0;
     let pushFailure = 0;
 
-    if (channels.includes('push') && fcmTokens.length > 0) {
-      const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
-        title: `📢 ${title}`,
-        body: message,
-        data: {
-          type,
-          priority,
-          actionUrl: actionUrl || '/notifications',
-          broadcast: 'true',
-        },
-      });
-      pushSuccess = pushResult.successCount;
-      pushFailure = pushResult.failureCount;
+    if (channels.includes('push')) {
+      if (fcmTokens.length > 0) {
+        const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
+          title: `📢 ${title}`,
+          body: message,
+          data: {
+            type,
+            priority,
+            actionUrl: actionUrl || '/notifications',
+            broadcast: 'true',
+          },
+        });
+        pushSuccess = pushResult.successCount;
+        pushFailure = pushResult.failureCount;
+      } else {
+        this.logger.warn(`Platform broadcast requested push, but 0 FCM device tokens were registered for target tenants.`);
+        pushFailure = recipientCount;
+      }
     }
 
     // 4. Create In-App Alert if requested
@@ -443,6 +448,41 @@ export class NotificationsService {
         tokensTargeted: fcmTokens.length,
         success: pushSuccess,
         failure: pushFailure,
+      },
+    };
+  }
+
+  // =========================================================================
+  // TENANT PLATFORM BROADCASTS INBOX (Sent from Super Admin)
+  // =========================================================================
+
+  async getTenantPlatformBroadcasts(tenant: TenantDocument, page = 1, limit = 20) {
+    const safePage = Math.max(page, 1);
+    const safeLimit = Math.min(limit, 50);
+    const skip = (safePage - 1) * safeLimit;
+
+    const tenantObjectId = Types.ObjectId.isValid(tenant._id) ? new Types.ObjectId(tenant._id) : tenant._id;
+
+    const filter: any = {
+      $or: [
+        { targetAudience: BroadcastTarget.ALL_TENANTS },
+        { targetTenantIds: tenantObjectId },
+        { targetTenantIds: tenant._id.toString() },
+      ],
+    };
+
+    const [data, total] = await Promise.all([
+      this.broadcastModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
+      this.broadcastModel.countDocuments(filter),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page: safePage,
+        limit: safeLimit,
+        totalPages: Math.ceil(total / safeLimit) || 1,
       },
     };
   }

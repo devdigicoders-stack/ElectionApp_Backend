@@ -14,7 +14,10 @@ const complaints_controller_1 = require("./complaints.controller");
 const complaint_schema_1 = require("./complaint.schema");
 const complaint_category_schema_1 = require("./complaint-category.schema");
 const tenant_feature_schema_1 = require("../features/tenant-feature.schema");
+const admin_user_schema_1 = require("../admin-users/admin-user.schema");
+const user_schema_1 = require("../users/user.schema");
 const audit_logs_module_1 = require("../audit-logs/audit-logs.module");
+const notifications_module_1 = require("../notifications/notifications.module");
 let ComplaintsModule = class ComplaintsModule {
 };
 exports.ComplaintsModule = ComplaintsModule;
@@ -25,8 +28,11 @@ exports.ComplaintsModule = ComplaintsModule = __decorate([
                 { name: complaint_schema_1.Complaint.name, schema: complaint_schema_1.ComplaintSchema },
                 { name: complaint_category_schema_1.ComplaintCategory.name, schema: complaint_category_schema_1.ComplaintCategorySchema },
                 { name: tenant_feature_schema_1.TenantFeature.name, schema: tenant_feature_schema_1.TenantFeatureSchema },
+                { name: admin_user_schema_1.AdminUser.name, schema: admin_user_schema_1.AdminUserSchema },
+                { name: user_schema_1.User.name, schema: user_schema_1.UserSchema },
             ]),
             audit_logs_module_1.AuditLogsModule,
+            notifications_module_1.NotificationsModule,
         ],
         controllers: [complaints_controller_1.ComplaintsController],
         providers: [complaints_service_1.ComplaintsService],
