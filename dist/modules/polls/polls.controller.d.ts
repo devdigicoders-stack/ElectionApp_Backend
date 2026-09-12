@@ -41,7 +41,7 @@ export declare class PollsController {
             resultVisibility: import("../../shared/types").PollResultVisibility;
             resultDeclaredAt: Date | null;
             isResultDeclared: boolean;
-            resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+            resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
             resultMessage: string;
             hasVoted: boolean;
             myOptionId: string | null;
@@ -91,7 +91,7 @@ export declare class PollsController {
         resultVisibility: import("../../shared/types").PollResultVisibility;
         resultDeclaredAt: Date | null;
         isResultDeclared: boolean;
-        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
         resultMessage: string;
         hasVoted: boolean;
         myOptionId: string | null;
@@ -111,7 +111,7 @@ export declare class PollsController {
         status: import("../../shared/types").PollStatus;
         isResultDeclared: boolean;
         resultDeclaredAt: Date | null;
-        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
         resultMessage: string;
         totalVotes: number | undefined;
     }>;
@@ -134,7 +134,7 @@ export declare class PollsController {
         isEnded: boolean;
         isUpcoming: boolean;
         isResultDeclared: boolean;
-        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
         resultMessage: string;
         tenantId: import("mongoose").Types.ObjectId;
         question: string;
@@ -224,7 +224,7 @@ export declare class PollsController {
         isEnded: boolean;
         isUpcoming: boolean;
         isResultDeclared: boolean;
-        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
         resultMessage: string;
         tenantId: import("mongoose").Types.ObjectId;
         question: string;
@@ -268,7 +268,7 @@ export declare class PollsController {
         isResultDeclared: boolean;
         resultDeclaredAt: Date;
         resultVisibility: import("../../shared/types").PollResultVisibility.ALWAYS_PUBLIC;
-        resultStatus: "DECLARED" | "SCHEDULED" | "PENDING" | "ADMIN_ONLY";
+        resultStatus: "ADMIN_ONLY" | "PENDING" | "DECLARED" | "SCHEDULED";
         totalVotes: number;
         options: {
             optionId: string;

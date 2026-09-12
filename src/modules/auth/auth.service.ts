@@ -96,7 +96,18 @@ export class AuthService {
       isSuperAdmin: admin.isSuperAdmin,
     });
 
-    return { token, admin: { id: admin._id, name: admin.name, role: admin.role } };
+    return {
+      token,
+      admin: { id: admin._id, name: admin.name, role: admin.role },
+      tenant: tenant
+        ? {
+            id: tenant._id,
+            name: tenant.name,
+            slug: tenant.slug,
+            branding: tenant.branding,
+          }
+        : undefined,
+    };
   }
 
   async superAdminLogin(dto: AdminLoginDto) {

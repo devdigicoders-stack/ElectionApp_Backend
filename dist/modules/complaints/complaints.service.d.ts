@@ -521,6 +521,10 @@ export declare class ComplaintsService {
         schema: import("mongoose").Schema;
         __v: number;
     }>;
+    remove(tenant: TenantDocument, id: string, adminUser?: any): Promise<{
+        success: boolean;
+        message: string;
+    }>;
     findPublic(tenant: TenantDocument, queryDto: QueryPublicComplaintsDto): Promise<{
         items: {
             _id: any;

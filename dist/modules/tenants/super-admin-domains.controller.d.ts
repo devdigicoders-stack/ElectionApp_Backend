@@ -41,7 +41,7 @@ export declare class SuperAdminDomainsController {
         isActive: boolean;
         isVerified: boolean;
         verifiedAt: Date | null;
-        verificationStatus: "pending" | "failed" | "verified" | "unconfigured";
+        verificationStatus: "pending" | "failed" | "unconfigured" | "verified";
         verificationToken: string | null;
         targetCname: string;
         dnsRecords: {

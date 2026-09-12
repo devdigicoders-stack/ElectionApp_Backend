@@ -36,6 +36,9 @@ let NewsController = class NewsController {
     getStats(req) {
         return this.newsService.getStats(req.tenant);
     }
+    findOneAdmin(req, id) {
+        return this.newsService.findOne(req.tenant, id, false);
+    }
     findOne(req, id) {
         return this.newsService.findOne(req.tenant, id, true);
     }
@@ -91,6 +94,15 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", void 0)
 ], NewsController.prototype, "getStats", null);
+__decorate([
+    (0, common_1.Get)('admin/:id'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], NewsController.prototype, "findOneAdmin", null);
 __decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Req)()),

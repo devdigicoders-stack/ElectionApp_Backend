@@ -631,4 +631,10 @@ export declare class ComplaintsController {
         schema: import("mongoose").Schema;
         __v: number;
     }>;
+    remove(req: TenantRequest & {
+        user: any;
+    }, id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

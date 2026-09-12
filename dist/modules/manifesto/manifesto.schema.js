@@ -20,15 +20,31 @@ __decorate([
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Manifesto.prototype, "tenantId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
-    __metadata("design:type", String)
-], Manifesto.prototype, "category", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ required: true, trim: true }),
     __metadata("design:type", String)
 ], Manifesto.prototype, "title", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ required: true }),
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Manifesto.prototype, "pdfUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Manifesto.prototype, "fileUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Manifesto.prototype, "fileType", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: null }),
+    __metadata("design:type", String)
+], Manifesto.prototype, "coverImageUrl", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: 'Manifesto' }),
+    __metadata("design:type", String)
+], Manifesto.prototype, "category", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ default: '' }),
     __metadata("design:type", String)
 ], Manifesto.prototype, "description", void 0);
 __decorate([
@@ -51,5 +67,5 @@ exports.Manifesto = Manifesto = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Manifesto);
 exports.ManifestoSchema = mongoose_1.SchemaFactory.createForClass(Manifesto);
-exports.ManifestoSchema.index({ tenantId: 1, category: 1 });
+exports.ManifestoSchema.index({ tenantId: 1, createdAt: -1 });
 //# sourceMappingURL=manifesto.schema.js.map

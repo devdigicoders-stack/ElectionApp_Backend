@@ -88,6 +88,9 @@ let ComplaintsController = class ComplaintsController {
     togglePublic(req, id, dto) {
         return this.complaintsService.togglePublic(req.tenant, id, dto, req.user);
     }
+    remove(req, id) {
+        return this.complaintsService.remove(req.tenant, id, req.user);
+    }
 };
 exports.ComplaintsController = ComplaintsController;
 __decorate([
@@ -270,6 +273,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, complaints_dto_1.TogglePublicComplaintDto]),
     __metadata("design:returntype", void 0)
 ], ComplaintsController.prototype, "togglePublic", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
+    (0, roles_guard_1.Roles)(types_1.UserRole.SUPER_ADMIN, types_1.UserRole.LEADER, types_1.UserRole.ADMIN, types_1.UserRole.COMPLAINT_MANAGER),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], ComplaintsController.prototype, "remove", null);
 exports.ComplaintsController = ComplaintsController = __decorate([
     (0, common_1.Controller)('complaints'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard, feature_guard_1.FeatureGuard),

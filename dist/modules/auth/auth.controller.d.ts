@@ -26,6 +26,40 @@ export declare class AuthController {
             name: string;
             role: string;
         };
+        tenant: {
+            id: import("mongoose").Types.ObjectId;
+            name: string;
+            slug: string;
+            branding: {
+                platformName?: string;
+                title?: string;
+                logoUrl?: string;
+                logo?: string;
+                faviconUrl?: string;
+                pwaIconUrl?: string;
+                leaderPhotoUrl?: string;
+                loginBgUrl?: string;
+                splashScreenUrl?: string;
+                splashScreens?: Array<{
+                    title?: string;
+                    subtitle?: string;
+                    mediaType?: "image" | "video";
+                    mediaUrl: string;
+                    order?: number;
+                }>;
+                primaryColor?: string;
+                secondaryColor?: string;
+                accentColor?: string;
+                leaderName?: string;
+                tagline?: string;
+                footerText?: string;
+                privacyPolicyUrl?: string;
+                termsUrl?: string;
+                privacyPolicyContent?: string;
+                termsContent?: string;
+                socialLinks?: Record<string, string>;
+            };
+        } | undefined;
     }>;
     superAdminLogin(dto: AdminLoginDto): Promise<{
         token: string;
