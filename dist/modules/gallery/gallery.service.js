@@ -53,19 +53,63 @@ let GalleryService = class GalleryService {
         return { data, total, page, limit };
     }
     async findOne(tenant, id) {
-        const item = await this.galleryModel.findOne({ _id: id, tenantId: tenant._id });
+        let item = null;
+        const tenantCondition = {
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        };
+        if (mongoose_2.Types.ObjectId.isValid(id)) {
+            item = await this.galleryModel.findOne({
+                _id: new mongoose_2.Types.ObjectId(id),
+                ...tenantCondition,
+            });
+        }
+        if (!item) {
+            item = await this.galleryModel.findOne({
+                _id: id,
+                ...tenantCondition,
+            });
+        }
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.galleryModel.findById(id);
+            if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+                item = candidate;
+            }
+        }
         if (!item)
             throw new common_1.NotFoundException('Gallery item not found');
         return item;
     }
     async update(tenant, id, data) {
-        const item = await this.galleryModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+        const tenantCondition = {
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        };
+        const idFilter = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        let item = await this.galleryModel.findOneAndUpdate({ _id: idFilter, ...tenantCondition }, { $set: data }, { new: true });
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.galleryModel.findById(id);
+            if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+                item = await this.galleryModel.findByIdAndUpdate(id, { $set: data }, { new: true });
+            }
+        }
         if (!item)
             throw new common_1.NotFoundException('Gallery item not found');
         return item;
     }
     async remove(tenant, id) {
-        return this.galleryModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const tenantCondition = {
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+        };
+        const idFilter = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        let item = await this.galleryModel.findOneAndDelete({ _id: idFilter, ...tenantCondition });
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.galleryModel.findById(id);
+            if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+                item = await this.galleryModel.findByIdAndDelete(id);
+            }
+        }
+        if (!item)
+            throw new common_1.NotFoundException('Gallery item not found');
+        return item;
     }
 };
 exports.GalleryService = GalleryService;

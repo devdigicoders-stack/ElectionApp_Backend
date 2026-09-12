@@ -199,7 +199,7 @@ let MembershipService = class MembershipService {
         if (!mongoose_2.Types.ObjectId.isValid(id)) {
             throw new common_1.BadRequestException('Invalid plan ID format');
         }
-        const plan = await this.planModel.findOne({ _id: id, tenantId: tenant._id });
+        const plan = await this.planModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!plan) {
             throw new common_1.NotFoundException(`Membership plan #${id} not found`);
         }
@@ -751,7 +751,7 @@ let MembershipService = class MembershipService {
             throw new common_1.BadRequestException('Invalid membership ID format');
         }
         const membership = await this.membershipModel
-            .findOne({ _id: id, tenantId: tenant._id })
+            .findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id })
             .populate('userId', 'name mobile areaId customFields')
             .populate('planId')
             .populate('approvedBy', 'name');
@@ -764,7 +764,7 @@ let MembershipService = class MembershipService {
         if (!mongoose_2.Types.ObjectId.isValid(id)) {
             throw new common_1.BadRequestException('Invalid membership ID format');
         }
-        const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+        const membership = await this.membershipModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
         }
@@ -802,7 +802,7 @@ let MembershipService = class MembershipService {
         if (!mongoose_2.Types.ObjectId.isValid(id)) {
             throw new common_1.BadRequestException('Invalid membership ID format');
         }
-        const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+        const membership = await this.membershipModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
         }
@@ -815,7 +815,7 @@ let MembershipService = class MembershipService {
             throw new common_1.BadRequestException('Invalid membership ID format');
         }
         const membership = await this.membershipModel
-            .findOne({ _id: id, tenantId: tenant._id })
+            .findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id })
             .populate('userId', 'name mobile areaId customFields')
             .populate('planId');
         if (!membership) {
@@ -842,7 +842,7 @@ let MembershipService = class MembershipService {
         if (!mongoose_2.Types.ObjectId.isValid(id)) {
             throw new common_1.BadRequestException('Invalid membership ID format');
         }
-        const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+        const membership = await this.membershipModel.findOne({ _id: new mongoose_2.Types.ObjectId(id), tenantId: tenant._id });
         if (!membership) {
             throw new common_1.NotFoundException(`Membership #${id} not found`);
         }

@@ -26,6 +26,10 @@ import { CreatePollDto, UpdatePollDto, QueryPollsDto, VotePollDto } from './poll
 import { v4 as uuidv4 } from 'uuid';
 import { Response } from 'express';
 
+export const toObjectId = (id: string | Types.ObjectId): Types.ObjectId => {
+  return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : (id as any);
+};
+
 export function getPollComputedState(
   poll: PollDocument | any,
   now: Date = new Date(),
@@ -437,7 +441,7 @@ export class PollsService {
    */
   async findOne(tenant: TenantDocument, id: string, user?: any, isAdmin: boolean = false) {
     const poll = await this.pollModel
-      .findOne({ _id: id, tenantId: tenant._id })
+      .findOne({ _id: toObjectId(id), tenantId: tenant._id })
       .populate('targetAreaId', 'name code');
 
     if (!poll) {
@@ -525,7 +529,7 @@ export class PollsService {
    */
   async vote(tenant: TenantDocument, pollId: string, userId: string, dto: VotePollDto | string) {
     const poll = await this.pollModel.findOne({
-      _id: pollId,
+      _id: toObjectId(pollId),
       tenantId: tenant._id,
     });
 
@@ -672,7 +676,7 @@ export class PollsService {
     }
 
     // New vote: enforce target audience eligibility criteria (SRS Sec 19)
-    const user = await this.userModel.findOne({ _id: userId, tenantId: tenant._id });
+    const user = await this.userModel.findOne({ _id: toObjectId(userId), tenantId: tenant._id });
     if (!user) {
       throw new NotFoundException('User record not found');
     }
@@ -821,7 +825,7 @@ export class PollsService {
    */
   async getAnalytics(tenant: TenantDocument, pollId: string) {
     const poll = await this.pollModel
-      .findOne({ _id: pollId, tenantId: tenant._id })
+      .findOne({ _id: toObjectId(pollId), tenantId: tenant._id })
       .populate('targetAreaId', 'name code');
 
     if (!poll) {
@@ -973,7 +977,7 @@ export class PollsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+    const poll = await this.pollModel.findOne({ _id: toObjectId(pollId), tenantId: tenant._id });
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
@@ -1090,7 +1094,7 @@ export class PollsService {
    * Update poll metadata, time duration, or result declaration settings (Admin)
    */
   async update(tenant: TenantDocument, id: string, dto: UpdatePollDto) {
-    const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });
+    const poll = await this.pollModel.findOne({ _id: toObjectId(id), tenantId: tenant._id });
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
@@ -1176,7 +1180,7 @@ export class PollsService {
    * POST /polls/:id/declare-result
    */
   async declareResult(tenant: TenantDocument, pollId: string) {
-    const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+    const poll = await this.pollModel.findOne({ _id: toObjectId(pollId), tenantId: tenant._id });
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
@@ -1204,7 +1208,7 @@ export class PollsService {
    * POST /polls/:id/close
    */
   async closePoll(tenant: TenantDocument, pollId: string) {
-    const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+    const poll = await this.pollModel.findOne({ _id: toObjectId(pollId), tenantId: tenant._id });
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }
@@ -1230,7 +1234,7 @@ export class PollsService {
    * Remove a poll and all corresponding votes (Admin)
    */
   async remove(tenant: TenantDocument, id: string) {
-    const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });
+    const poll = await this.pollModel.findOne({ _id: toObjectId(id), tenantId: tenant._id });
     if (!poll) {
       throw new NotFoundException('Poll not found');
     }

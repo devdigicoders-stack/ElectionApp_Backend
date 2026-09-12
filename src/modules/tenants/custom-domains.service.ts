@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { ConfigService } from '@nestjs/config';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import * as crypto from 'crypto';
 import * as dns from 'dns';
 import { Tenant, TenantDocument } from './tenant.schema';
@@ -20,6 +20,10 @@ export class CustomDomainsService {
     private configService: ConfigService,
     private auditLogsService: AuditLogsService,
   ) {}
+
+  private toId(id: any) {
+    return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+  }
 
   /**
    * Normalize and sanitize domain name
@@ -73,7 +77,7 @@ export class CustomDomainsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const tenant = await this.tenantModel.findById(tenantId);
+    const tenant = await this.tenantModel.findById(this.toId(tenantId));
     if (!tenant) throw new NotFoundException('Tenant not found');
 
     const cleanDomain = this.normalizeDomain(rawDomain);
@@ -188,7 +192,7 @@ export class CustomDomainsService {
    * Get domain configuration & DNS instructions for a tenant
    */
   async getDomainStatus(tenantId: string) {
-    const tenant = await this.tenantModel.findById(tenantId).select(
+    const tenant = await this.tenantModel.findById(this.toId(tenantId)).select(
       'name slug customDomain isCustomDomainVerified customDomainVerifiedAt customDomainVerification',
     );
     if (!tenant) throw new NotFoundException('Tenant not found');
@@ -234,7 +238,7 @@ export class CustomDomainsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const tenant = await this.tenantModel.findById(tenantId);
+    const tenant = await this.tenantModel.findById(this.toId(tenantId));
     if (!tenant) throw new NotFoundException('Tenant not found');
 
     const domainMeta = tenant.customDomainVerification;
@@ -417,7 +421,7 @@ export class CustomDomainsService {
     ipAddress?: string,
     userAgent?: string,
   ) {
-    const tenant = await this.tenantModel.findById(tenantId);
+    const tenant = await this.tenantModel.findById(this.toId(tenantId));
     if (!tenant) throw new NotFoundException('Tenant not found');
 
     const previousDomain = tenant.customDomain || tenant.customDomainVerification?.domain;

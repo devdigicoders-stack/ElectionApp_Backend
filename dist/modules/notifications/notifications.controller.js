@@ -44,6 +44,12 @@ let NotificationsController = class NotificationsController {
     remove(req, id) {
         return this.notificationsService.remove(req.tenant, id);
     }
+    registerToken(req, token) {
+        return this.notificationsService.registerFcmToken(req.user.sub, token);
+    }
+    testPush(req, token) {
+        return this.notificationsService.testFcm(token);
+    }
 };
 exports.NotificationsController = NotificationsController;
 __decorate([
@@ -110,6 +116,24 @@ __decorate([
     __metadata("design:paramtypes", [Object, String]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Post)('register-token'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)('token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "registerToken", null);
+__decorate([
+    (0, common_1.Post)('test-push'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)('token')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "testPush", null);
 exports.NotificationsController = NotificationsController = __decorate([
     (0, common_1.Controller)('notifications'),
     (0, common_1.UseGuards)(feature_guard_1.FeatureGuard),

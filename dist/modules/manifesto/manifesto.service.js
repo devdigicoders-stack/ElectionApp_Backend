@@ -21,32 +21,90 @@ let ManifestoService = class ManifestoService {
     constructor(manifestoModel) {
         this.manifestoModel = manifestoModel;
     }
-    async create(tenant, data) {
-        return this.manifestoModel.create({ tenantId: tenant._id, ...data });
+    getManifestoFilter(tenant, id) {
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant?._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant?._id;
+        return {
+            _id: objectId,
+            $or: [
+                { tenantId: tenantObjectId },
+                { tenantId: tenant?._id?.toString() },
+                { tenantId: tenant?._id },
+            ],
+        };
     }
-    async findAll(tenant, category) {
-        const query = { tenantId: tenant._id, isPublished: true };
+    async create(tenant, data) {
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant?._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant?._id;
+        return this.manifestoModel.create({ tenantId: tenantObjectId, ...data });
+    }
+    async findAll(tenant, category, includeUnpublished = false) {
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant?._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant?._id;
+        const query = {
+            $or: [
+                { tenantId: tenantObjectId },
+                { tenantId: tenant?._id?.toString() },
+                { tenantId: tenant?._id },
+            ],
+        };
+        if (!includeUnpublished) {
+            query.isPublished = true;
+        }
         if (category)
             query.category = category;
         return this.manifestoModel.find(query).sort({ sortOrder: 1, createdAt: -1 });
     }
     async getCategories(tenant) {
-        return this.manifestoModel.distinct('category', { tenantId: tenant._id, isPublished: true });
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant?._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant?._id;
+        return this.manifestoModel.distinct('category', {
+            $or: [
+                { tenantId: tenantObjectId },
+                { tenantId: tenant?._id?.toString() },
+                { tenantId: tenant?._id },
+            ],
+            isPublished: true,
+        });
     }
     async findOne(tenant, id) {
-        const item = await this.manifestoModel.findOne({ _id: id, tenantId: tenant._id });
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        let item = await this.manifestoModel.findOne(this.getManifestoFilter(tenant, id));
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.manifestoModel.findById(objectId);
+            if (candidate &&
+                (candidate.tenantId?.toString() === tenant?._id?.toString() || !candidate.tenantId)) {
+                item = candidate;
+            }
+        }
         if (!item)
             throw new common_1.NotFoundException('Manifesto item not found');
         return item;
     }
     async update(tenant, id, data) {
-        const item = await this.manifestoModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { $set: data }, { new: true });
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        let item = await this.manifestoModel.findOneAndUpdate(this.getManifestoFilter(tenant, id), { $set: data }, { new: true });
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.manifestoModel.findById(objectId);
+            if (candidate &&
+                (candidate.tenantId?.toString() === tenant?._id?.toString() || !candidate.tenantId)) {
+                item = await this.manifestoModel.findByIdAndUpdate(objectId, { $set: data }, { new: true });
+            }
+        }
         if (!item)
             throw new common_1.NotFoundException('Manifesto item not found');
         return item;
     }
     async remove(tenant, id) {
-        return this.manifestoModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        let item = await this.manifestoModel.findOneAndDelete(this.getManifestoFilter(tenant, id));
+        if (!item && mongoose_2.Types.ObjectId.isValid(id)) {
+            const candidate = await this.manifestoModel.findById(objectId);
+            if (candidate &&
+                (candidate.tenantId?.toString() === tenant?._id?.toString() || !candidate.tenantId)) {
+                item = await this.manifestoModel.findByIdAndDelete(objectId);
+            }
+        }
+        if (!item)
+            throw new common_1.NotFoundException('Manifesto item not found');
+        return { success: true, message: 'Manifesto item deleted successfully' };
     }
 };
 exports.ManifestoService = ManifestoService;

@@ -33,6 +33,7 @@ import {
 @Injectable()
 export class PosterGeneratorService {
   private readonly logger = new Logger(PosterGeneratorService.name);
+  private readonly seedingLocks = new Set<string>();
 
   constructor(
     @InjectModel(PosterTemplate.name) private templateModel: Model<PosterTemplateDocument>,
@@ -140,11 +141,22 @@ export class PosterGeneratorService {
    * Auto-seed ready-to-use templates for a tenant if none exist
    */
   async seedDefaultTemplatesIfEmpty(tenant: TenantDocument): Promise<void> {
-    const count = await this.templateModel.countDocuments({ tenantId: tenant._id });
-    if (count > 0) return;
+    const tenantIdStr = tenant._id.toString();
+    if (this.seedingLocks.has(tenantIdStr)) return;
 
-    const primaryColor = tenant.branding?.primaryColor || '#1e3a8a';
-    const secondaryColor = tenant.branding?.secondaryColor || '#f59e0b';
+    // If tenant has already been initialized, never re-seed even if templates were deleted by admin
+    if ((tenant.settings as any)?.postersSeeded) return;
+
+    this.seedingLocks.add(tenantIdStr);
+    try {
+      const count = await this.templateModel.countDocuments({ tenantId: tenant._id });
+      if (count > 0) {
+        await tenant.updateOne({ $set: { 'settings.postersSeeded': true } });
+        return;
+      }
+
+      const primaryColor = tenant.branding?.primaryColor || '#1e3a8a';
+      const secondaryColor = tenant.branding?.secondaryColor || '#f59e0b';
 
     // 1. Festival Greeting (Square 1080x1080)
     const festivalImg = await this.createBaseTemplateImage(
@@ -409,8 +421,12 @@ export class PosterGeneratorService {
       },
     ];
 
-    await this.templateModel.insertMany(defaultTemplates);
-    this.logger.log(`Successfully seeded ${defaultTemplates.length} default poster templates for tenant ${tenant.slug}`);
+      await this.templateModel.insertMany(defaultTemplates);
+      await tenant.updateOne({ $set: { 'settings.postersSeeded': true } });
+      this.logger.log(`Successfully seeded ${defaultTemplates.length} default poster templates for tenant ${tenant.slug}`);
+    } finally {
+      this.seedingLocks.delete(tenantIdStr);
+    }
   }
 
   /**
@@ -527,7 +543,6 @@ export class PosterGeneratorService {
    * 3. Get all unique template categories
    */
   async getTemplateCategories(tenant: TenantDocument) {
-    await this.seedDefaultTemplatesIfEmpty(tenant);
     return this.templateModel.distinct('category', { tenantId: tenant._id, isActive: true });
   }
 
@@ -536,7 +551,16 @@ export class PosterGeneratorService {
    */
   async getTemplate(tenant: TenantDocument, id: string) {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid template ID');
-    const template = await this.templateModel.findOne({ _id: id, tenantId: tenant._id });
+    let template = await this.templateModel.findOne({
+      _id: new Types.ObjectId(id),
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    });
+    if (!template) {
+      template = await this.templateModel.findOne({
+        _id: id,
+        $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+      });
+    }
     if (!template) throw new NotFoundException(`Poster template #${id} not found`);
     return template;
   }
@@ -580,7 +604,10 @@ export class PosterGeneratorService {
    */
   async removeTemplate(tenant: TenantDocument, id: string) {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid template ID');
-    const template = await this.templateModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const template = await this.templateModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    });
     if (!template) throw new NotFoundException(`Poster template #${id} not found`);
     return { message: `Template #${id} deleted successfully.` };
   }
@@ -616,8 +643,8 @@ export class PosterGeneratorService {
     }
 
     const template = await this.templateModel.findOne({
-      _id: templateId,
-      tenantId: tenant._id,
+      _id: new Types.ObjectId(templateId),
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
       isActive: true,
     });
     if (!template) {
@@ -870,7 +897,10 @@ export class PosterGeneratorService {
    */
   async getPosterFilePath(tenant: TenantDocument, id: string): Promise<{ filePath: string; filename: string }> {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid poster ID');
-    const record = await this.generatedModel.findOne({ _id: id, tenantId: tenant._id });
+    const record = await this.generatedModel.findOne({
+      _id: new Types.ObjectId(id),
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    });
     if (!record) throw new NotFoundException(`Poster #${id} not found`);
 
     const cleanRel = record.outputUrl.replace(/^[\\\/]+/, '').replace(/\//g, path.sep);
@@ -938,7 +968,10 @@ export class PosterGeneratorService {
    */
   async adminDeletePoster(tenant: TenantDocument, id: string) {
     if (!Types.ObjectId.isValid(id)) throw new BadRequestException('Invalid poster ID');
-    const poster = await this.generatedModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const poster = await this.generatedModel.findOneAndDelete({
+      _id: new Types.ObjectId(id),
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+    });
     if (!poster) throw new NotFoundException(`Poster #${id} not found`);
 
     const fullPath = path.join(process.cwd(), poster.outputUrl.replace(/^\//, ''));

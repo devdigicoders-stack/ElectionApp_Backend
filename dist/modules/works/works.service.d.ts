@@ -1,12 +1,13 @@
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Work, WorkDocument } from './work.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 import { WorkStatus } from '../../shared/types';
 export declare class WorksService {
     private workModel;
     constructor(workModel: Model<WorkDocument>);
-    create(tenant: TenantDocument, data: any): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    private toObjectId;
+    create(tenant: TenantDocument, data: any): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
@@ -19,8 +20,8 @@ export declare class WorksService {
         page?: number;
         limit?: number;
     }): Promise<{
-        data: (import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-            _id: import("mongoose").Types.ObjectId;
+        data: (import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: Types.ObjectId;
         }> & {
             __v: number;
         } & {
@@ -30,22 +31,22 @@ export declare class WorksService {
         page: number;
         limit: number;
     }>;
-    findOne(tenant: TenantDocument, id: string): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    findOne(tenant: TenantDocument, id: string): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }>;
-    update(tenant: TenantDocument, id: string, data: any): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    update(tenant: TenantDocument, id: string, data: any): Promise<import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {
         id: string;
     }>;
-    remove(tenant: TenantDocument, id: string): Promise<(import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
+    remove(tenant: TenantDocument, id: string): Promise<(import("mongoose").Document<unknown, {}, WorkDocument, {}, import("mongoose").DefaultSchemaOptions> & Work & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
     }> & {
         __v: number;
     } & {

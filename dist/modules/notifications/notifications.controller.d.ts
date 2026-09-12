@@ -13,6 +13,7 @@ export declare class NotificationsController {
     send(req: TenantRequest, id: string): Promise<{
         message: string;
         recipientCount: number;
+        pushTokensDispatched: number;
     }>;
     findAll(req: TenantRequest, page?: number, limit?: number): Promise<{
         data: (import("mongoose").Document<unknown, {}, import("./notification.schema").NotificationDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./notification.schema").Notification & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
@@ -43,11 +44,21 @@ export declare class NotificationsController {
     } & {
         id: string;
     }) | null>;
-    remove(req: TenantRequest, id: string): Promise<(import("mongoose").Document<unknown, {}, import("./notification.schema").NotificationDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./notification.schema").Notification & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }) | null>;
+    remove(req: TenantRequest, id: string): Promise<{
+        success: boolean;
+        message: string;
+        deletedId: string;
+    }>;
+    registerToken(req: any, token: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
+    testPush(req: any, token?: string): Promise<{
+        success: boolean;
+        messageId?: string;
+        error?: string;
+    } | {
+        success: boolean;
+        message: string;
+    }>;
 }

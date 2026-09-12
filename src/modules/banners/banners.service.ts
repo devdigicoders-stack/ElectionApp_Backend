@@ -1,12 +1,20 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { Banner, BannerDocument } from './banner.schema';
 import { TenantDocument } from '../tenants/tenant.schema';
 
 @Injectable()
 export class BannersService {
   constructor(@InjectModel(Banner.name) private bannerModel: Model<BannerDocument>) {}
+
+  private getBannerFilter(tenant: TenantDocument, id: string) {
+    const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+    return {
+      _id: objectId,
+      $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+    };
+  }
 
   private formatBanner(banner: any, req?: any, tenant?: any) {
     if (!banner) return null;
@@ -60,14 +68,14 @@ export class BannersService {
   }
 
   async findOne(tenant: TenantDocument, id: string, req?: any) {
-    const banner = await this.bannerModel.findOne({ _id: id, tenantId: tenant._id });
+    const banner = await this.bannerModel.findOne(this.getBannerFilter(tenant, id));
     if (!banner) throw new NotFoundException('Banner not found');
     return this.formatBanner(banner, req, tenant);
   }
 
   async update(tenant: TenantDocument, id: string, data: any, req?: any) {
     const banner = await this.bannerModel.findOneAndUpdate(
-      { _id: id, tenantId: tenant._id },
+      this.getBannerFilter(tenant, id),
       { $set: data },
       { new: true },
     );
@@ -76,16 +84,23 @@ export class BannersService {
   }
 
   async remove(tenant: TenantDocument, id: string) {
-    const banner = await this.bannerModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+    const banner = await this.bannerModel.findOneAndDelete(this.getBannerFilter(tenant, id));
     if (!banner) throw new NotFoundException('Banner not found');
     return { success: true, message: 'Banner deleted successfully' };
   }
 
   async reorder(tenant: TenantDocument, orders: { id: string; sortOrder: number }[]) {
     await Promise.all(
-      (orders || []).map(({ id, sortOrder }) =>
-        this.bannerModel.findOneAndUpdate({ _id: id, tenantId: tenant._id }, { sortOrder }),
-      ),
+      (orders || []).map(({ id, sortOrder }) => {
+        const objectId = Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : id;
+        return this.bannerModel.findOneAndUpdate(
+          {
+            _id: objectId,
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+          },
+          { sortOrder },
+        );
+      }),
     );
     return { message: 'Reordered successfully' };
   }

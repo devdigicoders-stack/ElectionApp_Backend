@@ -205,7 +205,7 @@ export class MembershipService {
       throw new BadRequestException('Invalid plan ID format');
     }
 
-    const plan = await this.planModel.findOne({ _id: id, tenantId: tenant._id });
+    const plan = await this.planModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!plan) {
       throw new NotFoundException(`Membership plan #${id} not found`);
     }
@@ -898,7 +898,7 @@ export class MembershipService {
     }
 
     const membership = await this.membershipModel
-      .findOne({ _id: id, tenantId: tenant._id })
+      .findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id })
       .populate('userId', 'name mobile areaId customFields')
       .populate('planId')
       .populate('approvedBy', 'name');
@@ -922,7 +922,7 @@ export class MembershipService {
       throw new BadRequestException('Invalid membership ID format');
     }
 
-    const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+    const membership = await this.membershipModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!membership) {
       throw new NotFoundException(`Membership #${id} not found`);
     }
@@ -970,7 +970,7 @@ export class MembershipService {
       throw new BadRequestException('Invalid membership ID format');
     }
 
-    const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+    const membership = await this.membershipModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!membership) {
       throw new NotFoundException(`Membership #${id} not found`);
     }
@@ -989,7 +989,7 @@ export class MembershipService {
     }
 
     const membership = await this.membershipModel
-      .findOne({ _id: id, tenantId: tenant._id })
+      .findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id })
       .populate('userId', 'name mobile areaId customFields')
       .populate('planId');
 
@@ -1027,7 +1027,7 @@ export class MembershipService {
       throw new BadRequestException('Invalid membership ID format');
     }
 
-    const membership = await this.membershipModel.findOne({ _id: id, tenantId: tenant._id });
+    const membership = await this.membershipModel.findOne({ _id: new Types.ObjectId(id), tenantId: tenant._id });
     if (!membership) {
       throw new NotFoundException(`Membership #${id} not found`);
     }

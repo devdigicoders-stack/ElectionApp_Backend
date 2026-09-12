@@ -18,6 +18,7 @@ export declare class User {
     address?: string;
     notes?: string;
     lastActiveAt?: Date;
+    fcmTokens: string[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -175,6 +176,15 @@ export declare const UserSchema: import("mongoose").Schema<User, import("mongoos
         id: string;
     }>> | undefined;
     lastActiveAt?: import("mongoose").SchemaDefinitionProperty<Date | undefined, User, Document<unknown, {}, User, {
+        id: string;
+    }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
+        _id: Types.ObjectId;
+    } & {
+        __v: number;
+    }, "id"> & import("mongoose").HydratedDocumentOverrides<{
+        id: string;
+    }>> | undefined;
+    fcmTokens?: import("mongoose").SchemaDefinitionProperty<string[], User, Document<unknown, {}, User, {
         id: string;
     }, import("mongoose").DefaultSchemaOptions> & Omit<User & {
         _id: Types.ObjectId;

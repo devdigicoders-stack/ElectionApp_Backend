@@ -3,6 +3,7 @@ import { TenantRequest } from '../../common/middleware/tenant.middleware';
 export declare class ManifestoController {
     private manifestoService;
     constructor(manifestoService: ManifestoService);
+    private isAuthorizedAdmin;
     create(req: TenantRequest, body: any): Promise<import("mongoose").Document<unknown, {}, import("./manifesto.schema").ManifestoDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./manifesto.schema").Manifesto & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
@@ -10,7 +11,7 @@ export declare class ManifestoController {
     } & {
         id: string;
     }>;
-    findAll(req: TenantRequest, category?: string): Promise<(import("mongoose").Document<unknown, {}, import("./manifesto.schema").ManifestoDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./manifesto.schema").Manifesto & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+    findAll(req: TenantRequest, category?: string, all?: string): Promise<(import("mongoose").Document<unknown, {}, import("./manifesto.schema").ManifestoDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./manifesto.schema").Manifesto & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: import("mongoose").Types.ObjectId;
     }> & {
         __v: number;
@@ -32,11 +33,8 @@ export declare class ManifestoController {
     } & {
         id: string;
     }>;
-    remove(req: TenantRequest, id: string): Promise<(import("mongoose").Document<unknown, {}, import("./manifesto.schema").ManifestoDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./manifesto.schema").Manifesto & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
-        _id: import("mongoose").Types.ObjectId;
-    }> & {
-        __v: number;
-    } & {
-        id: string;
-    }) | null>;
+    remove(req: TenantRequest, id: string): Promise<{
+        success: boolean;
+        message: string;
+    }>;
 }

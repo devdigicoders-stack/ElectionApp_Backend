@@ -60,6 +60,9 @@ let CustomDomainsService = class CustomDomainsService {
         this.configService = configService;
         this.auditLogsService = auditLogsService;
     }
+    toId(id) {
+        return mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+    }
     normalizeDomain(rawDomain) {
         if (!rawDomain)
             throw new common_1.BadRequestException('Domain name is required');
@@ -89,7 +92,7 @@ let CustomDomainsService = class CustomDomainsService {
         }
     }
     async configureDomain(tenantId, rawDomain, user, ipAddress, userAgent) {
-        const tenant = await this.tenantModel.findById(tenantId);
+        const tenant = await this.tenantModel.findById(this.toId(tenantId));
         if (!tenant)
             throw new common_1.NotFoundException('Tenant not found');
         const cleanDomain = this.normalizeDomain(rawDomain);
@@ -186,7 +189,7 @@ let CustomDomainsService = class CustomDomainsService {
         };
     }
     async getDomainStatus(tenantId) {
-        const tenant = await this.tenantModel.findById(tenantId).select('name slug customDomain isCustomDomainVerified customDomainVerifiedAt customDomainVerification');
+        const tenant = await this.tenantModel.findById(this.toId(tenantId)).select('name slug customDomain isCustomDomainVerified customDomainVerifiedAt customDomainVerification');
         if (!tenant)
             throw new common_1.NotFoundException('Tenant not found');
         const domainMeta = tenant.customDomainVerification || {
@@ -217,7 +220,7 @@ let CustomDomainsService = class CustomDomainsService {
         };
     }
     async verifyDomain(tenantId, options = {}, user, ipAddress, userAgent) {
-        const tenant = await this.tenantModel.findById(tenantId);
+        const tenant = await this.tenantModel.findById(this.toId(tenantId));
         if (!tenant)
             throw new common_1.NotFoundException('Tenant not found');
         const domainMeta = tenant.customDomainVerification;
@@ -371,7 +374,7 @@ let CustomDomainsService = class CustomDomainsService {
         };
     }
     async removeDomain(tenantId, user, ipAddress, userAgent) {
-        const tenant = await this.tenantModel.findById(tenantId);
+        const tenant = await this.tenantModel.findById(this.toId(tenantId));
         if (!tenant)
             throw new common_1.NotFoundException('Tenant not found');
         const previousDomain = tenant.customDomain || tenant.customDomainVerification?.domain;

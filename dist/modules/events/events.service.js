@@ -286,12 +286,21 @@ let EventsService = EventsService_1 = class EventsService {
         };
     }
     async findOne(tenant, id, user) {
-        if (!mongoose_2.Types.ObjectId.isValid(id)) {
-            throw new common_1.NotFoundException(`Event not found for id: ${id}`);
+        let event = null;
+        if (mongoose_2.Types.ObjectId.isValid(id)) {
+            event = await this.eventModel
+                .findOne({
+                _id: new mongoose_2.Types.ObjectId(id),
+                $or: [{ tenantId: tenant._id }, { tenantId: tenant._id.toString() }],
+            })
+                .populate('areaId', 'name code');
         }
-        const event = await this.eventModel
-            .findOne({ _id: id, tenantId: tenant._id })
-            .populate('areaId', 'name code');
+        if (!event) {
+            const candidate = await this.eventModel.findById(id).populate('areaId', 'name code');
+            if (candidate && candidate.tenantId && candidate.tenantId.toString() === tenant._id.toString()) {
+                event = candidate;
+            }
+        }
         if (!event) {
             throw new common_1.NotFoundException('Event not found');
         }

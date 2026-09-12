@@ -47,10 +47,10 @@ let PosterGeneratorController = class PosterGeneratorController {
             }
         }
         const dto = {
-            title: body.title,
+            title: body.title || body.name,
             category: body.category,
             description: body.description,
-            templateImageUrl: body.templateImageUrl,
+            templateImageUrl: body.templateImageUrl || body.imageUrl,
             thumbnailUrl: body.thumbnailUrl,
             width: body.width ? Number(body.width) : undefined,
             height: body.height ? Number(body.height) : undefined,
@@ -86,6 +86,8 @@ let PosterGeneratorController = class PosterGeneratorController {
         }
         const dto = {
             ...body,
+            title: body.title || body.name,
+            templateImageUrl: body.templateImageUrl || body.imageUrl,
             fields: parsedFields,
             width: body.width ? Number(body.width) : undefined,
             height: body.height ? Number(body.height) : undefined,

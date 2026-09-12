@@ -175,7 +175,9 @@ let NewsService = class NewsService {
         const isObjectId = mongoose_2.Types.ObjectId.isValid(idOrSlug);
         const query = {
             tenantId: tenant._id,
-            ...(isObjectId ? { $or: [{ _id: idOrSlug }, { slug: idOrSlug }] } : { slug: idOrSlug }),
+            ...(isObjectId
+                ? { $or: [{ _id: new mongoose_2.Types.ObjectId(idOrSlug) }, { slug: idOrSlug }] }
+                : { slug: idOrSlug }),
         };
         if (isPublic) {
             query.status = types_1.NewsStatus.PUBLISHED;
@@ -251,7 +253,11 @@ let NewsService = class NewsService {
         return summary;
     }
     async update(tenant, id, dto) {
-        const news = await this.newsModel.findOne({ _id: id, tenantId: tenant._id });
+        const isObjectId = mongoose_2.Types.ObjectId.isValid(id);
+        const news = await this.newsModel.findOne({
+            _id: isObjectId ? new mongoose_2.Types.ObjectId(id) : id,
+            tenantId: tenant._id,
+        });
         if (!news)
             throw new common_1.NotFoundException('News article not found');
         if (dto.title && dto.title !== news.title && !dto.slug) {
@@ -301,7 +307,11 @@ let NewsService = class NewsService {
         return news;
     }
     async updateStatus(tenant, id, dto) {
-        const news = await this.newsModel.findOne({ _id: id, tenantId: tenant._id });
+        const isObjectId = mongoose_2.Types.ObjectId.isValid(id);
+        const news = await this.newsModel.findOne({
+            _id: isObjectId ? new mongoose_2.Types.ObjectId(id) : id,
+            tenantId: tenant._id,
+        });
         if (!news)
             throw new common_1.NotFoundException('News article not found');
         news.status = dto.status;
@@ -315,7 +325,11 @@ let NewsService = class NewsService {
         return news;
     }
     async remove(tenant, id) {
-        const deleted = await this.newsModel.findOneAndDelete({ _id: id, tenantId: tenant._id });
+        const isObjectId = mongoose_2.Types.ObjectId.isValid(id);
+        const deleted = await this.newsModel.findOneAndDelete({
+            _id: isObjectId ? new mongoose_2.Types.ObjectId(id) : id,
+            tenantId: tenant._id,
+        });
         if (!deleted)
             throw new common_1.NotFoundException('News article not found');
         return { success: true, message: 'News article deleted successfully' };

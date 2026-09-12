@@ -11,6 +11,7 @@ export declare class PosterGeneratorService {
     private userModel;
     private readonly bgRemovalService;
     private readonly logger;
+    private readonly seedingLocks;
     constructor(templateModel: Model<PosterTemplateDocument>, generatedModel: Model<GeneratedPosterDocument>, userModel: Model<UserDocument>, bgRemovalService: BackgroundRemovalService);
     private drawRoundedRect;
     private createBaseTemplateImage;

@@ -12,11 +12,12 @@ import {
   Ip,
   Headers,
   UseGuards,
+  SetMetadata,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { ComplaintsService } from './complaints.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { JwtAuthGuard, IS_PUBLIC } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard, Roles } from '../../common/guards/roles.guard';
 import { FeatureGuard } from '../../common/guards/feature.guard';
 import { RequireFeature } from '../../common/decorators/feature.decorator';
@@ -32,6 +33,8 @@ import {
   RejectComplaintDto,
   CreateCategoryDto,
   UpdateCategoryDto,
+  TogglePublicComplaintDto,
+  QueryPublicComplaintsDto,
 } from './complaints.dto';
 
 @Controller('complaints')
@@ -104,6 +107,16 @@ export class ComplaintsController {
   @Get('my/stats')
   getMyStats(@Req() req: TenantRequest & { user: any }) {
     return this.complaintsService.getCitizenDashboardCounters(req.tenant, req.user.sub);
+  }
+
+  /**
+   * 6b. Public Complaints Feed for Citizen PWA Community Board
+   * GET /complaints/public
+   */
+  @Get('public')
+  @SetMetadata(IS_PUBLIC, true)
+  findPublic(@Req() req: TenantRequest, @Query() query: QueryPublicComplaintsDto) {
+    return this.complaintsService.findPublic(req.tenant, query);
   }
 
   // ══════════════════════════════════════════════════════════════
@@ -290,4 +303,45 @@ export class ComplaintsController {
       req.user.sub,
     );
   }
+
+  /**
+   * 19. Admin: Toggle Public Visibility on Citizen PWA
+   * PATCH /complaints/:id/public
+   */
+  @Patch(':id/public')
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.COMPLAINT_MANAGER,
+    UserRole.AREA_COORDINATOR,
+  )
+  @UseGuards(RolesGuard)
+  togglePublic(
+    @Req() req: TenantRequest & { user: any },
+    @Param('id') id: string,
+    @Body() dto: TogglePublicComplaintDto,
+  ) {
+    return this.complaintsService.togglePublic(req.tenant, id, dto, req.user);
+  }
+
+  /**
+   * 20. Admin: Delete Complaint
+   * DELETE /complaints/:id
+   */
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(
+    UserRole.SUPER_ADMIN,
+    UserRole.LEADER,
+    UserRole.ADMIN,
+    UserRole.COMPLAINT_MANAGER,
+  )
+  remove(
+    @Req() req: TenantRequest & { user: any },
+    @Param('id') id: string,
+  ) {
+    return this.complaintsService.remove(req.tenant, id, req.user);
+  }
 }
+

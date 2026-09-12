@@ -13,9 +13,16 @@ export class AboutLeaderService {
   }
 
   async upsert(tenant: TenantDocument, data: any) {
+    const cleanData = { ...(data || {}) };
+    delete cleanData._id;
+    delete cleanData.__v;
+    delete cleanData.createdAt;
+    delete cleanData.updatedAt;
+    delete cleanData.tenantId;
+
     return this.aboutModel.findOneAndUpdate(
-      { tenantId: tenant._id },
-      { $set: { tenantId: tenant._id, ...data } },
+      { $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }] },
+      { $set: { tenantId: tenant._id, ...cleanData } },
       { new: true, upsert: true },
     );
   }

@@ -4,6 +4,7 @@ import { TenantDocument } from '../tenants/tenant.schema';
 export declare class BannersService {
     private bannerModel;
     constructor(bannerModel: Model<BannerDocument>);
+    private getBannerFilter;
     private formatBanner;
     create(tenant: TenantDocument, data: any, req?: any): Promise<any>;
     findActive(tenant: TenantDocument, req?: any): Promise<any[]>;

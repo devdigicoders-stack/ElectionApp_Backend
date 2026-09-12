@@ -4,6 +4,7 @@ import { TenantsService } from './tenants.service';
 import { TenantsController } from './tenants.controller';
 import { SuperAdminDomainsController } from './super-admin-domains.controller';
 import { TenantDomainController } from './tenant-domain.controller';
+import { TenantBrandingController } from './tenant-branding.controller';
 import { CustomDomainsService } from './custom-domains.service';
 import { Tenant, TenantSchema } from './tenant.schema';
 import { TenantFeature, TenantFeatureSchema } from '../features/tenant-feature.schema';
@@ -42,6 +43,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     TenantsController,
     SuperAdminDomainsController,
     TenantDomainController,
+    TenantBrandingController,
   ],
   providers: [TenantsService, CustomDomainsService],
   exports: [TenantsService, CustomDomainsService, MongooseModule],

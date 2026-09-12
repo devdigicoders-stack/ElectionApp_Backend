@@ -55,6 +55,26 @@ export class AboutLeader {
 
   @Prop({ type: [{ year: String, title: String, description: String }], default: [] })
   timeline: { year: string; title: string; description?: string }[];
+
+  @Prop({
+    type: [
+      {
+        name: { type: String, required: true },
+        designation: { type: String, default: null },
+        partyRole: { type: String, default: null },
+        photoUrl: { type: String, default: null },
+        order: { type: Number, default: 0 },
+      },
+    ],
+    default: [],
+  })
+  seniorLeaders: {
+    name: string;
+    designation?: string;
+    partyRole?: string;
+    photoUrl?: string;
+    order?: number;
+  }[];
 }
 
 export const AboutLeaderSchema = SchemaFactory.createForClass(AboutLeader);

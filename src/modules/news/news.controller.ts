@@ -73,7 +73,17 @@ export class NewsController {
   }
 
   /**
-   * 6. [Public] Get Single News Article by ID or Slug
+   * 6. [Admin] Get Single News Article by ID (any status: draft, scheduled, published, archived)
+   * GET /news/admin/:id
+   */
+  @Get('admin/:id')
+  @UseGuards(JwtAuthGuard)
+  findOneAdmin(@Req() req: TenantRequest, @Param('id') id: string) {
+    return this.newsService.findOne(req.tenant, id, false);
+  }
+
+  /**
+   * 7. [Public] Get Single News Article by ID or Slug
    * GET /news/:id
    */
   @Get(':id')

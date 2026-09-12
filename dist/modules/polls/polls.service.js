@@ -13,7 +13,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 };
 var PollsService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.PollsService = void 0;
+exports.PollsService = exports.toObjectId = void 0;
 exports.getPollComputedState = getPollComputedState;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
@@ -26,6 +26,10 @@ const volunteer_schema_1 = require("../volunteers/volunteer.schema");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
 const types_1 = require("../../shared/types");
 const uuid_1 = require("uuid");
+const toObjectId = (id) => {
+    return mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+};
+exports.toObjectId = toObjectId;
 function getPollComputedState(poll, now = new Date(), isAdmin = false, hasVoted = false) {
     const startsAt = poll.startsAt ? new Date(poll.startsAt) : null;
     const endsAt = poll.endsAt ? new Date(poll.endsAt) : null;
@@ -387,7 +391,7 @@ let PollsService = PollsService_1 = class PollsService {
     }
     async findOne(tenant, id, user, isAdmin = false) {
         const poll = await this.pollModel
-            .findOne({ _id: id, tenantId: tenant._id })
+            .findOne({ _id: (0, exports.toObjectId)(id), tenantId: tenant._id })
             .populate('targetAreaId', 'name code');
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
@@ -464,7 +468,7 @@ let PollsService = PollsService_1 = class PollsService {
     }
     async vote(tenant, pollId, userId, dto) {
         const poll = await this.pollModel.findOne({
-            _id: pollId,
+            _id: (0, exports.toObjectId)(pollId),
             tenantId: tenant._id,
         });
         if (!poll) {
@@ -561,7 +565,7 @@ let PollsService = PollsService_1 = class PollsService {
                 totalVotes: state.canViewResults ? poll.totalVotes : undefined,
             };
         }
-        const user = await this.userModel.findOne({ _id: userId, tenantId: tenant._id });
+        const user = await this.userModel.findOne({ _id: (0, exports.toObjectId)(userId), tenantId: tenant._id });
         if (!user) {
             throw new common_1.NotFoundException('User record not found');
         }
@@ -667,7 +671,7 @@ let PollsService = PollsService_1 = class PollsService {
     }
     async getAnalytics(tenant, pollId) {
         const poll = await this.pollModel
-            .findOne({ _id: pollId, tenantId: tenant._id })
+            .findOne({ _id: (0, exports.toObjectId)(pollId), tenantId: tenant._id })
             .populate('targetAreaId', 'name code');
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
@@ -784,7 +788,7 @@ let PollsService = PollsService_1 = class PollsService {
         };
     }
     async exportPollCsv(tenant, pollId, res, format = 'csv', adminUser, ipAddress, userAgent) {
-        const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+        const poll = await this.pollModel.findOne({ _id: (0, exports.toObjectId)(pollId), tenantId: tenant._id });
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
         }
@@ -878,7 +882,7 @@ let PollsService = PollsService_1 = class PollsService {
         return res.status(200).send(csvContent);
     }
     async update(tenant, id, dto) {
-        const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });
+        const poll = await this.pollModel.findOne({ _id: (0, exports.toObjectId)(id), tenantId: tenant._id });
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
         }
@@ -962,7 +966,7 @@ let PollsService = PollsService_1 = class PollsService {
         };
     }
     async declareResult(tenant, pollId) {
-        const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+        const poll = await this.pollModel.findOne({ _id: (0, exports.toObjectId)(pollId), tenantId: tenant._id });
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
         }
@@ -982,7 +986,7 @@ let PollsService = PollsService_1 = class PollsService {
         };
     }
     async closePoll(tenant, pollId) {
-        const poll = await this.pollModel.findOne({ _id: pollId, tenantId: tenant._id });
+        const poll = await this.pollModel.findOne({ _id: (0, exports.toObjectId)(pollId), tenantId: tenant._id });
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
         }
@@ -1001,7 +1005,7 @@ let PollsService = PollsService_1 = class PollsService {
         };
     }
     async remove(tenant, id) {
-        const poll = await this.pollModel.findOne({ _id: id, tenantId: tenant._id });
+        const poll = await this.pollModel.findOne({ _id: (0, exports.toObjectId)(id), tenantId: tenant._id });
         if (!poll) {
             throw new common_1.NotFoundException('Poll not found');
         }

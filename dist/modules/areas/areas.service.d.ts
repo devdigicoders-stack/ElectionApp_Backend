@@ -6,7 +6,8 @@ export declare class AreasService {
     private areaModel;
     constructor(levelModel: Model<AreaLevelDocument>, areaModel: Model<AreaDocument>);
     createLevel(tenant: TenantDocument, data: {
-        levelOrder: number;
+        levelOrder?: number;
+        rank?: number;
         name: string;
         isRequired?: boolean;
     }): Promise<import("mongoose").Document<unknown, {}, AreaLevelDocument, {}, import("mongoose").DefaultSchemaOptions> & AreaLevel & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
@@ -51,6 +52,23 @@ export declare class AreasService {
         __v: number;
     } & {
         id: string;
+    }>;
+    updateArea(tenant: TenantDocument, id: string, data: Partial<{
+        name: string;
+        code?: string;
+        levelId: string;
+        parentId?: string;
+        isActive?: boolean;
+    }>): Promise<import("mongoose").Document<unknown, {}, AreaDocument, {}, import("mongoose").DefaultSchemaOptions> & Area & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+        _id: Types.ObjectId;
+    }> & {
+        __v: number;
+    } & {
+        id: string;
+    }>;
+    deleteArea(tenant: TenantDocument, id: string): Promise<{
+        success: boolean;
+        message: string;
     }>;
     getAreasByLevel(tenant: TenantDocument, levelId: string): Promise<(import("mongoose").Document<unknown, {}, AreaDocument, {}, import("mongoose").DefaultSchemaOptions> & Area & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;

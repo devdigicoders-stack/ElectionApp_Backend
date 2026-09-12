@@ -23,7 +23,13 @@ let AreasService = class AreasService {
         this.areaModel = areaModel;
     }
     async createLevel(tenant, data) {
-        return this.levelModel.create({ tenantId: tenant._id, ...data });
+        const levelOrder = Number(data.levelOrder ?? data.rank ?? 1);
+        return this.levelModel.create({
+            tenantId: tenant._id,
+            name: data.name.trim(),
+            levelOrder,
+            isRequired: data.isRequired !== false,
+        });
     }
     async getLevels(tenant) {
         return this.levelModel.find({ tenantId: tenant._id }).sort({ levelOrder: 1 });
@@ -42,7 +48,67 @@ let AreasService = class AreasService {
         return this.levelModel.findOneAndDelete({ _id: levelId, tenantId: tenant._id });
     }
     async createArea(tenant, data) {
-        return this.areaModel.create({ tenantId: tenant._id, ...data });
+        const payload = {
+            tenantId: tenant._id,
+            name: data.name.trim(),
+            levelId: mongoose_2.Types.ObjectId.isValid(data.levelId) ? new mongoose_2.Types.ObjectId(data.levelId) : data.levelId,
+        };
+        if (data.parentId && typeof data.parentId === 'string' && data.parentId.trim().length > 0) {
+            payload.parentId = mongoose_2.Types.ObjectId.isValid(data.parentId) ? new mongoose_2.Types.ObjectId(data.parentId) : data.parentId;
+        }
+        else {
+            payload.parentId = null;
+        }
+        if (data.code && data.code.trim()) {
+            payload.code = data.code.trim();
+        }
+        return this.areaModel.create(payload);
+    }
+    async updateArea(tenant, id, data) {
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        const cleanData = {};
+        if (data.name !== undefined)
+            cleanData.name = data.name.trim();
+        if (data.code !== undefined)
+            cleanData.code = data.code ? data.code.trim() : null;
+        if (data.isActive !== undefined)
+            cleanData.isActive = Boolean(data.isActive);
+        if (data.levelId) {
+            cleanData.levelId = mongoose_2.Types.ObjectId.isValid(data.levelId) ? new mongoose_2.Types.ObjectId(data.levelId) : data.levelId;
+        }
+        if (data.parentId !== undefined) {
+            if (data.parentId && typeof data.parentId === 'string' && data.parentId.trim().length > 0) {
+                cleanData.parentId = mongoose_2.Types.ObjectId.isValid(data.parentId) ? new mongoose_2.Types.ObjectId(data.parentId) : data.parentId;
+            }
+            else {
+                cleanData.parentId = null;
+            }
+        }
+        const area = await this.areaModel.findOneAndUpdate({
+            _id: objectId,
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+        }, { $set: cleanData }, { new: true });
+        if (!area)
+            throw new common_1.NotFoundException('Area not found');
+        return area;
+    }
+    async deleteArea(tenant, id) {
+        const objectId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id) : id;
+        const childCount = await this.areaModel.countDocuments({
+            tenantId: tenant._id,
+            parentId: objectId,
+            isActive: true,
+        });
+        if (childCount > 0) {
+            throw new common_1.BadRequestException(`Cannot delete this area because it has ${childCount} sub-area(s). Delete or move sub-areas first.`);
+        }
+        const area = await this.areaModel.findOneAndDelete({
+            _id: objectId,
+            $or: [{ tenantId: tenant._id }, { tenantId: tenant._id?.toString() }],
+        });
+        if (!area)
+            throw new common_1.NotFoundException('Area not found');
+        return { success: true, message: 'Area deleted successfully' };
     }
     async getAreasByLevel(tenant, levelId) {
         return this.areaModel.find({ tenantId: tenant._id, levelId, isActive: true }).sort({ name: 1 });

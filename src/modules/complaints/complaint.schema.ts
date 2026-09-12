@@ -148,6 +148,16 @@ export class Complaint {
   @Prop({ type: Types.ObjectId, ref: 'AdminUser', default: null })
   rejectedBy?: Types.ObjectId;
 
+  // Public Visibility on Citizen PWA
+  @Prop({ default: false })
+  isPublic: boolean;
+
+  @Prop({ default: null })
+  publishedAt?: Date;
+
+  @Prop({ type: Types.ObjectId, ref: 'AdminUser', default: null })
+  publishedBy?: Types.ObjectId;
+
   // Complete Audit & Status Timeline (SRS Sec 15: "Timeline & Status history")
   @Prop({
     type: [
@@ -172,6 +182,7 @@ export const ComplaintSchema = SchemaFactory.createForClass(Complaint);
 
 // Performance Indexes
 ComplaintSchema.index({ tenantId: 1, status: 1 });
+ComplaintSchema.index({ tenantId: 1, isPublic: 1, status: 1 });
 ComplaintSchema.index({ tenantId: 1, priority: 1 });
 ComplaintSchema.index({ tenantId: 1, areaId: 1 });
 ComplaintSchema.index({ tenantId: 1, category: 1 });

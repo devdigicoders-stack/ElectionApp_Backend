@@ -257,8 +257,9 @@ export class MasterAreasService {
     parentId?: string;
     sortOrder?: number;
   }) {
+    const trimmedName = data.name.trim();
     const payload: Record<string, any> = {
-      name: data.name.trim(),
+      name: trimmedName,
       code: data.code?.trim() || null,
       levelType: data.levelType,
       sortOrder: data.sortOrder || 0,
@@ -272,6 +273,36 @@ export class MasterAreasService {
     if (data.panchayatId) payload.panchayatId = new Types.ObjectId(data.panchayatId);
     if (data.gramId) payload.gramId = new Types.ObjectId(data.gramId);
     if (data.parentId) payload.parentId = new Types.ObjectId(data.parentId);
+
+    // Deduplication check: if an area with same levelType and name (or code) exists under same parent
+    const baseName = trimmedName.split('(')[0].trim();
+    const query: Record<string, any> = {
+      levelType: data.levelType,
+      $or: [
+        { name: { $regex: new RegExp(`^${trimmedName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { name: { $regex: new RegExp(`^${baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { name: { $regex: new RegExp(`^${trimmedName.replace(/\s+/g, '\\s*')}$`, 'i') } },
+      ],
+    };
+    if (payload.code) {
+      query.$or.push({ code: payload.code });
+    }
+    if (payload.stateId) query.stateId = payload.stateId;
+
+    const existing = await this.masterAreaModel.findOne(query);
+    if (existing) {
+      let updated = false;
+      if (payload.code && !existing.code) {
+        existing.code = payload.code;
+        updated = true;
+      }
+      if (existing.name !== trimmedName && trimmedName.includes('(') && !existing.name.includes('(')) {
+        existing.name = trimmedName;
+        updated = true;
+      }
+      if (updated) await existing.save();
+      return existing;
+    }
 
     return this.masterAreaModel.create(payload);
   }

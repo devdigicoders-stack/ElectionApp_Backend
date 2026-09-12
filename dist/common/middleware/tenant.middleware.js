@@ -27,26 +27,53 @@ let TenantMiddleware = class TenantMiddleware {
         const headerTenantId = req.headers['x-tenant-id'];
         const querySlug = req.query?.['tenant'];
         const queryTenantId = req.query?.['tenantId'];
-        const host = req.hostname || '';
+        const host = (req.hostname || '').toLowerCase().trim();
         const isLocalhost = host === 'localhost' || host === '127.0.0.1';
         const isCloudHosting = host.endsWith('onrender.com') ||
             host.endsWith('vercel.app') ||
             host.endsWith('railway.app') ||
             host.endsWith('fly.dev') ||
             host.endsWith('herokuapp.com');
-        const subdomain = !isLocalhost && !isCloudHosting && host.includes('.') ? host.split('.')[0] : null;
+        const isBaseApiDomain = host === 'election.digicoders.in' ||
+            host === 'api.election.digicoders.in' ||
+            host === 'elelection.digicoders.in';
+        let subdomain = null;
+        if (!isLocalhost && !isCloudHosting && !isBaseApiDomain && host.includes('.')) {
+            if (host.endsWith('.election.digicoders.in')) {
+                subdomain = host.replace('.election.digicoders.in', '').split('.')[0];
+            }
+            else if (host.endsWith('.elelection.digicoders.in')) {
+                subdomain = host.replace('.elelection.digicoders.in', '').split('.')[0];
+            }
+            else {
+                const parts = host.split('.');
+                if (parts.length > 2) {
+                    subdomain = parts[0];
+                }
+            }
+        }
         let tenant = null;
         if (headerTenantId) {
-            if (!(0, mongoose_2.isValidObjectId)(headerTenantId)) {
-                throw new common_1.BadRequestException(`Invalid "x-tenant-id" value: "${headerTenantId}". It must be a 24-character MongoDB ObjectId (or use "x-tenant-slug" header instead, e.g. "x-tenant-slug: demo").`);
+            if ((0, mongoose_2.isValidObjectId)(headerTenantId)) {
+                tenant = await this.tenantModel.findById(headerTenantId);
             }
-            tenant = await this.tenantModel.findById(headerTenantId);
+            if (!tenant) {
+                tenant = await this.tenantModel.findOne({ slug: headerTenantId.toLowerCase().trim() });
+            }
+            if (!tenant) {
+                throw new common_1.BadRequestException(`Tenant not found for "x-tenant-id": "${headerTenantId}". Provide a valid 24-character ObjectId or tenant slug.`);
+            }
         }
         else if (queryTenantId) {
-            if (!(0, mongoose_2.isValidObjectId)(queryTenantId)) {
-                throw new common_1.BadRequestException(`Invalid "tenantId" query param: "${queryTenantId}". It must be a 24-character MongoDB ObjectId.`);
+            if ((0, mongoose_2.isValidObjectId)(queryTenantId)) {
+                tenant = await this.tenantModel.findById(queryTenantId);
             }
-            tenant = await this.tenantModel.findById(queryTenantId);
+            if (!tenant) {
+                tenant = await this.tenantModel.findOne({ slug: queryTenantId.toLowerCase().trim() });
+            }
+            if (!tenant) {
+                throw new common_1.BadRequestException(`Tenant not found for "tenantId": "${queryTenantId}". Provide a valid 24-character ObjectId or tenant slug.`);
+            }
         }
         else if (headerSlug) {
             tenant = await this.tenantModel.findOne({ slug: headerSlug.toLowerCase().trim() });
@@ -62,7 +89,7 @@ let TenantMiddleware = class TenantMiddleware {
         else {
             tenant = await this.tenantModel.findOne({ customDomain: host });
         }
-        if (!tenant && (isLocalhost || isCloudHosting)) {
+        if (!tenant && (isLocalhost || isCloudHosting || isBaseApiDomain)) {
             tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: types_1.TenantStatus.ACTIVE }));
         }
         if (!tenant) {

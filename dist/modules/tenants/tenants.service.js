@@ -631,7 +631,8 @@ let TenantsService = class TenantsService {
         return tenant;
     }
     async updateBranding(id, branding) {
-        const existing = await this.tenantModel.findById(id);
+        const queryId = mongoose_2.Types.ObjectId.isValid(id) ? new mongoose_2.Types.ObjectId(id.toString()) : id;
+        const existing = await this.tenantModel.findById(queryId);
         if (!existing)
             throw new common_1.NotFoundException('Tenant not found');
         const title = branding.title || branding.platformName;
@@ -654,7 +655,7 @@ let TenantsService = class TenantsService {
         if (title && !existing.title) {
             updatePayload.title = title;
         }
-        return this.tenantModel.findByIdAndUpdate(id, { $set: updatePayload }, { new: true });
+        return this.tenantModel.findByIdAndUpdate(queryId, { $set: updatePayload }, { new: true });
     }
     async toggleFeature(tenantId, featureKey, isEnabled) {
         const { Types } = await Promise.resolve().then(() => __importStar(require('mongoose')));

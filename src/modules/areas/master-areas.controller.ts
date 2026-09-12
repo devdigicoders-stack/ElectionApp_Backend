@@ -17,22 +17,22 @@ export class MasterAreasController {
 
   // ─── Public / Client Cascading Selectors ───────────────────────────────────
 
-  @Get('states')
+  @Get(['states', 'state'])
   getStates() {
     return this.masterAreasService.getStates();
   }
 
-  @Get('lok-sabhas')
+  @Get(['lok-sabhas', 'lok-sabha', 'lok-shabhas', 'lok-shabha'])
   getLokSabhas(@Query('stateId') stateId?: string) {
     return this.masterAreasService.getLokSabhas(stateId);
   }
 
-  @Get('districts')
+  @Get(['districts', 'district'])
   getDistricts(@Query('stateId') stateId?: string) {
     return this.masterAreasService.getDistricts(stateId);
   }
 
-  @Get('vidhan-sabhas')
+  @Get(['vidhan-sabhas', 'vidhan-sabha'])
   getVidhanSabhas(
     @Query('stateId') stateId?: string,
     @Query('lokSabhaId') lokSabhaId?: string,
@@ -41,7 +41,7 @@ export class MasterAreasController {
     return this.masterAreasService.getVidhanSabhas({ stateId, lokSabhaId, districtId });
   }
 
-  @Get('blocks')
+  @Get(['blocks', 'block'])
   getBlocks(
     @Query('stateId') stateId?: string,
     @Query('lokSabhaId') lokSabhaId?: string,
@@ -51,7 +51,7 @@ export class MasterAreasController {
     return this.masterAreasService.getBlocks({ stateId, lokSabhaId, districtId, vidhanSabhaId });
   }
 
-  @Get('panchayats')
+  @Get(['panchayats', 'panchayat'])
   getPanchayats(
     @Query('stateId') stateId?: string,
     @Query('vidhanSabhaId') vidhanSabhaId?: string,
@@ -60,7 +60,7 @@ export class MasterAreasController {
     return this.masterAreasService.getPanchayats({ stateId, vidhanSabhaId, blockId });
   }
 
-  @Get('grams')
+  @Get(['grams', 'gram'])
   getGrams(
     @Query('panchayatId') panchayatId?: string,
     @Query('blockId') blockId?: string,
@@ -68,7 +68,7 @@ export class MasterAreasController {
     return this.masterAreasService.getGrams({ panchayatId, blockId });
   }
 
-  @Get('wards')
+  @Get(['wards', 'ward'])
   getWards(
     @Query('gramId') gramId?: string,
     @Query('panchayatId') panchayatId?: string,

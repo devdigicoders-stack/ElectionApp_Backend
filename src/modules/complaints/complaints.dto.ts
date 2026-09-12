@@ -88,6 +88,11 @@ export class QueryComplaintsDto {
   @Type(() => Number)
   @IsNumber()
   limit?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  isPublic?: boolean;
 }
 
 export class AssignComplaintDto {
@@ -178,6 +183,39 @@ export class CreateCategoryDto {
   @Type(() => Number)
   @IsNumber()
   order?: number;
+}
+
+export class TogglePublicComplaintDto {
+  @IsBoolean()
+  isPublic: boolean;
+}
+
+export class QueryPublicComplaintsDto {
+  @IsOptional()
+  @IsEnum(ComplaintStatus)
+  status?: ComplaintStatus;
+
+  @IsOptional()
+  @IsString()
+  areaId?: string;
+
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  limit?: number;
 }
 
 export class UpdateCategoryDto {
