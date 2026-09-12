@@ -294,6 +294,9 @@ export class EventsService {
    * Get single event details with full status and user registration status
    */
   async findOne(tenant: TenantDocument, id: string, user?: any) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new NotFoundException(`Event not found for id: ${id}`);
+    }
     const event = await this.eventModel
       .findOne({ _id: id, tenantId: tenant._id })
       .populate('areaId', 'name code');
@@ -471,6 +474,62 @@ export class EventsService {
       isCheckedIn: false,
     };
   }
+
+  /**
+   * Get events that the current user has marked as 'going'
+   */
+  async getMyGoing(tenant: TenantDocument, userId: string) {
+    const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+    const rsvps = await this.rsvpModel
+      .find({
+        tenantId: tenant._id,
+        $or: [{ userId: userObjectId }, { userId: userId.toString() }],
+        status: EventRsvpStatus.GOING,
+      })
+      .populate('eventId')
+      .exec();
+
+    return rsvps.map((r: any) => r.eventId).filter(Boolean);
+  }
+
+  /**
+   * Delete / Cancel RSVP for an event
+   */
+  async deleteRsvp(tenant: TenantDocument, eventId: string, userId: string) {
+    const eventObjectId = Types.ObjectId.isValid(eventId) ? new Types.ObjectId(eventId) : eventId;
+    const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+
+    const rsvp = await this.rsvpModel.findOne({
+      tenantId: tenant._id,
+      $or: [
+        { eventId: eventObjectId, userId: userObjectId },
+        { eventId: eventId, userId: userId },
+        { eventId: eventObjectId, userId: userId },
+        { eventId: eventId, userId: userObjectId },
+      ],
+    });
+
+    if (rsvp) {
+      const wasGoing = rsvp.status === EventRsvpStatus.GOING;
+      const wasInterested = rsvp.status === EventRsvpStatus.INTERESTED;
+      await this.rsvpModel.deleteOne({ _id: rsvp._id });
+
+      if (wasGoing) {
+        await this.eventModel.updateOne(
+          { _id: eventObjectId },
+          { $inc: { goingCount: -1, registeredCount: -1 } },
+        );
+      } else if (wasInterested) {
+        await this.eventModel.updateOne(
+          { _id: eventObjectId },
+          { $inc: { interestedCount: -1 } },
+        );
+      }
+    }
+
+    return { message: 'RSVP removed successfully' };
+  }
+
 
   /**
    * Get authenticated user's RSVP status for an event

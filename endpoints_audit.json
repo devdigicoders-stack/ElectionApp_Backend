@@ -1,0 +1,2869 @@
+{
+  "allEndpoints": [
+    {
+      "file": "about-leader.controller.ts",
+      "module": "about-leader",
+      "method": "GET",
+      "endpoint": "/about-leader"
+    },
+    {
+      "file": "about-leader.controller.ts",
+      "module": "about-leader",
+      "method": "PUT",
+      "endpoint": "/about-leader"
+    },
+    {
+      "file": "admin-users.controller.ts",
+      "module": "admin-users",
+      "method": "POST",
+      "endpoint": "/admin-users"
+    },
+    {
+      "file": "admin-users.controller.ts",
+      "module": "admin-users",
+      "method": "GET",
+      "endpoint": "/admin-users"
+    },
+    {
+      "file": "admin-users.controller.ts",
+      "module": "admin-users",
+      "method": "GET",
+      "endpoint": "/admin-users/:id"
+    },
+    {
+      "file": "admin-users.controller.ts",
+      "module": "admin-users",
+      "method": "PATCH",
+      "endpoint": "/admin-users/:id"
+    },
+    {
+      "file": "admin-users.controller.ts",
+      "module": "admin-users",
+      "method": "DELETE",
+      "endpoint": "/admin-users/:id"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "POST",
+      "endpoint": "/super-admin/staff"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "GET",
+      "endpoint": "/super-admin/staff"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "GET",
+      "endpoint": "/super-admin/staff/roles"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "GET",
+      "endpoint": "/super-admin/staff/:id"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "PATCH",
+      "endpoint": "/super-admin/staff/:id"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "PATCH",
+      "endpoint": "/super-admin/staff/:id/status"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "PATCH",
+      "endpoint": "/super-admin/staff/:id/reset-password"
+    },
+    {
+      "file": "super-admin-staff.controller.ts",
+      "module": "admin-users",
+      "method": "DELETE",
+      "endpoint": "/super-admin/staff/:id"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "POST",
+      "endpoint": "/areas/levels"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "GET",
+      "endpoint": "/areas/levels"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "PATCH",
+      "endpoint": "/areas/levels/:id"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "DELETE",
+      "endpoint": "/areas/levels/:id"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "POST",
+      "endpoint": "/areas"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "GET",
+      "endpoint": "/areas/tree"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "GET",
+      "endpoint": "/areas/by-level/:levelId"
+    },
+    {
+      "file": "areas.controller.ts",
+      "module": "areas",
+      "method": "GET",
+      "endpoint": "/areas/:id/children"
+    },
+    {
+      "file": "audit-logs.controller.ts",
+      "module": "audit-logs",
+      "method": "GET",
+      "endpoint": "/super-admin/audit-logs"
+    },
+    {
+      "file": "auth.controller.ts",
+      "module": "auth",
+      "method": "POST",
+      "endpoint": "/auth/send-otp"
+    },
+    {
+      "file": "auth.controller.ts",
+      "module": "auth",
+      "method": "POST",
+      "endpoint": "/auth/verify-otp"
+    },
+    {
+      "file": "auth.controller.ts",
+      "module": "auth",
+      "method": "POST",
+      "endpoint": "/auth/admin/login"
+    },
+    {
+      "file": "auth.controller.ts",
+      "module": "auth",
+      "method": "POST",
+      "endpoint": "/auth/super-admin/login"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "POST",
+      "endpoint": "/banners"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "GET",
+      "endpoint": "/banners"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "GET",
+      "endpoint": "/banners/all"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "PATCH",
+      "endpoint": "/banners/reorder"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "PATCH",
+      "endpoint": "/banners/:id"
+    },
+    {
+      "file": "banners.controller.ts",
+      "module": "banners",
+      "method": "DELETE",
+      "endpoint": "/banners/:id"
+    },
+    {
+      "file": "citizen-dashboard.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/citizen/dashboard"
+    },
+    {
+      "file": "citizen-dashboard.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/citizen/profile"
+    },
+    {
+      "file": "citizen-dashboard.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "PATCH",
+      "endpoint": "/citizen/profile"
+    },
+    {
+      "file": "citizen-dashboard.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/citizen"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/hierarchy"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/works"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/events"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/news"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/polls"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/coordinator"
+    },
+    {
+      "file": "my-area.controller.ts",
+      "module": "citizen-dashboard",
+      "method": "GET",
+      "endpoint": "/my-area/complaints"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/categories"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "POST",
+      "endpoint": "/complaints/categories"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/categories/:catId"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "DELETE",
+      "endpoint": "/complaints/categories/:catId"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/my"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/my/stats"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/analytics"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/stats"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "POST",
+      "endpoint": "/complaints"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "GET",
+      "endpoint": "/complaints/:id"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/assign"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/priority"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "POST",
+      "endpoint": "/complaints/:id/remarks"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/resolve"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/close"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/reject"
+    },
+    {
+      "file": "complaints.controller.ts",
+      "module": "complaints",
+      "method": "PATCH",
+      "endpoint": "/complaints/:id/status"
+    },
+    {
+      "file": "dashboard.controller.ts",
+      "module": "dashboard",
+      "method": "GET",
+      "endpoint": "/dashboard"
+    },
+    {
+      "file": "super-admin-dashboard.controller.ts",
+      "module": "dashboard",
+      "method": "GET",
+      "endpoint": "/super-admin/dashboard/stats"
+    },
+    {
+      "file": "super-admin-dashboard.controller.ts",
+      "module": "dashboard",
+      "method": "GET",
+      "endpoint": "/super-admin/dashboard/growth"
+    },
+    {
+      "file": "super-admin-dashboard.controller.ts",
+      "module": "dashboard",
+      "method": "GET",
+      "endpoint": "/super-admin/dashboard/tenants-overview"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "POST",
+      "endpoint": "/events"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "GET",
+      "endpoint": "/events"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "GET",
+      "endpoint": "/events/:id"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "PATCH",
+      "endpoint": "/events/:id"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "DELETE",
+      "endpoint": "/events/:id"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "POST",
+      "endpoint": "/events/:id/rsvp"
+    },
+    {
+      "file": "events.controller.ts",
+      "module": "events",
+      "method": "GET",
+      "endpoint": "/events/:id/my-rsvp"
+    },
+    {
+      "file": "gallery.controller.ts",
+      "module": "gallery",
+      "method": "POST",
+      "endpoint": "/gallery"
+    },
+    {
+      "file": "gallery.controller.ts",
+      "module": "gallery",
+      "method": "GET",
+      "endpoint": "/gallery"
+    },
+    {
+      "file": "gallery.controller.ts",
+      "module": "gallery",
+      "method": "GET",
+      "endpoint": "/gallery/:id"
+    },
+    {
+      "file": "gallery.controller.ts",
+      "module": "gallery",
+      "method": "PATCH",
+      "endpoint": "/gallery/:id"
+    },
+    {
+      "file": "gallery.controller.ts",
+      "module": "gallery",
+      "method": "DELETE",
+      "endpoint": "/gallery/:id"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "POST",
+      "endpoint": "/manifesto"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "GET",
+      "endpoint": "/manifesto"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "GET",
+      "endpoint": "/manifesto/categories"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "GET",
+      "endpoint": "/manifesto/:id"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "PATCH",
+      "endpoint": "/manifesto/:id"
+    },
+    {
+      "file": "manifesto.controller.ts",
+      "module": "manifesto",
+      "method": "DELETE",
+      "endpoint": "/manifesto/:id"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "POST",
+      "endpoint": "/membership/apply"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/my"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/my/card"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/my/card/download"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/verify/:membershipNumber"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/stats"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/:id"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "GET",
+      "endpoint": "/membership/:id/card/download"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "PATCH",
+      "endpoint": "/membership/:id/approve"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "PATCH",
+      "endpoint": "/membership/:id/reject"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "POST",
+      "endpoint": "/membership/:id/regenerate-card"
+    },
+    {
+      "file": "membership.controller.ts",
+      "module": "membership",
+      "method": "PATCH",
+      "endpoint": "/membership/:id/card-details"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "POST",
+      "endpoint": "/news"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "GET",
+      "endpoint": "/news"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "GET",
+      "endpoint": "/news/admin"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "GET",
+      "endpoint": "/news/categories"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "GET",
+      "endpoint": "/news/stats"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "GET",
+      "endpoint": "/news/:id"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "PATCH",
+      "endpoint": "/news/:id"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "PATCH",
+      "endpoint": "/news/:id/status"
+    },
+    {
+      "file": "news.controller.ts",
+      "module": "news",
+      "method": "DELETE",
+      "endpoint": "/news/:id"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "POST",
+      "endpoint": "/notifications"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "POST",
+      "endpoint": "/notifications/:id/send"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "GET",
+      "endpoint": "/notifications/admin"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "GET",
+      "endpoint": "/notifications/my"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "GET",
+      "endpoint": "/notifications/unread-count"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "PATCH",
+      "endpoint": "/notifications/:id/read"
+    },
+    {
+      "file": "notifications.controller.ts",
+      "module": "notifications",
+      "method": "DELETE",
+      "endpoint": "/notifications/:id"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments/config"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments/generate-test-signature"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "POST",
+      "endpoint": "/payments/orders"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "POST",
+      "endpoint": "/payments/verify"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "POST",
+      "endpoint": "/payments/webhook"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments/my"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments/analytics"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "GET",
+      "endpoint": "/payments/:id"
+    },
+    {
+      "file": "payments.controller.ts",
+      "module": "payments",
+      "method": "POST",
+      "endpoint": "/payments/:id/refund"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "POST",
+      "endpoint": "/super-admin/plans"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "GET",
+      "endpoint": "/super-admin/plans"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "GET",
+      "endpoint": "/super-admin/plans/:id"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "PATCH",
+      "endpoint": "/super-admin/plans/:id"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "DELETE",
+      "endpoint": "/super-admin/plans/:id"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "PATCH",
+      "endpoint": "/super-admin/plans/:id/toggle-active"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "POST",
+      "endpoint": "/super-admin/plans/assign/:tenantId"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "GET",
+      "endpoint": "/super-admin/plans"
+    },
+    {
+      "file": "plans.controller.ts",
+      "module": "plans",
+      "method": "GET",
+      "endpoint": "/super-admin/plans/:slug"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "POST",
+      "endpoint": "/polls"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "GET",
+      "endpoint": "/polls"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "GET",
+      "endpoint": "/polls/:id"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "POST",
+      "endpoint": "/polls/:id/vote"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "GET",
+      "endpoint": "/polls/:id/my-vote"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "PATCH",
+      "endpoint": "/polls/:id"
+    },
+    {
+      "file": "polls.controller.ts",
+      "module": "polls",
+      "method": "DELETE",
+      "endpoint": "/polls/:id"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "POST",
+      "endpoint": "/poster-generator/templates"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "GET",
+      "endpoint": "/poster-generator/templates"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "GET",
+      "endpoint": "/poster-generator/templates/categories"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "GET",
+      "endpoint": "/poster-generator/templates/:id"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "PATCH",
+      "endpoint": "/poster-generator/templates/:id"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "DELETE",
+      "endpoint": "/poster-generator/templates/:id"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "POST",
+      "endpoint": "/poster-generator/generate/:templateId"
+    },
+    {
+      "file": "poster-generator.controller.ts",
+      "module": "poster-generator",
+      "method": "GET",
+      "endpoint": "/poster-generator/my-posters"
+    },
+    {
+      "file": "public-config.controller.ts",
+      "module": "public-config",
+      "method": "GET",
+      "endpoint": "/config"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "GET",
+      "endpoint": "/registration-form/public"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "GET",
+      "endpoint": "/registration-form"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "PUT",
+      "endpoint": "/registration-form/fields"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "POST",
+      "endpoint": "/registration-form/fields"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "PATCH",
+      "endpoint": "/registration-form/fields/:key"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "DELETE",
+      "endpoint": "/registration-form/fields/:key"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "POST",
+      "endpoint": "/registration-form/reset-default"
+    },
+    {
+      "file": "registration-form.controller.ts",
+      "module": "registration-form",
+      "method": "POST",
+      "endpoint": "/registration-form/complete-profile"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions/stats"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions/expiring-soon"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions/tenant/:tenantId"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions/:id"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions/:id/renew"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions/:id/upgrade"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "PATCH",
+      "endpoint": "/super-admin/subscriptions/:id/extend-trial"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions/:id/cancel"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions/:id/pause"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "POST",
+      "endpoint": "/super-admin/subscriptions/:id/resume"
+    },
+    {
+      "file": "subscriptions.controller.ts",
+      "module": "subscriptions",
+      "method": "GET",
+      "endpoint": "/super-admin/subscriptions/current"
+    },
+    {
+      "file": "super-admin-domains.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/domains"
+    },
+    {
+      "file": "super-admin-domains.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants/:id/domain"
+    },
+    {
+      "file": "super-admin-domains.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants/:id/domain"
+    },
+    {
+      "file": "super-admin-domains.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants/:id/domain/verify"
+    },
+    {
+      "file": "super-admin-domains.controller.ts",
+      "module": "tenants",
+      "method": "DELETE",
+      "endpoint": "/super-admin/tenants/:id/domain"
+    },
+    {
+      "file": "tenant-domain.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/dashboard/domain"
+    },
+    {
+      "file": "tenant-domain.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/dashboard/domain"
+    },
+    {
+      "file": "tenant-domain.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/dashboard/domain/verify"
+    },
+    {
+      "file": "tenant-domain.controller.ts",
+      "module": "tenants",
+      "method": "DELETE",
+      "endpoint": "/dashboard/domain"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants/:id"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "PATCH",
+      "endpoint": "/super-admin/tenants/:id"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "PATCH",
+      "endpoint": "/super-admin/tenants/:id/branding"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants/:id/features"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "PATCH",
+      "endpoint": "/super-admin/tenants/:id/features/:featureKey"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants/:id/admin-users"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "PATCH",
+      "endpoint": "/super-admin/tenants/:id/suspend"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "PATCH",
+      "endpoint": "/super-admin/tenants/:id/activate"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants/:id/impersonate"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "POST",
+      "endpoint": "/super-admin/tenants/:id/impersonate/exit"
+    },
+    {
+      "file": "tenants.controller.ts",
+      "module": "tenants",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants/:id/impersonation-history"
+    },
+    {
+      "file": "uploads.controller.ts",
+      "module": "uploads",
+      "method": "POST",
+      "endpoint": "/uploads/:module"
+    },
+    {
+      "file": "tenant-usage.controller.ts",
+      "module": "usage",
+      "method": "GET",
+      "endpoint": "/dashboard/usage"
+    },
+    {
+      "file": "usage.controller.ts",
+      "module": "usage",
+      "method": "GET",
+      "endpoint": "/super-admin/usage/overview"
+    },
+    {
+      "file": "usage.controller.ts",
+      "module": "usage",
+      "method": "GET",
+      "endpoint": "/super-admin/tenants/:id/usage"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/citizens"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/citizens/tags"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/citizens/analytics"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/citizens/export"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "POST",
+      "endpoint": "/citizens/bulk-tags"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "POST",
+      "endpoint": "/citizens/bulk-untag"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/citizens/:id"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "PATCH",
+      "endpoint": "/citizens/:id"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "PATCH",
+      "endpoint": "/citizens/:id/status"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "POST",
+      "endpoint": "/citizens/:id/tags"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "DELETE",
+      "endpoint": "/citizens/:id/tags/:tag"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "PATCH",
+      "endpoint": "/citizens/:id/category"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "POST",
+      "endpoint": "/citizens/:id/membership"
+    },
+    {
+      "file": "citizens.controller.ts",
+      "module": "users",
+      "method": "POST",
+      "endpoint": "/citizens/:id/volunteer"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "PATCH",
+      "endpoint": "/users/profile"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/users"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/users/stats"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/users/area-count"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "GET",
+      "endpoint": "/users/:id"
+    },
+    {
+      "file": "users.controller.ts",
+      "module": "users",
+      "method": "PATCH",
+      "endpoint": "/users/:id/toggle-active"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "POST",
+      "endpoint": "/volunteers/tasks"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers/tasks"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers/tasks/my"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers/tasks/stats"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers/tasks/:id"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "PATCH",
+      "endpoint": "/volunteers/tasks/:id"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "PATCH",
+      "endpoint": "/volunteers/tasks/:id/accept"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "POST",
+      "endpoint": "/volunteers/tasks/:id/submit"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "PATCH",
+      "endpoint": "/volunteers/tasks/:id/review"
+    },
+    {
+      "file": "volunteer-tasks.controller.ts",
+      "module": "volunteers",
+      "method": "DELETE",
+      "endpoint": "/volunteers/tasks/:id"
+    },
+    {
+      "file": "volunteers.controller.ts",
+      "module": "volunteers",
+      "method": "POST",
+      "endpoint": "/volunteers"
+    },
+    {
+      "file": "volunteers.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers"
+    },
+    {
+      "file": "volunteers.controller.ts",
+      "module": "volunteers",
+      "method": "GET",
+      "endpoint": "/volunteers/my"
+    },
+    {
+      "file": "volunteers.controller.ts",
+      "module": "volunteers",
+      "method": "PATCH",
+      "endpoint": "/volunteers/:id"
+    },
+    {
+      "file": "volunteers.controller.ts",
+      "module": "volunteers",
+      "method": "DELETE",
+      "endpoint": "/volunteers/:id"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "POST",
+      "endpoint": "/works"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "GET",
+      "endpoint": "/works"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "GET",
+      "endpoint": "/works/stats"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "GET",
+      "endpoint": "/works/:id"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "PATCH",
+      "endpoint": "/works/:id"
+    },
+    {
+      "file": "works.controller.ts",
+      "module": "works",
+      "method": "DELETE",
+      "endpoint": "/works/:id"
+    }
+  ],
+  "roleCategories": {
+    "superAdmin": [
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "POST",
+        "endpoint": "/super-admin/staff"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "GET",
+        "endpoint": "/super-admin/staff"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "GET",
+        "endpoint": "/super-admin/staff/roles"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "GET",
+        "endpoint": "/super-admin/staff/:id"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "PATCH",
+        "endpoint": "/super-admin/staff/:id"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "PATCH",
+        "endpoint": "/super-admin/staff/:id/status"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "PATCH",
+        "endpoint": "/super-admin/staff/:id/reset-password"
+      },
+      {
+        "file": "super-admin-staff.controller.ts",
+        "module": "admin-users",
+        "method": "DELETE",
+        "endpoint": "/super-admin/staff/:id"
+      },
+      {
+        "file": "audit-logs.controller.ts",
+        "module": "audit-logs",
+        "method": "GET",
+        "endpoint": "/super-admin/audit-logs"
+      },
+      {
+        "file": "auth.controller.ts",
+        "module": "auth",
+        "method": "POST",
+        "endpoint": "/auth/super-admin/login"
+      },
+      {
+        "file": "super-admin-dashboard.controller.ts",
+        "module": "dashboard",
+        "method": "GET",
+        "endpoint": "/super-admin/dashboard/stats"
+      },
+      {
+        "file": "super-admin-dashboard.controller.ts",
+        "module": "dashboard",
+        "method": "GET",
+        "endpoint": "/super-admin/dashboard/growth"
+      },
+      {
+        "file": "super-admin-dashboard.controller.ts",
+        "module": "dashboard",
+        "method": "GET",
+        "endpoint": "/super-admin/dashboard/tenants-overview"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "POST",
+        "endpoint": "/super-admin/plans"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "GET",
+        "endpoint": "/super-admin/plans"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "GET",
+        "endpoint": "/super-admin/plans/:id"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "PATCH",
+        "endpoint": "/super-admin/plans/:id"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "DELETE",
+        "endpoint": "/super-admin/plans/:id"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "PATCH",
+        "endpoint": "/super-admin/plans/:id/toggle-active"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "POST",
+        "endpoint": "/super-admin/plans/assign/:tenantId"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "GET",
+        "endpoint": "/super-admin/plans"
+      },
+      {
+        "file": "plans.controller.ts",
+        "module": "plans",
+        "method": "GET",
+        "endpoint": "/super-admin/plans/:slug"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions/stats"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions/expiring-soon"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions/tenant/:tenantId"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions/:id"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions/:id/renew"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions/:id/upgrade"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "PATCH",
+        "endpoint": "/super-admin/subscriptions/:id/extend-trial"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions/:id/cancel"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions/:id/pause"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "POST",
+        "endpoint": "/super-admin/subscriptions/:id/resume"
+      },
+      {
+        "file": "subscriptions.controller.ts",
+        "module": "subscriptions",
+        "method": "GET",
+        "endpoint": "/super-admin/subscriptions/current"
+      },
+      {
+        "file": "super-admin-domains.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/domains"
+      },
+      {
+        "file": "super-admin-domains.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants/:id/domain"
+      },
+      {
+        "file": "super-admin-domains.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants/:id/domain"
+      },
+      {
+        "file": "super-admin-domains.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants/:id/domain/verify"
+      },
+      {
+        "file": "super-admin-domains.controller.ts",
+        "module": "tenants",
+        "method": "DELETE",
+        "endpoint": "/super-admin/tenants/:id/domain"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants/:id"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "PATCH",
+        "endpoint": "/super-admin/tenants/:id"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "PATCH",
+        "endpoint": "/super-admin/tenants/:id/branding"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants/:id/features"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "PATCH",
+        "endpoint": "/super-admin/tenants/:id/features/:featureKey"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants/:id/admin-users"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "PATCH",
+        "endpoint": "/super-admin/tenants/:id/suspend"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "PATCH",
+        "endpoint": "/super-admin/tenants/:id/activate"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants/:id/impersonate"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/super-admin/tenants/:id/impersonate/exit"
+      },
+      {
+        "file": "tenants.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants/:id/impersonation-history"
+      },
+      {
+        "file": "usage.controller.ts",
+        "module": "usage",
+        "method": "GET",
+        "endpoint": "/super-admin/usage/overview"
+      },
+      {
+        "file": "usage.controller.ts",
+        "module": "usage",
+        "method": "GET",
+        "endpoint": "/super-admin/tenants/:id/usage"
+      }
+    ],
+    "tenantAdmin": [
+      {
+        "file": "about-leader.controller.ts",
+        "module": "about-leader",
+        "method": "PUT",
+        "endpoint": "/about-leader"
+      },
+      {
+        "file": "admin-users.controller.ts",
+        "module": "admin-users",
+        "method": "POST",
+        "endpoint": "/admin-users"
+      },
+      {
+        "file": "admin-users.controller.ts",
+        "module": "admin-users",
+        "method": "GET",
+        "endpoint": "/admin-users"
+      },
+      {
+        "file": "admin-users.controller.ts",
+        "module": "admin-users",
+        "method": "GET",
+        "endpoint": "/admin-users/:id"
+      },
+      {
+        "file": "admin-users.controller.ts",
+        "module": "admin-users",
+        "method": "PATCH",
+        "endpoint": "/admin-users/:id"
+      },
+      {
+        "file": "admin-users.controller.ts",
+        "module": "admin-users",
+        "method": "DELETE",
+        "endpoint": "/admin-users/:id"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "POST",
+        "endpoint": "/areas/levels"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "GET",
+        "endpoint": "/areas/levels"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "PATCH",
+        "endpoint": "/areas/levels/:id"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "DELETE",
+        "endpoint": "/areas/levels/:id"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "POST",
+        "endpoint": "/areas"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "GET",
+        "endpoint": "/areas/by-level/:levelId"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "GET",
+        "endpoint": "/areas/:id/children"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "POST",
+        "endpoint": "/banners"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "PATCH",
+        "endpoint": "/banners/reorder"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "PATCH",
+        "endpoint": "/banners/:id"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "DELETE",
+        "endpoint": "/banners/:id"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/categories/:catId"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "DELETE",
+        "endpoint": "/complaints/categories/:catId"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/analytics"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/assign"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/priority"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/resolve"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/close"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/reject"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "PATCH",
+        "endpoint": "/complaints/:id/status"
+      },
+      {
+        "file": "dashboard.controller.ts",
+        "module": "dashboard",
+        "method": "GET",
+        "endpoint": "/dashboard"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "POST",
+        "endpoint": "/events"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "PATCH",
+        "endpoint": "/events/:id"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "DELETE",
+        "endpoint": "/events/:id"
+      },
+      {
+        "file": "gallery.controller.ts",
+        "module": "gallery",
+        "method": "POST",
+        "endpoint": "/gallery"
+      },
+      {
+        "file": "gallery.controller.ts",
+        "module": "gallery",
+        "method": "PATCH",
+        "endpoint": "/gallery/:id"
+      },
+      {
+        "file": "gallery.controller.ts",
+        "module": "gallery",
+        "method": "DELETE",
+        "endpoint": "/gallery/:id"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "POST",
+        "endpoint": "/manifesto"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "PATCH",
+        "endpoint": "/manifesto/:id"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "DELETE",
+        "endpoint": "/manifesto/:id"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/verify/:membershipNumber"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/stats"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/:id"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/:id/card/download"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "PATCH",
+        "endpoint": "/membership/:id/approve"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "PATCH",
+        "endpoint": "/membership/:id/reject"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "POST",
+        "endpoint": "/membership/:id/regenerate-card"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "PATCH",
+        "endpoint": "/membership/:id/card-details"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "POST",
+        "endpoint": "/news"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "PATCH",
+        "endpoint": "/news/:id"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "PATCH",
+        "endpoint": "/news/:id/status"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "DELETE",
+        "endpoint": "/news/:id"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments/config"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments/generate-test-signature"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "POST",
+        "endpoint": "/payments/orders"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "POST",
+        "endpoint": "/payments/verify"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "POST",
+        "endpoint": "/payments/webhook"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments/my"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments/analytics"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "GET",
+        "endpoint": "/payments/:id"
+      },
+      {
+        "file": "payments.controller.ts",
+        "module": "payments",
+        "method": "POST",
+        "endpoint": "/payments/:id/refund"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "POST",
+        "endpoint": "/polls"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "PATCH",
+        "endpoint": "/polls/:id"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "DELETE",
+        "endpoint": "/polls/:id"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "GET",
+        "endpoint": "/poster-generator/my-posters"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "GET",
+        "endpoint": "/registration-form"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "PUT",
+        "endpoint": "/registration-form/fields"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "POST",
+        "endpoint": "/registration-form/fields"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "PATCH",
+        "endpoint": "/registration-form/fields/:key"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "DELETE",
+        "endpoint": "/registration-form/fields/:key"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "POST",
+        "endpoint": "/registration-form/reset-default"
+      },
+      {
+        "file": "tenant-domain.controller.ts",
+        "module": "tenants",
+        "method": "GET",
+        "endpoint": "/dashboard/domain"
+      },
+      {
+        "file": "tenant-domain.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/dashboard/domain"
+      },
+      {
+        "file": "tenant-domain.controller.ts",
+        "module": "tenants",
+        "method": "POST",
+        "endpoint": "/dashboard/domain/verify"
+      },
+      {
+        "file": "tenant-domain.controller.ts",
+        "module": "tenants",
+        "method": "DELETE",
+        "endpoint": "/dashboard/domain"
+      },
+      {
+        "file": "tenant-usage.controller.ts",
+        "module": "usage",
+        "method": "GET",
+        "endpoint": "/dashboard/usage"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "PATCH",
+        "endpoint": "/users/profile"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/users"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/users/stats"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/users/area-count"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/users/:id"
+      },
+      {
+        "file": "users.controller.ts",
+        "module": "users",
+        "method": "PATCH",
+        "endpoint": "/users/:id/toggle-active"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers/tasks"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers/tasks/my"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers/tasks/stats"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers/tasks/:id"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "PATCH",
+        "endpoint": "/volunteers/tasks/:id"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "PATCH",
+        "endpoint": "/volunteers/tasks/:id/accept"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "PATCH",
+        "endpoint": "/volunteers/tasks/:id/review"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "DELETE",
+        "endpoint": "/volunteers/tasks/:id"
+      },
+      {
+        "file": "volunteers.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers"
+      },
+      {
+        "file": "volunteers.controller.ts",
+        "module": "volunteers",
+        "method": "PATCH",
+        "endpoint": "/volunteers/:id"
+      },
+      {
+        "file": "volunteers.controller.ts",
+        "module": "volunteers",
+        "method": "DELETE",
+        "endpoint": "/volunteers/:id"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "POST",
+        "endpoint": "/works"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "PATCH",
+        "endpoint": "/works/:id"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "DELETE",
+        "endpoint": "/works/:id"
+      }
+    ],
+    "citizenPwa": [
+      {
+        "file": "about-leader.controller.ts",
+        "module": "about-leader",
+        "method": "GET",
+        "endpoint": "/about-leader"
+      },
+      {
+        "file": "areas.controller.ts",
+        "module": "areas",
+        "method": "GET",
+        "endpoint": "/areas/tree"
+      },
+      {
+        "file": "auth.controller.ts",
+        "module": "auth",
+        "method": "POST",
+        "endpoint": "/auth/send-otp"
+      },
+      {
+        "file": "auth.controller.ts",
+        "module": "auth",
+        "method": "POST",
+        "endpoint": "/auth/verify-otp"
+      },
+      {
+        "file": "auth.controller.ts",
+        "module": "auth",
+        "method": "POST",
+        "endpoint": "/auth/admin/login"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "GET",
+        "endpoint": "/banners"
+      },
+      {
+        "file": "banners.controller.ts",
+        "module": "banners",
+        "method": "GET",
+        "endpoint": "/banners/all"
+      },
+      {
+        "file": "citizen-dashboard.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/citizen/dashboard"
+      },
+      {
+        "file": "citizen-dashboard.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/citizen/profile"
+      },
+      {
+        "file": "citizen-dashboard.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "PATCH",
+        "endpoint": "/citizen/profile"
+      },
+      {
+        "file": "citizen-dashboard.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/citizen"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/hierarchy"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/works"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/events"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/news"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/polls"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/coordinator"
+      },
+      {
+        "file": "my-area.controller.ts",
+        "module": "citizen-dashboard",
+        "method": "GET",
+        "endpoint": "/my-area/complaints"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/categories"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "POST",
+        "endpoint": "/complaints/categories"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/my"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/my/stats"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/stats"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "POST",
+        "endpoint": "/complaints"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "GET",
+        "endpoint": "/complaints/:id"
+      },
+      {
+        "file": "complaints.controller.ts",
+        "module": "complaints",
+        "method": "POST",
+        "endpoint": "/complaints/:id/remarks"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "GET",
+        "endpoint": "/events"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "GET",
+        "endpoint": "/events/:id"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "POST",
+        "endpoint": "/events/:id/rsvp"
+      },
+      {
+        "file": "events.controller.ts",
+        "module": "events",
+        "method": "GET",
+        "endpoint": "/events/:id/my-rsvp"
+      },
+      {
+        "file": "gallery.controller.ts",
+        "module": "gallery",
+        "method": "GET",
+        "endpoint": "/gallery"
+      },
+      {
+        "file": "gallery.controller.ts",
+        "module": "gallery",
+        "method": "GET",
+        "endpoint": "/gallery/:id"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "GET",
+        "endpoint": "/manifesto"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "GET",
+        "endpoint": "/manifesto/categories"
+      },
+      {
+        "file": "manifesto.controller.ts",
+        "module": "manifesto",
+        "method": "GET",
+        "endpoint": "/manifesto/:id"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "POST",
+        "endpoint": "/membership/apply"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/my"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/my/card"
+      },
+      {
+        "file": "membership.controller.ts",
+        "module": "membership",
+        "method": "GET",
+        "endpoint": "/membership/my/card/download"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "GET",
+        "endpoint": "/news"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "GET",
+        "endpoint": "/news/admin"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "GET",
+        "endpoint": "/news/categories"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "GET",
+        "endpoint": "/news/stats"
+      },
+      {
+        "file": "news.controller.ts",
+        "module": "news",
+        "method": "GET",
+        "endpoint": "/news/:id"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "POST",
+        "endpoint": "/notifications"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "POST",
+        "endpoint": "/notifications/:id/send"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "GET",
+        "endpoint": "/notifications/admin"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "GET",
+        "endpoint": "/notifications/my"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "GET",
+        "endpoint": "/notifications/unread-count"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "PATCH",
+        "endpoint": "/notifications/:id/read"
+      },
+      {
+        "file": "notifications.controller.ts",
+        "module": "notifications",
+        "method": "DELETE",
+        "endpoint": "/notifications/:id"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "GET",
+        "endpoint": "/polls"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "GET",
+        "endpoint": "/polls/:id"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "POST",
+        "endpoint": "/polls/:id/vote"
+      },
+      {
+        "file": "polls.controller.ts",
+        "module": "polls",
+        "method": "GET",
+        "endpoint": "/polls/:id/my-vote"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "POST",
+        "endpoint": "/poster-generator/templates"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "GET",
+        "endpoint": "/poster-generator/templates"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "GET",
+        "endpoint": "/poster-generator/templates/categories"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "GET",
+        "endpoint": "/poster-generator/templates/:id"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "PATCH",
+        "endpoint": "/poster-generator/templates/:id"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "DELETE",
+        "endpoint": "/poster-generator/templates/:id"
+      },
+      {
+        "file": "poster-generator.controller.ts",
+        "module": "poster-generator",
+        "method": "POST",
+        "endpoint": "/poster-generator/generate/:templateId"
+      },
+      {
+        "file": "public-config.controller.ts",
+        "module": "public-config",
+        "method": "GET",
+        "endpoint": "/config"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "GET",
+        "endpoint": "/registration-form/public"
+      },
+      {
+        "file": "registration-form.controller.ts",
+        "module": "registration-form",
+        "method": "POST",
+        "endpoint": "/registration-form/complete-profile"
+      },
+      {
+        "file": "uploads.controller.ts",
+        "module": "uploads",
+        "method": "POST",
+        "endpoint": "/uploads/:module"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/citizens"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/citizens/tags"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/citizens/analytics"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/citizens/export"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "POST",
+        "endpoint": "/citizens/bulk-tags"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "POST",
+        "endpoint": "/citizens/bulk-untag"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "GET",
+        "endpoint": "/citizens/:id"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "PATCH",
+        "endpoint": "/citizens/:id"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "PATCH",
+        "endpoint": "/citizens/:id/status"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "POST",
+        "endpoint": "/citizens/:id/tags"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "DELETE",
+        "endpoint": "/citizens/:id/tags/:tag"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "PATCH",
+        "endpoint": "/citizens/:id/category"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "POST",
+        "endpoint": "/citizens/:id/membership"
+      },
+      {
+        "file": "citizens.controller.ts",
+        "module": "users",
+        "method": "POST",
+        "endpoint": "/citizens/:id/volunteer"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "POST",
+        "endpoint": "/volunteers/tasks"
+      },
+      {
+        "file": "volunteer-tasks.controller.ts",
+        "module": "volunteers",
+        "method": "POST",
+        "endpoint": "/volunteers/tasks/:id/submit"
+      },
+      {
+        "file": "volunteers.controller.ts",
+        "module": "volunteers",
+        "method": "POST",
+        "endpoint": "/volunteers"
+      },
+      {
+        "file": "volunteers.controller.ts",
+        "module": "volunteers",
+        "method": "GET",
+        "endpoint": "/volunteers/my"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "GET",
+        "endpoint": "/works"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "GET",
+        "endpoint": "/works/stats"
+      },
+      {
+        "file": "works.controller.ts",
+        "module": "works",
+        "method": "GET",
+        "endpoint": "/works/:id"
+      }
+    ],
+    "publicShared": []
+  }
+}

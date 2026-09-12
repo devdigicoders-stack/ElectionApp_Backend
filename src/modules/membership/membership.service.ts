@@ -46,7 +46,7 @@ export class MembershipService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Area.name) private areaModel: Model<AreaDocument>,
     @Optional() private auditLogsService?: AuditLogsService,
-  ) {}
+  ) { }
 
   private generateMemberNumber(tenantSlug: string, count: number): string {
     return `${tenantSlug.toUpperCase()}-${String(count + 1).padStart(6, '0')}`;
@@ -422,16 +422,23 @@ export class MembershipService {
     ctx.clip();
 
     let photoRendered = false;
-    const photoSource = membership.photoUrl || user.customFields?.photo || user.customFields?.avatarUrl;
+    const photoSource = membership.photoUrl || user.profilePhoto || user.photo || user.customFields?.photo || user.customFields?.avatarUrl;
     if (photoSource) {
       try {
-        const fullPhotoPath = path.isAbsolute(photoSource)
-          ? photoSource
-          : path.join(process.cwd(), photoSource.replace(/^\//, ''));
-        if (fs.existsSync(fullPhotoPath)) {
-          const mPhoto = await loadImage(fullPhotoPath);
+        if (photoSource.startsWith('data:image/')) {
+          const base64Data = photoSource.replace(/^data:image\/\w+;base64,/, '');
+          const mPhoto = await loadImage(Buffer.from(base64Data, 'base64'));
           ctx.drawImage(mPhoto, photoX, photoY, photoW, photoH);
           photoRendered = true;
+        } else {
+          const fullPhotoPath = path.isAbsolute(photoSource)
+            ? photoSource
+            : path.join(process.cwd(), photoSource.replace(/^\//, ''));
+          if (fs.existsSync(fullPhotoPath)) {
+            const mPhoto = await loadImage(fullPhotoPath);
+            ctx.drawImage(mPhoto, photoX, photoY, photoW, photoH);
+            photoRendered = true;
+          }
         }
       } catch (e) {
         photoRendered = false;
@@ -732,12 +739,12 @@ export class MembershipService {
       requiresPayment: isPaidPlan,
       paymentDetails: isPaidPlan
         ? {
-            amount: plan.price,
-            currency: plan.currency || 'INR',
-            planId: plan._id,
-            planName: plan.name,
-            paymentOrderUrl: '/payments/orders',
-          }
+          amount: plan.price,
+          currency: plan.currency || 'INR',
+          planId: plan._id,
+          planName: plan.name,
+          paymentOrderUrl: '/payments/orders',
+        }
         : null,
       membership: await this.membershipModel
         .findById(membership._id)
@@ -756,7 +763,7 @@ export class MembershipService {
         tenantId: tenant._id,
         $or: [{ userId: userObjectId }, { userId: userId.toString() }],
       })
-      .populate('userId', 'name mobile areaId customFields')
+      .populate('userId', 'name mobile profilePhoto areaId customFields')
       .populate('planId')
       .populate('approvedBy', 'name');
   }
@@ -771,7 +778,7 @@ export class MembershipService {
         tenantId: tenant._id,
         $or: [{ userId: userObjectId }, { userId: userId.toString() }],
       })
-      .populate('userId', 'name mobile areaId customFields')
+      .populate('userId', 'name mobile profilePhoto areaId customFields')
       .populate('planId');
 
     if (!membership) {
@@ -1274,8 +1281,8 @@ export class MembershipService {
       const paymentStatus = m.paymentInfo?.transactionId
         ? 'Paid'
         : m.status === MembershipStatus.APPROVED
-        ? 'Approved / Free'
-        : 'Unpaid';
+          ? 'Approved / Free'
+          : 'Unpaid';
       const verifyUrl = m.membershipNumber
         ? `http://${domain}/membership/verify/${m.membershipNumber}`
         : '';
@@ -1334,7 +1341,7 @@ export class MembershipService {
           ipAddress,
           userAgent,
         })
-        .catch(() => {});
+        .catch(() => { });
     }
 
     return res.status(200).send(csv);

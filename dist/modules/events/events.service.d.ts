@@ -107,6 +107,10 @@ export declare class EventsService {
         ticketNumber: string | null;
         isCheckedIn: boolean;
     }>;
+    getMyGoing(tenant: TenantDocument, userId: string): Promise<any[]>;
+    deleteRsvp(tenant: TenantDocument, eventId: string, userId: string): Promise<{
+        message: string;
+    }>;
     getUserRsvp(tenant: TenantDocument, eventId: string, userId: string): Promise<{
         hasRsvp: boolean;
         status: null;

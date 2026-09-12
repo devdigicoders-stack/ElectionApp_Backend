@@ -45,6 +45,9 @@ export declare class EventsController {
         limit: number;
         totalPages: number;
     }>;
+    getMyGoing(req: TenantRequest & {
+        user: any;
+    }): Promise<any[]>;
     findOne(req: TenantRequest, id: string): Promise<{
         _id: import("mongoose").Types.ObjectId;
         title: string;
@@ -89,6 +92,11 @@ export declare class EventsController {
         status: import("../../shared/types").EventRsvpStatus;
         ticketNumber: string | null;
         isCheckedIn: boolean;
+    }>;
+    removeRsvp(req: TenantRequest & {
+        user: any;
+    }, id: string): Promise<{
+        message: string;
     }>;
     getMyRsvp(req: TenantRequest & {
         user: any;

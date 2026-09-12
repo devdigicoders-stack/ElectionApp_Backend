@@ -83,6 +83,19 @@ export class EventsController {
   }
 
   /**
+   * Get events that the current user is marked as 'going' to (Citizen)
+   * GET /events/my-going
+   * NOTE: Must be defined before @Get(':id') so 'my-going' is not treated as an event ID!
+   */
+  @Get('my-going')
+  @UseGuards(JwtAuthGuard)
+  getMyGoing(
+    @Req() req: TenantRequest & { user: any },
+  ) {
+    return this.eventsService.getMyGoing(req.tenant, req.user.sub);
+  }
+
+  /**
    * 2. Get single event details with user's RSVP status (Public / Citizen)
    * GET /events/:id
    */
@@ -108,6 +121,19 @@ export class EventsController {
     @Body() dto: RsvpEventDto,
   ) {
     return this.eventsService.rsvp(req.tenant, id, req.user.sub, dto);
+  }
+
+  /**
+   * Cancel or remove RSVP for an event (Citizen)
+   * DELETE /events/:id/rsvp
+   */
+  @Delete(':id/rsvp')
+  @UseGuards(JwtAuthGuard)
+  removeRsvp(
+    @Req() req: TenantRequest & { user: any },
+    @Param('id') id: string,
+  ) {
+    return this.eventsService.deleteRsvp(req.tenant, id, req.user.sub);
   }
 
   /**

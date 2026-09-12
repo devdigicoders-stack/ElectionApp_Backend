@@ -373,16 +373,24 @@ let MembershipService = class MembershipService {
         ctx.stroke();
         ctx.clip();
         let photoRendered = false;
-        const photoSource = membership.photoUrl || user.customFields?.photo || user.customFields?.avatarUrl;
+        const photoSource = membership.photoUrl || user.profilePhoto || user.photo || user.customFields?.photo || user.customFields?.avatarUrl;
         if (photoSource) {
             try {
-                const fullPhotoPath = path.isAbsolute(photoSource)
-                    ? photoSource
-                    : path.join(process.cwd(), photoSource.replace(/^\//, ''));
-                if (fs.existsSync(fullPhotoPath)) {
-                    const mPhoto = await loadImage(fullPhotoPath);
+                if (photoSource.startsWith('data:image/')) {
+                    const base64Data = photoSource.replace(/^data:image\/\w+;base64,/, '');
+                    const mPhoto = await loadImage(Buffer.from(base64Data, 'base64'));
                     ctx.drawImage(mPhoto, photoX, photoY, photoW, photoH);
                     photoRendered = true;
+                }
+                else {
+                    const fullPhotoPath = path.isAbsolute(photoSource)
+                        ? photoSource
+                        : path.join(process.cwd(), photoSource.replace(/^\//, ''));
+                    if (fs.existsSync(fullPhotoPath)) {
+                        const mPhoto = await loadImage(fullPhotoPath);
+                        ctx.drawImage(mPhoto, photoX, photoY, photoW, photoH);
+                        photoRendered = true;
+                    }
                 }
             }
             catch (e) {
@@ -641,7 +649,7 @@ let MembershipService = class MembershipService {
             tenantId: tenant._id,
             $or: [{ userId: userObjectId }, { userId: userId.toString() }],
         })
-            .populate('userId', 'name mobile areaId customFields')
+            .populate('userId', 'name mobile profilePhoto areaId customFields')
             .populate('planId')
             .populate('approvedBy', 'name');
     }
@@ -652,7 +660,7 @@ let MembershipService = class MembershipService {
             tenantId: tenant._id,
             $or: [{ userId: userObjectId }, { userId: userId.toString() }],
         })
-            .populate('userId', 'name mobile areaId customFields')
+            .populate('userId', 'name mobile profilePhoto areaId customFields')
             .populate('planId');
         if (!membership) {
             throw new common_1.NotFoundException('No membership application found. Please apply first.');

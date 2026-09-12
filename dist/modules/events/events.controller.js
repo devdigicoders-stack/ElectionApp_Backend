@@ -87,12 +87,18 @@ let EventsController = class EventsController {
         const { user, isAdmin } = this.extractOptionalUser(req);
         return this.eventsService.findAll(req.tenant, query, user, isAdmin);
     }
+    getMyGoing(req) {
+        return this.eventsService.getMyGoing(req.tenant, req.user.sub);
+    }
     findOne(req, id) {
         const { user } = this.extractOptionalUser(req);
         return this.eventsService.findOne(req.tenant, id, user);
     }
     rsvp(req, id, dto) {
         return this.eventsService.rsvp(req.tenant, id, req.user.sub, dto);
+    }
+    removeRsvp(req, id) {
+        return this.eventsService.deleteRsvp(req.tenant, id, req.user.sub);
     }
     getMyRsvp(req, id) {
         return this.eventsService.getUserRsvp(req.tenant, id, req.user.sub);
@@ -142,6 +148,14 @@ __decorate([
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "findAll", null);
 __decorate([
+    (0, common_1.Get)('my-going'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "getMyGoing", null);
+__decorate([
     (0, common_1.Get)(':id'),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Param)('id')),
@@ -159,6 +173,15 @@ __decorate([
     __metadata("design:paramtypes", [Object, String, events_dto_1.RsvpEventDto]),
     __metadata("design:returntype", void 0)
 ], EventsController.prototype, "rsvp", null);
+__decorate([
+    (0, common_1.Delete)(':id/rsvp'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, String]),
+    __metadata("design:returntype", void 0)
+], EventsController.prototype, "removeRsvp", null);
 __decorate([
     (0, common_1.Get)(':id/my-rsvp'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),

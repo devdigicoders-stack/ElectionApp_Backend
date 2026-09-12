@@ -286,6 +286,9 @@ let EventsService = EventsService_1 = class EventsService {
         };
     }
     async findOne(tenant, id, user) {
+        if (!mongoose_2.Types.ObjectId.isValid(id)) {
+            throw new common_1.NotFoundException(`Event not found for id: ${id}`);
+        }
         const event = await this.eventModel
             .findOne({ _id: id, tenantId: tenant._id })
             .populate('areaId', 'name code');
@@ -436,6 +439,43 @@ let EventsService = EventsService_1 = class EventsService {
             ticketNumber: newRsvp.ticketNumber || null,
             isCheckedIn: false,
         };
+    }
+    async getMyGoing(tenant, userId) {
+        const userObjectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
+        const rsvps = await this.rsvpModel
+            .find({
+            tenantId: tenant._id,
+            $or: [{ userId: userObjectId }, { userId: userId.toString() }],
+            status: types_1.EventRsvpStatus.GOING,
+        })
+            .populate('eventId')
+            .exec();
+        return rsvps.map((r) => r.eventId).filter(Boolean);
+    }
+    async deleteRsvp(tenant, eventId, userId) {
+        const eventObjectId = mongoose_2.Types.ObjectId.isValid(eventId) ? new mongoose_2.Types.ObjectId(eventId) : eventId;
+        const userObjectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
+        const rsvp = await this.rsvpModel.findOne({
+            tenantId: tenant._id,
+            $or: [
+                { eventId: eventObjectId, userId: userObjectId },
+                { eventId: eventId, userId: userId },
+                { eventId: eventObjectId, userId: userId },
+                { eventId: eventId, userId: userObjectId },
+            ],
+        });
+        if (rsvp) {
+            const wasGoing = rsvp.status === types_1.EventRsvpStatus.GOING;
+            const wasInterested = rsvp.status === types_1.EventRsvpStatus.INTERESTED;
+            await this.rsvpModel.deleteOne({ _id: rsvp._id });
+            if (wasGoing) {
+                await this.eventModel.updateOne({ _id: eventObjectId }, { $inc: { goingCount: -1, registeredCount: -1 } });
+            }
+            else if (wasInterested) {
+                await this.eventModel.updateOne({ _id: eventObjectId }, { $inc: { interestedCount: -1 } });
+            }
+        }
+        return { message: 'RSVP removed successfully' };
     }
     async getUserRsvp(tenant, eventId, userId) {
         const eventObjectId = mongoose_2.Types.ObjectId.isValid(eventId) ? new mongoose_2.Types.ObjectId(eventId) : eventId;
