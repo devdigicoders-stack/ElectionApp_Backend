@@ -20,11 +20,17 @@ const complaint_schema_1 = require("./complaint.schema");
 const complaint_category_schema_1 = require("./complaint-category.schema");
 const types_1 = require("../../shared/types");
 const audit_logs_service_1 = require("../audit-logs/audit-logs.service");
+const firebase_service_1 = require("../notifications/firebase.service");
+const admin_user_schema_1 = require("../admin-users/admin-user.schema");
+const user_schema_1 = require("../users/user.schema");
 let ComplaintsService = class ComplaintsService {
-    constructor(complaintModel, categoryModel, auditLogsService) {
+    constructor(complaintModel, categoryModel, adminUserModel, userModel, auditLogsService, firebaseService) {
         this.complaintModel = complaintModel;
         this.categoryModel = categoryModel;
+        this.adminUserModel = adminUserModel;
+        this.userModel = userModel;
         this.auditLogsService = auditLogsService;
+        this.firebaseService = firebaseService;
     }
     async generateNumber(tenantId) {
         const year = new Date().getFullYear();
@@ -36,6 +42,42 @@ let ComplaintsService = class ComplaintsService {
             },
         });
         return `CMP-${year}-${String(count + 1).padStart(6, '0')}`;
+    }
+    async pushToAdmins(tenantId, payload) {
+        if (!this.firebaseService?.isReady())
+            return;
+        try {
+            const admins = await this.adminUserModel
+                .find({ tenantId, isActive: true, fcmTokens: { $exists: true, $not: { $size: 0 } } })
+                .select('fcmTokens')
+                .lean();
+            const tokens = [];
+            for (const admin of admins) {
+                for (const tok of admin.fcmTokens || []) {
+                    if (tok && !tokens.includes(tok))
+                        tokens.push(tok);
+                }
+            }
+            if (tokens.length > 0) {
+                await this.firebaseService.sendMulticastPush(tokens, payload).catch(() => { });
+            }
+        }
+        catch { }
+    }
+    async pushToCitizen(userId, payload) {
+        if (!this.firebaseService?.isReady())
+            return;
+        try {
+            const userObjId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId.toString()) : null;
+            if (!userObjId)
+                return;
+            const user = await this.userModel.findById(userObjId).select('fcmTokens').lean();
+            const tokens = user?.fcmTokens || [];
+            if (tokens.length === 0)
+                return;
+            await this.firebaseService.sendToSingleToken(tokens[0], payload).catch(() => { });
+        }
+        catch { }
     }
     async create(tenant, userId, dto) {
         if (!mongoose_2.Types.ObjectId.isValid(userId)) {
@@ -69,7 +111,13 @@ let ComplaintsService = class ComplaintsService {
                 },
             ],
         });
-        return this.findOne(tenant, complaint._id.toString(), { sub: userId, role: 'citizen' });
+        const saved = await this.findOne(tenant, complaint._id.toString(), { sub: userId, role: 'citizen' });
+        this.pushToAdmins(tenant._id, {
+            title: '🆕 New Complaint Filed',
+            body: `${complaint.title} — ${complaint.complaintNumber}`,
+            data: { type: 'complaint_new', complaintId: complaint._id.toString(), complaintNumber: complaint.complaintNumber },
+        });
+        return saved;
     }
     async findByUser(tenant, userId) {
         if (!mongoose_2.Types.ObjectId.isValid(userId)) {
@@ -313,7 +361,13 @@ let ComplaintsService = class ComplaintsService {
             updatedAt: new Date(),
         });
         await complaint.save();
-        return this.findOne(tenant, id, adminUser);
+        const result = await this.findOne(tenant, id, adminUser);
+        this.pushToCitizen(complaint.userId, {
+            title: '✅ Complaint Resolved',
+            body: `Your complaint "${complaint.title}" has been resolved.`,
+            data: { type: 'complaint_resolved', complaintId: id },
+        });
+        return result;
     }
     async closeComplaint(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
@@ -337,7 +391,13 @@ let ComplaintsService = class ComplaintsService {
             updatedAt: new Date(),
         });
         await complaint.save();
-        return this.findOne(tenant, id, adminUser);
+        const closedResult = await this.findOne(tenant, id, adminUser);
+        this.pushToCitizen(complaint.userId, {
+            title: '🔒 Complaint Closed',
+            body: `Your complaint "${complaint.title}" has been officially closed.`,
+            data: { type: 'complaint_closed', complaintId: id },
+        });
+        return closedResult;
     }
     async rejectComplaint(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
@@ -359,7 +419,13 @@ let ComplaintsService = class ComplaintsService {
             updatedAt: new Date(),
         });
         await complaint.save();
-        return this.findOne(tenant, id, adminUser);
+        const rejectedResult = await this.findOne(tenant, id, adminUser);
+        this.pushToCitizen(complaint.userId, {
+            title: '❌ Complaint Rejected',
+            body: `Your complaint "${complaint.title}" was rejected: ${dto.reason.trim()}`,
+            data: { type: 'complaint_rejected', complaintId: id },
+        });
+        return rejectedResult;
     }
     async updateStatus(tenant, id, status, note, updatedBy) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
@@ -385,7 +451,16 @@ let ComplaintsService = class ComplaintsService {
             updatedAt: new Date(),
         });
         await complaint.save();
-        return this.findOne(tenant, id);
+        const updatedResult = await this.findOne(tenant, id);
+        if (status === types_1.ComplaintStatus.RESOLVED || status === types_1.ComplaintStatus.CLOSED) {
+            const statusLabel = status === types_1.ComplaintStatus.RESOLVED ? '✅ Resolved' : '🔒 Closed';
+            this.pushToCitizen(complaint.userId, {
+                title: `Complaint ${statusLabel}`,
+                body: note || `Your complaint status updated to ${status}`,
+                data: { type: 'complaint_status', complaintId: id, status },
+            });
+        }
+        return updatedResult;
     }
     async togglePublic(tenant, id, dto, adminUser) {
         if (!mongoose_2.Types.ObjectId.isValid(id))
@@ -851,9 +926,15 @@ exports.ComplaintsService = ComplaintsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(complaint_schema_1.Complaint.name)),
     __param(1, (0, mongoose_1.InjectModel)(complaint_category_schema_1.ComplaintCategory.name)),
-    __param(2, (0, common_1.Optional)()),
+    __param(2, (0, mongoose_1.InjectModel)(admin_user_schema_1.AdminUser.name)),
+    __param(3, (0, mongoose_1.InjectModel)(user_schema_1.User.name)),
+    __param(4, (0, common_1.Optional)()),
+    __param(5, (0, common_1.Optional)()),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        audit_logs_service_1.AuditLogsService])
+        mongoose_2.Model,
+        mongoose_2.Model,
+        audit_logs_service_1.AuditLogsService,
+        firebase_service_1.FirebaseService])
 ], ComplaintsService);
 //# sourceMappingURL=complaints.service.js.map

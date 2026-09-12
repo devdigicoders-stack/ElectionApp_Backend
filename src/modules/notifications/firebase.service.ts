@@ -24,15 +24,38 @@ export class FirebaseService implements OnModuleInit {
     }
 
     try {
-      const configPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || 'device-streaming-3d1aacd5-firebase-adminsdk-fbsvc-b0d3cd0c94.json';
-      let resolvedPath = configPath;
+      let serviceAccount: any = null;
 
-      if (!path.isAbsolute(configPath)) {
-        resolvedPath = path.resolve(process.cwd(), configPath);
+      // 1. Try inline JSON env variable first (useful for hosting like Render, Railway, AWS, etc.)
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+        try {
+          serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+        } catch (e: any) {
+          this.logger.error(`Error parsing FIREBASE_SERVICE_ACCOUNT_JSON: ${e.message}`);
+        }
       }
 
-      if (fs.existsSync(resolvedPath)) {
-        const serviceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+      // 2. Try file path
+      if (!serviceAccount) {
+        const configPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || 'device-streaming-3d1aacd5-firebase-adminsdk-fbsvc-b0d3cd0c94.json';
+        let resolvedPath = configPath;
+
+        if (!path.isAbsolute(configPath)) {
+          resolvedPath = path.resolve(process.cwd(), configPath);
+        }
+
+        if (fs.existsSync(resolvedPath)) {
+          serviceAccount = JSON.parse(fs.readFileSync(resolvedPath, 'utf8'));
+        } else {
+          // Check parent directories as fallback
+          const parentPath = path.resolve(process.cwd(), '..', configPath);
+          if (fs.existsSync(parentPath)) {
+            serviceAccount = JSON.parse(fs.readFileSync(parentPath, 'utf8'));
+          }
+        }
+      }
+
+      if (serviceAccount && serviceAccount.project_id) {
         this.firebaseApp = initializeApp({
           credential: cert(serviceAccount),
           projectId: serviceAccount.project_id,
@@ -40,7 +63,7 @@ export class FirebaseService implements OnModuleInit {
         this.isInitialized = true;
         this.logger.log(`Firebase Admin SDK initialized with project: ${serviceAccount.project_id}`);
       } else {
-        this.logger.warn(`Firebase service account file not found at ${resolvedPath}. Push notifications will be mocked/disabled.`);
+        this.logger.warn(`Firebase service account file not found. Push notifications will be mocked/disabled.`);
       }
     } catch (error: any) {
       this.logger.error(`Failed to initialize Firebase Admin SDK: ${error.message}`);

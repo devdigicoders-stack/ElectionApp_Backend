@@ -27,6 +27,19 @@ export declare class NotificationsController {
         page: number;
         limit: number;
     }>;
+    getPlatformBroadcasts(req: TenantRequest, page?: number, limit?: number): Promise<{
+        data: (import("./platform-broadcast.schema").PlatformBroadcast & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
+            _id: import("mongoose").Types.ObjectId;
+        }> & {
+            __v: number;
+        })[];
+        meta: {
+            total: number;
+            page: number;
+            limit: number;
+            totalPages: number;
+        };
+    }>;
     getMyNotifications(req: TenantRequest & {
         user: any;
     }, page?: number, limit?: number): Promise<(import("mongoose").Document<unknown, {}, import("./notification.schema").NotificationReadDocument, {}, import("mongoose").DefaultSchemaOptions> & import("./notification.schema").NotificationRead & import("mongoose").Document<import("mongoose").Types.ObjectId, any, any, Record<string, any>, {}> & Required<{

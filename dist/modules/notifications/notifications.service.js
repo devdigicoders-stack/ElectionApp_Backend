@@ -319,19 +319,25 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
         }
         let pushSuccess = 0;
         let pushFailure = 0;
-        if (channels.includes('push') && fcmTokens.length > 0) {
-            const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
-                title: `📢 ${title}`,
-                body: message,
-                data: {
-                    type,
-                    priority,
-                    actionUrl: actionUrl || '/notifications',
-                    broadcast: 'true',
-                },
-            });
-            pushSuccess = pushResult.successCount;
-            pushFailure = pushResult.failureCount;
+        if (channels.includes('push')) {
+            if (fcmTokens.length > 0) {
+                const pushResult = await this.firebaseService.sendMulticastPush(fcmTokens, {
+                    title: `📢 ${title}`,
+                    body: message,
+                    data: {
+                        type,
+                        priority,
+                        actionUrl: actionUrl || '/notifications',
+                        broadcast: 'true',
+                    },
+                });
+                pushSuccess = pushResult.successCount;
+                pushFailure = pushResult.failureCount;
+            }
+            else {
+                this.logger.warn(`Platform broadcast requested push, but 0 FCM device tokens were registered for target tenants.`);
+                pushFailure = recipientCount;
+            }
         }
         if (channels.includes('in_app')) {
             await this.recordSystemAlert({
@@ -374,16 +380,44 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
             },
         };
     }
+    async getTenantPlatformBroadcasts(tenant, page = 1, limit = 20) {
+        const safePage = Math.max(page, 1);
+        const safeLimit = Math.min(limit, 50);
+        const skip = (safePage - 1) * safeLimit;
+        const tenantObjectId = mongoose_2.Types.ObjectId.isValid(tenant._id) ? new mongoose_2.Types.ObjectId(tenant._id) : tenant._id;
+        const filter = {
+            $or: [
+                { targetAudience: platform_broadcast_schema_1.BroadcastTarget.ALL_TENANTS },
+                { targetTenantIds: tenantObjectId },
+                { targetTenantIds: tenant._id.toString() },
+            ],
+        };
+        const [data, total] = await Promise.all([
+            this.broadcastModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(safeLimit).lean(),
+            this.broadcastModel.countDocuments(filter),
+        ]);
+        return {
+            data,
+            meta: {
+                total,
+                page: safePage,
+                limit: safeLimit,
+                totalPages: Math.ceil(total / safeLimit) || 1,
+            },
+        };
+    }
     async registerFcmToken(userId, token) {
         if (!token || token.trim().length < 10) {
             return { success: false, message: 'Invalid FCM token' };
         }
         const cleanToken = token.trim();
-        const objectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
-        await Promise.all([
-            this.userModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
-            this.adminUserModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
-        ]);
+        if (userId) {
+            const objectId = mongoose_2.Types.ObjectId.isValid(userId) ? new mongoose_2.Types.ObjectId(userId) : userId;
+            await Promise.all([
+                this.userModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+                this.adminUserModel.findByIdAndUpdate(objectId, { $addToSet: { fcmTokens: cleanToken } }),
+            ]);
+        }
         return { success: true, message: 'FCM push token registered successfully' };
     }
     async testFcm(targetToken) {
@@ -401,8 +435,8 @@ let NotificationsService = NotificationsService_1 = class NotificationsService {
             };
         }
         const result = await this.firebaseService.sendToSingleToken(tokenToUse, {
-            title: '🔔 Test Notification from Antigravity / SaaS Super Admin',
-            body: 'Firebase Cloud Messaging (FCM) is properly connected and operating in real-time!',
+            title: 'Official Notification',
+            body: 'Live push notifications are now active on your device.',
             data: {
                 test: 'true',
                 timestamp: new Date().toISOString(),

@@ -1,9 +1,9 @@
-import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, Query, Req, UseGuards, SetMetadata } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { TenantRequest } from '../../common/middleware/tenant.middleware';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { FeatureGuard } from '../../common/guards/feature.guard';
-import { RequireFeature } from '../../common/decorators/feature.decorator';
+import { RequireFeature, FEATURE_KEY } from '../../common/decorators/feature.decorator';
 import { FeatureKey } from '../../shared/types';
 
 @Controller('notifications')
@@ -31,6 +31,13 @@ export class NotificationsController {
   @UseGuards(JwtAuthGuard)
   findAll(@Req() req: TenantRequest, @Query('page') page?: number, @Query('limit') limit?: number) {
     return this.notificationsService.findAll(req.tenant, page, limit);
+  }
+
+  // Admin / Tenant: get platform broadcasts sent by Super Admin
+  @Get('platform-broadcasts')
+  @UseGuards(JwtAuthGuard)
+  getPlatformBroadcasts(@Req() req: TenantRequest, @Query('page') page?: number, @Query('limit') limit?: number) {
+    return this.notificationsService.getTenantPlatformBroadcasts(req.tenant, page, limit);
   }
 
   // Public: get my notifications
@@ -64,16 +71,19 @@ export class NotificationsController {
     return this.notificationsService.remove(req.tenant, id);
   }
 
-  // Register FCM Token for logged-in Citizen / User / Admin
+  // Register FCM Token for logged-in Citizen / User / Admin or Guest
+  // NOTE: @SetMetadata overrides class-level FeatureGuard — FCM token registration must never be feature-gated
   @Post('register-token')
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata(FEATURE_KEY, null)
   registerToken(@Req() req: any, @Body('token') token: string) {
-    return this.notificationsService.registerFcmToken(req.user.sub, token);
+    const userId = req.user?.sub || req.user?._id;
+    return this.notificationsService.registerFcmToken(userId, token);
   }
 
   // Test FCM Push notification directly to this device or registered tokens
+  // NOTE: @SetMetadata overrides class-level FeatureGuard — FCM token test must never be feature-gated
   @Post('test-push')
-  @UseGuards(JwtAuthGuard)
+  @SetMetadata(FEATURE_KEY, null)
   testPush(@Req() req: any, @Body('token') token?: string) {
     return this.notificationsService.testFcm(token);
   }

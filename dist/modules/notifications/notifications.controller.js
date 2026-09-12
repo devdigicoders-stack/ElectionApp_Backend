@@ -32,6 +32,9 @@ let NotificationsController = class NotificationsController {
     findAll(req, page, limit) {
         return this.notificationsService.findAll(req.tenant, page, limit);
     }
+    getPlatformBroadcasts(req, page, limit) {
+        return this.notificationsService.getTenantPlatformBroadcasts(req.tenant, page, limit);
+    }
     getMyNotifications(req, page, limit) {
         return this.notificationsService.getForUser(req.tenant, req.user.sub, page, limit);
     }
@@ -45,7 +48,8 @@ let NotificationsController = class NotificationsController {
         return this.notificationsService.remove(req.tenant, id);
     }
     registerToken(req, token) {
-        return this.notificationsService.registerFcmToken(req.user.sub, token);
+        const userId = req.user?.sub || req.user?._id;
+        return this.notificationsService.registerFcmToken(userId, token);
     }
     testPush(req, token) {
         return this.notificationsService.testFcm(token);
@@ -80,6 +84,16 @@ __decorate([
     __metadata("design:paramtypes", [Object, Number, Number]),
     __metadata("design:returntype", void 0)
 ], NotificationsController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)('platform-broadcasts'),
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Query)('page')),
+    __param(2, (0, common_1.Query)('limit')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Number, Number]),
+    __metadata("design:returntype", void 0)
+], NotificationsController.prototype, "getPlatformBroadcasts", null);
 __decorate([
     (0, common_1.Get)('my'),
     (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
@@ -118,7 +132,7 @@ __decorate([
 ], NotificationsController.prototype, "remove", null);
 __decorate([
     (0, common_1.Post)('register-token'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.SetMetadata)(feature_decorator_1.FEATURE_KEY, null),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)('token')),
     __metadata("design:type", Function),
@@ -127,7 +141,7 @@ __decorate([
 ], NotificationsController.prototype, "registerToken", null);
 __decorate([
     (0, common_1.Post)('test-push'),
-    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.SetMetadata)(feature_decorator_1.FEATURE_KEY, null),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)('token')),
     __metadata("design:type", Function),

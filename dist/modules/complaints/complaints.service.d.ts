@@ -5,13 +5,21 @@ import { ComplaintCategory, ComplaintCategoryDocument } from './complaint-catego
 import { TenantDocument } from '../tenants/tenant.schema';
 import { ComplaintStatus, ComplaintPriority } from '../../shared/types';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
+import { FirebaseService } from '../notifications/firebase.service';
+import { AdminUserDocument } from '../admin-users/admin-user.schema';
+import { UserDocument } from '../users/user.schema';
 import { CreateComplaintDto, QueryComplaintsDto, AssignComplaintDto, UpdatePriorityDto, AddRemarkDto, ResolveComplaintDto, CloseComplaintDto, RejectComplaintDto, CreateCategoryDto, UpdateCategoryDto, TogglePublicComplaintDto, QueryPublicComplaintsDto } from './complaints.dto';
 export declare class ComplaintsService {
     private complaintModel;
     private categoryModel;
+    private adminUserModel;
+    private userModel;
     private auditLogsService?;
-    constructor(complaintModel: Model<ComplaintDocument>, categoryModel: Model<ComplaintCategoryDocument>, auditLogsService?: AuditLogsService | undefined);
+    private firebaseService?;
+    constructor(complaintModel: Model<ComplaintDocument>, categoryModel: Model<ComplaintCategoryDocument>, adminUserModel: Model<AdminUserDocument>, userModel: Model<UserDocument>, auditLogsService?: AuditLogsService | undefined, firebaseService?: FirebaseService | undefined);
     private generateNumber;
+    private pushToAdmins;
+    private pushToCitizen;
     create(tenant: TenantDocument, userId: string, dto: CreateComplaintDto): Promise<(Complaint & import("mongoose").Document<Types.ObjectId, any, any, Record<string, any>, {}> & Required<{
         _id: Types.ObjectId;
     }> & {
