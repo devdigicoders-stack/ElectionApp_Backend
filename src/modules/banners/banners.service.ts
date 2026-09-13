@@ -22,9 +22,24 @@ export class BannersService {
 
     let host = req?.get ? req.get('host') : (req?.headers ? req.headers['host'] : null);
     if (!host && tenant) {
-      host = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+      if (tenant.customDomain) {
+        host = tenant.customDomain;
+      } else {
+        const envBase = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+        if (envBase) {
+          try {
+            const parsed = new URL(envBase.startsWith('http') ? envBase : `https://${envBase}`);
+            host = parsed.host;
+          } catch {
+            host = envBase.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+          }
+        } else {
+          const port = process.env.PORT || 3001;
+          host = `${tenant.slug}.localhost:${port}`;
+        }
+      }
     }
-    const protocol = req?.protocol || 'http';
+    const protocol = req?.protocol || (host && !host.includes('localhost') ? 'https' : 'http');
 
     if (doc.imageUrl) {
       if (doc.imageUrl.startsWith('/')) {

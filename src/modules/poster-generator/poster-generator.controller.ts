@@ -359,9 +359,20 @@ export class PosterGeneratorController {
   @Get('share/:id')
   async getShareMetadata(@Req() req: TenantRequest, @Param('id') id: string) {
     const { filename } = await this.posterService.getPosterFilePath(req.tenant, id);
-    const domain = req.tenant.customDomain || `${req.tenant.slug}.localhost:3001`;
-    const bannerUrl = `http://${domain}/uploads/${req.tenant.slug}/generated-posters/${filename}`;
-    const downloadUrl = `http://${domain}/poster-generator/download/${id}`;
+    const envBase = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+    let base = '';
+    if (req.tenant.customDomain) {
+      const proto = req.tenant.customDomain.includes('localhost') ? 'http' : 'https';
+      base = `${proto}://${req.tenant.customDomain}`;
+    } else if (envBase) {
+      const cleanBase = envBase.replace(/\/+$/, '');
+      base = cleanBase.startsWith('http') ? cleanBase : `https://${cleanBase}`;
+    } else {
+      const port = process.env.PORT || 3001;
+      base = `http://${req.tenant.slug}.localhost:${port}`;
+    }
+    const bannerUrl = `${base}/uploads/${req.tenant.slug}/generated-posters/${filename}`;
+    const downloadUrl = `${base}/poster-generator/download/${id}`;
     const shareText = `Check out my official poster generated on ${req.tenant.name}! Download: ${downloadUrl}`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 

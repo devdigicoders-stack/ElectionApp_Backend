@@ -89,9 +89,10 @@ export class TenantMiddleware implements NestMiddleware {
       tenant = await this.tenantModel.findOne({ customDomain: host });
     }
 
-    // Fallback: If still not found and in local dev, cloud hosting, or base API domain, fallback to 'demo' or first active tenant
+    // Fallback: If still not found and in local dev, cloud hosting, or base API domain, fallback to DEFAULT_TENANT_SLUG or first active tenant
     if (!tenant && (isLocalhost || isCloudHosting || isBaseApiDomain)) {
-      tenant = (await this.tenantModel.findOne({ slug: 'demo' })) || (await this.tenantModel.findOne({ status: TenantStatus.ACTIVE }));
+      const defaultSlug = (process.env.DEFAULT_TENANT_SLUG || 'demo').toLowerCase().trim();
+      tenant = (await this.tenantModel.findOne({ slug: defaultSlug })) || (await this.tenantModel.findOne({ status: TenantStatus.ACTIVE }));
     }
 
     if (!tenant) {

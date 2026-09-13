@@ -847,8 +847,19 @@ export class PosterGeneratorService {
     const downloadUrl = `/poster-generator/download/`;
 
     // 6. Sharing Metadata (SRS Sec 27)
-    const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
-    const fullBannerUrl = `http://${domain}${outputUrl}`;
+    const envBase = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+    let fullBannerUrl = '';
+    if (tenant.customDomain) {
+      const proto = tenant.customDomain.includes('localhost') ? 'http' : 'https';
+      fullBannerUrl = `${proto}://${tenant.customDomain}${outputUrl}`;
+    } else if (envBase) {
+      const cleanBase = envBase.replace(/\/+$/, '');
+      const protoBase = cleanBase.startsWith('http') ? cleanBase : `https://${cleanBase}`;
+      fullBannerUrl = `${protoBase}${outputUrl}`;
+    } else {
+      const port = process.env.PORT || 3001;
+      fullBannerUrl = `http://${tenant.slug}.localhost:${port}${outputUrl}`;
+    }
     const personName = fieldValues['name'] || 'Citizen';
     const shareText = `Check out my official poster for ${template.title} by ${tenant.name}! Create your own personalized banner here: ${fullBannerUrl}`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;

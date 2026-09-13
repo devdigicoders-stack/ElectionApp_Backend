@@ -80,6 +80,40 @@ export class MembershipService {
     ctx.closePath();
   }
 
+  public getDomain(tenant: TenantDocument | any): string {
+    if (tenant?.customDomain) {
+      return tenant.customDomain;
+    }
+    const envUrl = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+    if (envUrl) {
+      try {
+        const parsed = new URL(envUrl.startsWith('http') ? envUrl : `https://${envUrl}`);
+        return parsed.host;
+      } catch {
+        return envUrl.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      }
+    }
+    const port = process.env.PORT || 3001;
+    const slug = tenant?.slug || 'demo';
+    return `${slug}.localhost:${port}`;
+  }
+
+  public getVerificationUrl(tenant: TenantDocument | any, membershipNumber: string): string {
+    if (tenant?.customDomain) {
+      const proto = tenant.customDomain.includes('localhost') ? 'http' : 'https';
+      return `${proto}://${tenant.customDomain}/membership/verify/${membershipNumber}`;
+    }
+    const envUrl = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+    if (envUrl) {
+      const cleanBase = envUrl.replace(/\/+$/, '');
+      const protoBase = cleanBase.startsWith('http') ? cleanBase : `https://${cleanBase}`;
+      return `${protoBase}/membership/verify/${membershipNumber}`;
+    }
+    const port = process.env.PORT || 3001;
+    const slug = tenant?.slug || 'demo';
+    return `http://${slug}.localhost:${port}/membership/verify/${membershipNumber}`;
+  }
+
   // ══════════════════════════════════════════════════════════════
   // MEMBERSHIP PLANS MANAGEMENT (SRS Sec 20 & 53)
   // ══════════════════════════════════════════════════════════════
@@ -574,8 +608,8 @@ export class MembershipService {
     ctx.shadowBlur = 12;
     ctx.restore();
 
-    const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
-    const verifyUrl = `http://${domain}/membership/verify/${membershipNumber}`;
+    const domain = this.getDomain(tenant);
+    const verifyUrl = this.getVerificationUrl(tenant, membershipNumber);
 
     const qrBuffer = await QRCode.toBuffer(verifyUrl, {
       width: 175,
@@ -702,7 +736,7 @@ export class MembershipService {
       try {
         const { cardUrl } = await this.generateDigitalCard(tenant, membership);
         membership.cardUrl = cardUrl;
-        membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membershipNumber}`;
+        membership.verificationUrl = this.getVerificationUrl(tenant, membershipNumber);
         await membership.save();
       } catch (err: any) {
         // Non-fatal, card generated on getMyCard
@@ -810,12 +844,16 @@ export class MembershipService {
       const { cardUrl } = await this.generateDigitalCard(tenant, membership, membership.userId);
       membership.cardUrl = cardUrl;
       membership.cardIssuedAt = new Date();
-      membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membership.membershipNumber}`;
+      membership.verificationUrl = this.getVerificationUrl(tenant, membership.membershipNumber);
       await membership.save();
     }
 
-    const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
-    const verifyUrl = membership.verificationUrl || `http://${domain}/membership/verify/${membership.membershipNumber}`;
+    const domain = this.getDomain(tenant);
+    const verifyUrl = this.getVerificationUrl(tenant, membership.membershipNumber);
+    if (!membership.verificationUrl || membership.verificationUrl !== verifyUrl || membership.verificationUrl.includes('localhost')) {
+      membership.verificationUrl = verifyUrl;
+      await membership.save().catch(() => null);
+    }
     const shareText = `Proud Member of ${tenant.name}! Here is my official verified digital membership card (ID: ${membership.membershipNumber}). Verify online: ${verifyUrl}`;
     const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
 
@@ -951,7 +989,7 @@ export class MembershipService {
     membership.cardUrl = cardUrl;
     membership.cardIssuedAt = new Date();
     membership.cardVersion = (membership.cardVersion || 1) + 1;
-    membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membership.membershipNumber}`;
+    membership.verificationUrl = this.getVerificationUrl(tenant, membership.membershipNumber);
 
     await membership.save();
 
@@ -1009,7 +1047,7 @@ export class MembershipService {
     membership.cardUrl = cardUrl;
     membership.cardIssuedAt = new Date();
     membership.cardVersion = (membership.cardVersion || 1) + 1;
-    membership.verificationUrl = `http://${tenant.customDomain || tenant.slug + '.localhost:3001'}/membership/verify/${membership.membershipNumber}`;
+    membership.verificationUrl = this.getVerificationUrl(tenant, membership.membershipNumber);
 
     await membership.save();
     return membership;
@@ -1248,7 +1286,7 @@ export class MembershipService {
     const areaMap = new Map<string, string>();
     areas.forEach((a) => areaMap.set(a._id.toString(), a.name));
 
-    const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+    const domain = this.getDomain(tenant);
 
     const csvHeaders = [
       'Membership ID',
@@ -1284,7 +1322,7 @@ export class MembershipService {
           ? 'Approved / Free'
           : 'Unpaid';
       const verifyUrl = m.membershipNumber
-        ? `http://${domain}/membership/verify/${m.membershipNumber}`
+        ? this.getVerificationUrl(tenant, m.membershipNumber)
         : '';
 
       return [

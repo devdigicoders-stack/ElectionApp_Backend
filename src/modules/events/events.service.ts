@@ -786,7 +786,19 @@ export class EventsService {
     const event = await this.eventModel.findOne({ _id: id, tenantId: tenant._id });
     if (!event) throw new NotFoundException('Event not found');
 
-    const domain = tenant.customDomain || `${tenant.slug}.localhost:3001`;
+    const envBase = process.env.APP_URL || process.env.API_BASE_URL || process.env.BASE_URL || process.env.FRONTEND_URL;
+    let eventLink = '';
+    if (tenant.customDomain) {
+      const proto = tenant.customDomain.includes('localhost') ? 'http' : 'https';
+      eventLink = `${proto}://${tenant.customDomain}/events/${event._id}`;
+    } else if (envBase) {
+      const cleanBase = envBase.replace(/\/+$/, '');
+      const protoBase = cleanBase.startsWith('http') ? cleanBase : `https://${cleanBase}`;
+      eventLink = `${protoBase}/events/${event._id}`;
+    } else {
+      const port = process.env.PORT || 3001;
+      eventLink = `http://${tenant.slug}.localhost:${port}/events/${event._id}`;
+    }
     const dateFormatted = new Date(event.startDate).toLocaleDateString('en-IN', {
       weekday: 'short',
       year: 'numeric',
@@ -808,7 +820,7 @@ export class EventsService {
       event.description ? `_${event.description}_` : null,
       ``,
       `👉 *Join & Register Pass Here:*`,
-      `http://${domain}/events/${event._id}`,
+      eventLink,
       ``,
       `— Organized by ${leaderName}`,
     ]
